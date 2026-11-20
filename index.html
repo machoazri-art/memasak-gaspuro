@@ -22,6 +22,33 @@
 .insideActions button{min-height:104px;border-radius:20px;box-shadow:inset 0 1px #ffffff22}
 #inside{padding-left:clamp(12px,4vw,24px);padding-right:clamp(12px,4vw,24px)}
 @media(max-width:600px){.room{max-height:52svh;margin:8px auto 12px}.insideActions button{min-height:90px;padding:10px 4px}.insideActions span{font-size:27px}}
+
+/* ===== Clean CSS3 warung interior redesign ===== */
+#inside{background:radial-gradient(ellipse at 50% 0%,#315642 0,#1b382b 58%,#142b21 100%)!important}
+.insideTop{max-width:900px;margin:0 auto;padding:16px 4px 12px!important}
+.insideTop h2{font-size:clamp(20px,5vw,27px)!important;letter-spacing:-.4px}
+.insideTop small{font-size:14px;color:#c8d9c5!important}
+.closeInside{box-shadow:0 5px 16px #081b1655;transition:transform .18s}
+.closeInside:active{transform:scale(.94)}
+.room{isolation:isolate;aspect-ratio:1.18/1!important;height:auto!important;min-height:0!important;max-height:62svh!important;border:5px solid #f3dba4!important;border-radius:26px!important;overflow:hidden;background-color:#c4d9ad!important;background-image:
+ linear-gradient(180deg,transparent 0 67%,#b58a5b 67% 100%),
+ repeating-linear-gradient(90deg,transparent 0 76px,#6f56301a 77px 80px),
+ linear-gradient(180deg,#d8e9c4 0%,#b9d1a9 67%,#c69b68 67%,#b78655 100%)!important;
+ box-shadow:0 16px 38px #071b1455,inset 0 0 0 1px #fff8d9!important}
+.roomArt,.roomSign,.counter{display:none!important}
+.room:before{content:"";position:absolute;z-index:0;left:6%;top:10%;width:29%;height:31%;border:9px solid #f4d99d;border-radius:12px;background:linear-gradient(180deg,#315a43 0 72%,#244a37 72%);box-shadow:0 7px 0 #84603c; background-image:linear-gradient(180deg,transparent 0 78%,#e2b96d 78%),linear-gradient(90deg,transparent 48%,#f0d69c 49% 52%,transparent 53%),linear-gradient(#315a43,#315a43)}
+.room:after{content:"";position:absolute;z-index:1;left:27%;bottom:16%;width:48%;height:18%;border:7px solid #765036;border-radius:12px 12px 5px 5px;background:linear-gradient(180deg,#d99d5c 0 16%,#9a6039 17% 100%);box-shadow:0 18px 0 -7px #69442e,0 27px 0 -10px #69442e,0 35px 18px #4a352544}
+.chefArt{z-index:3;left:8%!important;bottom:18%!important;font-size:clamp(42px,9vw,68px)!important;filter:drop-shadow(0 5px 3px #243a2766);line-height:1}
+.kitchenHot{z-index:4;right:7%!important;bottom:19%!important;width:25%!important;height:32%!important;max-width:164px;max-height:164px;border:5px solid #f5dfa9!important;border-radius:24px!important;background:linear-gradient(145deg,#71866c,#405e4b)!important;color:#fff4d4!important;font-size:clamp(38px,8vw,58px)!important;box-shadow:0 9px 22px #152b1f66,inset 0 2px 8px #ffffff30!important;animation:none!important;transition:transform .2s,filter .2s}
+.kitchenHot:before{content:"";position:absolute;inset:10% 12% 28%;border-radius:50%;background:radial-gradient(circle at 50% 48%,#fff6c5 0 13%,#e7b84e 14% 25%,#42443c 27% 33%,#202c26 34% 42%,transparent 44%);opacity:.95}
+.kitchenHot{font-size:0!important}
+.kitchenHot:after{content:"";position:absolute;left:34%;top:31%;width:34%;height:7%;border-radius:8px;background:#fff1ce;transform:rotate(42deg);box-shadow:0 2px 3px #27382a88}
+.kitchenHot small{bottom:8px!important;left:50%;transform:translateX(-50%);font-size:clamp(9px,2.5vw,12px)!important;letter-spacing:.3px;background:#fff4d7!important;color:#35513d!important;padding:7px 10px!important;box-shadow:0 3px 8px #203a2b44}
+.insideActions{max-width:900px!important;gap:12px!important;margin:14px auto!important}
+.insideActions button{min-height:104px;border:1px solid #6d8a6e!important;border-radius:20px!important;background:linear-gradient(145deg,#345b43,#294936)!important;box-shadow:0 7px 18px #0c241a55,inset 0 1px #ffffff20!important;font-size:15px;transition:transform .15s,background .15s}
+.insideActions button:active{transform:translateY(2px) scale(.98)}
+.insideActions span{font-size:29px!important;margin-bottom:5px}
+@media(max-width:600px){.room{aspect-ratio:1.05/1!important;max-height:55svh!important;border-radius:22px!important}.insideTop{padding-top:12px!important}.insideActions{gap:8px!important;margin-top:12px!important}.insideActions button{min-height:88px;font-size:14px}.insideActions span{font-size:26px!important}}
 </style></head><body><div class="app">
 <header class="top"><div class="logo">🍳</div><div class="brand"><b>Memasak Gaspuro</b><small>Food Tycoon · Bandar Makanan Malaysia 🇲🇾</small></div><div class="cash" id="cash">RM80</div></header>
 <div class="stats"><div class="stat"><small>⭐ LEVEL</small><b id="level">1</b></div><div class="stat"><small>👥 PELANGGAN</small><b id="customers">0</b></div><div class="stat"><small>🏪 PERNIAGAAN</small><b id="businesses">1</b></div></div>
