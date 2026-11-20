@@ -76,7 +76,7 @@
 .customerLayer{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:hidden}.customerNpc{position:absolute;width:48px;height:66px;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:auto;cursor:pointer;filter:drop-shadow(0 4px 3px #47372266);animation:customerArrive 2.8s ease-out both;transition:left .8s ease,top .8s ease;z-index:8}.customerNpc .avatar{font-size:clamp(28px,7vw,39px);line-height:1.05}.customerNpc .orderBubble{font-size:10px;white-space:nowrap;background:#fff8df;color:#35513d;border:2px solid #9a7448;border-radius:9px;padding:3px 6px;font-weight:900}.customerNpc.waiting{animation:customerBob 1.6s ease-in-out infinite}.customerNpc.waiting .orderBubble{background:#ffe7a7;animation:orderPulse 1.2s ease-in-out infinite}.customerNpc.eating .orderBubble{background:#d9f0c8}.customerNpc.paying .orderBubble{background:#ffe19a}.customerNpc.leaving{animation:customerLeave 1s ease-in forwards;pointer-events:none}.customerHint{position:absolute;z-index:7;bottom:3%;left:50%;transform:translateX(-50%);background:#244a37ef;color:#fff1c8;border:1px solid #f2dba6;border-radius:20px;padding:7px 12px;font-size:clamp(9px,2.3vw,11px);font-weight:800;white-space:nowrap;box-shadow:0 3px 12px #283a2866}@keyframes customerArrive{0%{transform:translate(-20px,45px) scale(.8);opacity:0}100%{transform:translate(0,0) scale(1);opacity:1}}@keyframes customerBob{50%{transform:translateY(-4px)}}@keyframes customerLeave{to{transform:translate(35px,35px) scale(.7);opacity:0}}@keyframes orderPulse{50%{transform:scale(1.07)}}@media(max-width:600px){.customerNpc{width:42px;height:58px}.customerNpc .orderBubble{font-size:9px;padding:2px 4px}.customerHint{bottom:2%}}
 /* Phaser 3 migration · Fasa 1: visual scene foundation */
 #phaserWorld{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;border-radius:inherit}
-#phaserWorld canvas{display:block;width:100%!important;height:100%!important;pointer-events:none}
+#phaserWorld canvas{display:block;width:100%!important;height:100%!important;pointer-events:auto}
 .room.phaser-ready{background:#d9c49a!important;background-image:none!important}
 .room.phaser-ready:before,.room.phaser-ready:after{display:none!important}
 .room.phaser-ready .cashierZone,.room.phaser-ready .topTable,.room.phaser-ready .plantDecor,.room.phaser-ready .walkway,.room.phaser-ready .chefArt,.room.phaser-ready .doorLabel{display:none!important}
@@ -283,7 +283,6 @@ function bootPhaserRestaurant(){
     moveCustomerActor(id,x,y,bubble){
       const actor=this.customerActors&&this.customerActors.get(id);if(!actor)return;
       const tx=x*9,ty=y*7.6;
-      this.tweens.add({targets:[actor.avatar,actor.tag,actor.shadow],x:(target)=>target.x,y:(target)=>target.y,duration:1});
       this.tweens.add({targets:actor.avatar,x:tx,y:ty,duration:850,ease:'Sine.easeInOut'});
       this.tweens.add({targets:actor.tag,x:tx,y:ty-38,duration:850,ease:'Sine.easeInOut'});
       this.tweens.add({targets:actor.shadow,x:tx,y:ty+20,duration:850,ease:'Sine.easeInOut'});
