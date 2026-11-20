@@ -194,8 +194,7 @@ function bootPhaserTown(){
    // trees, houses and garden accents
    for(let i=0;i<34;i++){const x=160+(i%9)*145,y=10+Math.floor(i/9)*185;if((y>70&&y<180)||(x>150&&x<730&&y>185&&y<420))continue;g.fillStyle(0x699b5d,1);g.fillCircle(x,y,18);g.fillStyle(0x4e854f,1);g.fillCircle(x-5,y-7,11);g.fillStyle(0x8dba73,1);g.fillCircle(x+5,y-8,5)}
    this.add.text(440,215,'🍜 DATARAN MAKANAN',{fontFamily:'system-ui',fontSize:'17px',fontStyle:'bold',color:'#6a5638'}).setOrigin(.5).setDepth(2);
-   this.add.text(90,62,'BANDAR GASPURO',{fontFamily:'system-ui',fontSize:'21px',fontStyle:'bold',color:'#31513a',backgroundColor:'#fff2d5',padding:{x:12,y:7}}).setOrigin(.5).setDepth(2);
-   this.add.text(800,62,'JALAN UTAMA',{fontFamily:'system-ui',fontSize:'13px',fontStyle:'bold',color:'#fff4d6',backgroundColor:'#58666a',padding:{x:8,y:5}}).setOrigin(.5).setDepth(2);
+   this.add.text(450,24,'BANDAR GASPURO',{fontFamily:'system-ui',fontSize:'21px',fontStyle:'bold',color:'#31513a',backgroundColor:'#fff2d5',padding:{x:14,y:7}}).setOrigin(.5).setDepth(2);
    this.lotNodes=[];
    for(let i=0;i<12;i++){
     const col=i%4,row=Math.floor(i/4),x=145+col*175,y=140+row*180;
@@ -205,9 +204,11 @@ function bootPhaserTown(){
    }
    this.people=[];for(let i=0;i<8;i++){const p=this.add.text(190+i*66,275+(i%3)*22,['🧍🏻','🧍🏽‍♀️','🧍🏼'][i%3],{fontSize:'19px'}).setOrigin(.5);this.world.add(p);this.people.push(p)}
    this.cars=[];for(let i=0;i<5;i++){const car=this.add.text(-500-i*180,105,['🚗','🚙','🛵'][i%3],{fontSize:'27px'}).setOrigin(.5);this.world.add(car);this.cars.push(car)}
-   this.hud=this.add.text(14,14,'RM0 · Lv.1',{fontFamily:'system-ui',fontSize:'16px',fontStyle:'bold',color:'#fff9e8',backgroundColor:'#315b43',padding:{x:10,y:7}}).setScrollFactor(0).setDepth(1000);
-   this.refreshTown();this.syncState(GaspuroStateBridge.snapshot());this.cameras.main.setBounds(-700,-500,3000,2300);this.cameras.main.centerOn(450,380);
-   this.scale.on('resize',()=>{if(this.cameras.main)this.cameras.main.setViewport(0,0,this.scale.width,this.scale.height)});
+   this.hud=null; // HTML dashboard above the map is the single source for money/level/customer stats.
+   this.refreshTown();this.syncState(GaspuroStateBridge.snapshot());
+   this.cameras.main.setBounds(-700,-500,3000,2300);
+   const fitTownToScreen=()=>{const cam=this.cameras.main;if(!cam)return;cam.setViewport(0,0,this.scale.width,this.scale.height);const fit=Math.min(this.scale.width/900,this.scale.height/760);cam.setZoom(Phaser.Math.Clamp(fit,0.62,1.12));cam.centerOn(450,380)};
+   fitTownToScreen();this.scale.on('resize',fitTownToScreen);
    // Enable a second native pointer: Phaser listens to only one touch by default.
    this.input.addPointer(1);
    this.lastPinch=0;this.dragStart=null;
@@ -242,7 +243,7 @@ function bootPhaserTown(){
    $('buildBtn').disabled=!unlocked;render();drawTools();this.refreshTown();
   }
   syncState(data){
-   if(this.hud)this.hud.setText('💰 RM'+Math.floor(data.money).toLocaleString('en-MY')+'   ⭐ Lv.'+data.level+'   🏪 '+data.buildings.length+'   👥 '+data.customers);
+   // Keep the Phaser map clean; live statistics remain in the responsive HTML dashboard.
    this.refreshTown();
   }
   refreshTown(){
@@ -254,7 +255,8 @@ function bootPhaserTown(){
     if(b){
       const type=bizType(b),emoji=type.emoji;
       const roof=this.add.text(71,43,({warung:'🏠',mamak:'🏪',satay:'🏬',drink:'🥤',cafe:'☕',foodcourt:'🏢',restaurant:'🦐'})[b.type]||'🏪',{fontSize:'48px'}).setOrigin(.5);
-      const label=this.add.text(71,78,emoji+' '+type.name,{fontFamily:'system-ui',fontSize:'10px',fontStyle:'bold',color:'#344636',backgroundColor:'#fff9e9',padding:{x:4,y:3},align:'center'}).setOrigin(.5);
+      const shortName=type.name.length>22?type.name.slice(0,21)+'…':type.name;
+      const label=this.add.text(71,78,emoji+' '+shortName,{fontFamily:'system-ui',fontSize:'10px',fontStyle:'bold',color:'#344636',backgroundColor:'#fff9e9',padding:{x:4,y:3},align:'center',wordWrap:{width:126,useAdvancedWrap:true},fixedWidth:130}).setOrigin(.5);
       const level=this.add.text(118,15,'Lv.'+b.level,{fontFamily:'system-ui',fontSize:'10px',fontStyle:'bold',color:'#fff9e9',backgroundColor:'#38764b',padding:{x:4,y:2}}).setOrigin(.5);
       lot.add([roof,label,level]);dynamic.push(roof,label,level);
       title.setText('');
@@ -309,7 +311,7 @@ canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);
 canvas.addEventListener('pointermove',e=>{if(!drag)return;let dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>6)drag.moved=true;if(drag.moved){camera.x=drag.cx+dx*canvas.width/canvas.clientWidth;camera.y=drag.cy+dy*canvas.height/canvas.clientHeight}});
 canvas.addEventListener('pointerup',e=>{if(!drag)return;if(!drag.moved){let p=screenToWorld(e),lot=plots.find(x=>p.x>=x.x&&p.x<=x.x+x.w&&p.y>=x.y&&p.y<=x.y+x.h);if(lot){s.selectedLot=lot.i;let b=selectedBuilding();if(b){openInterior(b);drag=null;return}$('selectionTitle').textContent=b?bizType(b).emoji+' '+bizType(b).name:'🏡 Lot '+(lot.i+1)+' kosong';$('selectionText').textContent=b?'Tahap '+b.level+' · Hasil terkumpul '+fmt(b.bank):lot.unlocked?'Pilih jenis perniagaan dan bina di sini.':'Lot terkunci. Naik level untuk buka.';$('buildBtn').disabled=!!b||!lot.unlocked;render();drawTools();}}drag=null});
 canvas.addEventListener('wheel',e=>{e.preventDefault();camera.scale=Math.max(.65,Math.min(1.6,camera.scale+(e.deltaY<0?.08:-.08)))},{passive:false});
-const changeTownZoom=delta=>{const sc=phaserTownScene();if(!sc||!sc.cameras||!sc.cameras.main)return;sc.cameras.main.setZoom(Phaser.Math.Clamp(sc.cameras.main.zoom+delta,.55,2.25))};
+const changeTownZoom=delta=>{const sc=phaserTownScene();if(!sc||!sc.cameras||!sc.cameras.main)return;sc.cameras.main.setZoom(Phaser.Math.Clamp(sc.cameras.main.zoom+delta,.45,2.25))};
 ['zin','zout','home'].forEach(id=>$(id).addEventListener('pointerdown',e=>e.stopPropagation()));
 $('zin').onclick=e=>{e.preventDefault();changeTownZoom(.18)};$('zout').onclick=e=>{e.preventDefault();changeTownZoom(-.18)};$('home').onclick=e=>{e.preventDefault();const sc=phaserTownScene();if(sc){sc.cameras.main.setZoom(1);sc.cameras.main.centerOn(450,380)}};
 let currentShop=null,cookTimer=null,cookRemaining=30,cookDone=[false,false,false];
