@@ -176,7 +176,7 @@ function bootPhaserTown(){
     const col=i%4,row=Math.floor(i/4),x=145+col*175,y=140+row*180;
     const lot=this.add.container(x,y);const bg=this.add.graphics();bg.fillStyle(0xd6e5b9,1);bg.fillRoundedRect(0,0,142,118,12);bg.lineStyle(3,0xfff8df,1);bg.strokeRoundedRect(0,0,142,118,12);bg.fillStyle(0x9fb48b,1);bg.fillRoundedRect(8,8,126,100,8);lot.add(bg);
     const title=this.add.text(71,96,'LOT '+(i+1),{fontFamily:'system-ui',fontSize:'11px',fontStyle:'bold',color:'#52664e'}).setOrigin(.5);lot.add(title);
-    const hit=this.add.zone(71,59,142,118).setInteractive({useHandCursor:true});hit.on('pointerup',pointer=>{if(this.moved)return;this.selectLot(i)});lot.add(hit);this.world.add(lot);this.lotNodes.push({lot,bg,title,i});
+    const hit=this.add.zone(71,59,142,118).setInteractive({useHandCursor:true});hit.on('pointerup',pointer=>{if(this.moved)return;this.selectLot(i)});lot.add(hit);this.world.add(lot);this.lotNodes.push({lot,bg,title,i,dynamic:[]});
    }
    this.people=[];for(let i=0;i<8;i++){const p=this.add.text(190+i*66,275+(i%3)*22,['🧍🏻','🧍🏽‍♀️','🧍🏼'][i%3],{fontSize:'19px'}).setOrigin(.5);this.world.add(p);this.people.push(p)}
    this.cars=[];for(let i=0;i<5;i++){const car=this.add.text(-500-i*180,105,['🚗','🚙','🛵'][i%3],{fontSize:'27px'}).setOrigin(.5);this.world.add(car);this.cars.push(car)}
@@ -198,7 +198,8 @@ function bootPhaserTown(){
   }
   refreshTown(){
    if(!this.lotNodes)return;
-   this.lotNodes.forEach(({lot,bg,title,i})=>{
+   this.lotNodes.forEach(({lot,bg,title,i,dynamic})=>{
+    dynamic.forEach(o=>o.destroy());dynamic.length=0;
     const b=s.buildings.find(x=>x.lot===i),unlocked=i<unlockedLots();
     bg.clear();bg.fillStyle(unlocked?0xd6e5b9:0xaab69e,1);bg.fillRoundedRect(0,0,142,118,12);bg.lineStyle(3,s.selectedLot===i?0xffb72f:0xfff8df,s.selectedLot===i?1:0.9);bg.strokeRoundedRect(0,0,142,118,12);bg.fillStyle(0x9fb48b,1);bg.fillRoundedRect(8,8,126,100,8);
     if(b){
@@ -206,7 +207,7 @@ function bootPhaserTown(){
       const roof=this.add.text(71,43,({warung:'🏠',mamak:'🏪',satay:'🏬',drink:'🥤',cafe:'☕',foodcourt:'🏢',restaurant:'🦐'})[b.type]||'🏪',{fontSize:'48px'}).setOrigin(.5);
       const label=this.add.text(71,78,emoji+' '+type.name,{fontFamily:'system-ui',fontSize:'10px',fontStyle:'bold',color:'#344636',backgroundColor:'#fff9e9',padding:{x:4,y:3},align:'center'}).setOrigin(.5);
       const level=this.add.text(118,15,'Lv.'+b.level,{fontFamily:'system-ui',fontSize:'10px',fontStyle:'bold',color:'#fff9e9',backgroundColor:'#38764b',padding:{x:4,y:2}}).setOrigin(.5);
-      lot.add([roof,label,level]);
+      lot.add([roof,label,level]);dynamic.push(roof,label,level);
       title.setText('');
     }else{
       title.setText(unlocked?'＋ LOT KOSONG':'🔒 LEVEL '+(Math.ceil(i/2)+1));title.setPosition(71,59);title.setFontSize('12px');
