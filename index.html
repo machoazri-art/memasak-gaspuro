@@ -33,7 +33,7 @@ const types=[
 {id:'foodcourt',name:'Medan Selera',emoji:'🏬',cost:750,base:62,desc:'Pelbagai gerai dalam satu tempat',color:'#e1b85c'},
 {id:'restaurant',name:'Restoran Seafood',emoji:'🦐',cost:1100,base:90,desc:'Hidangan laut untuk seisi keluarga',color:'#76a9bc'}
 ];
-const defaultState={money:80,level:1,xp:0,customers:0,totalIncome:0,earned:0,workers:0,rating:3,buildings:[{id:1,type:'warung',lot:5,level:1,bank:0,served:0}],selectedLot:1,selectedBuild:'warung',upgrades:{marketing:0,quality:0,traffic:0},missionClaimed:false,achievements:[],lastTick:Date.now(),legacyImported:false};
+const defaultState={money:80,level:1,xp:0,customers:0,totalIncome:0,earned:0,workers:0,rating:3,buildings:[{id:1,type:'warung',lot:1,level:1,bank:0,served:0}],selectedLot:1,selectedBuild:'warung',upgrades:{marketing:0,quality:0,traffic:0},missionClaimed:false,achievements:[],lastTick:Date.now(),legacyImported:false};
 let s=load();
 function load(){let n=null;try{n=JSON.parse(localStorage.getItem('gaspuro-town-v1')||'null')}catch(e){}if(n)return {...defaultState,...n,upgrades:{...defaultState.upgrades,...n.upgrades}};let old=null;try{old=JSON.parse(localStorage.getItem('gaspuro-v2')||'null')}catch(e){}let x={...defaultState};if(old){x.money=Math.max(80,Number(old.money)||80);x.level=Math.max(1,Number(old.level)||1);x.xp=Number(old.xp)||0;x.customers=Number(old.served)||0;x.totalIncome=Number(old.totalEarned)||0;x.earned=x.totalIncome;x.legacyImported=true}return x}
 function save(){s.lastTick=Date.now();localStorage.setItem('gaspuro-town-v1',JSON.stringify(s));render()}
