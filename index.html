@@ -96,6 +96,10 @@
 .phaser-unavailable #townPhaserMount{display:none!important}
 @media(max-width:600px){.app{padding:7px}.mapbox{height:min(66svh,560px);min-height:380px}.maphead{top:7px;left:7px;right:7px}.maphelp{max-width:55%;text-align:center;font-size:9px}.room.topRoom{width:100%;min-height:360px!important;max-height:62svh!important}.insideTop{gap:8px}.insideTop h2{font-size:17px}#phaserWorld canvas{touch-action:none}}
 @media(max-height:650px) and (orientation:landscape){.mapbox{height:72vh;min-height:280px}.room.topRoom{max-height:68vh!important;min-height:280px!important}}
+/* Fasa 6.1: dependable zoom and multi-touch controls */
+.mapbox,#townPhaserMount,#townPhaserMount canvas{touch-action:none!important;-webkit-user-select:none;user-select:none}
+.zoom{z-index:20!important;pointer-events:auto!important;touch-action:manipulation}
+.zoom button{pointer-events:auto;position:relative;z-index:21;min-width:44px;min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 </style></head><body><div class="app">
 <header class="top"><div class="logo">🍳</div><div class="brand"><b>Memasak Gaspuro</b><small>Food Tycoon · Bandar Makanan Malaysia 🇲🇾</small></div><div class="cash" id="cash">RM80</div></header>
 <div class="stats"><div class="stat"><small>⭐ LEVEL</small><b id="level">1</b></div><div class="stat"><small>👥 PELANGGAN</small><b id="customers">0</b></div><div class="stat"><small>🏪 PERNIAGAAN</small><b id="businesses">1</b></div></div>
@@ -204,12 +208,30 @@ function bootPhaserTown(){
    this.hud=this.add.text(14,14,'RM0 · Lv.1',{fontFamily:'system-ui',fontSize:'16px',fontStyle:'bold',color:'#fff9e8',backgroundColor:'#315b43',padding:{x:10,y:7}}).setScrollFactor(0).setDepth(1000);
    this.refreshTown();this.syncState(GaspuroStateBridge.snapshot());this.cameras.main.setBounds(-700,-500,3000,2300);this.cameras.main.centerOn(450,380);
    this.scale.on('resize',()=>{if(this.cameras.main)this.cameras.main.setViewport(0,0,this.scale.width,this.scale.height)});
-   this.input.on('pointerdown',p=>{if(p.y>this.scale.height-70&&p.x>this.scale.width-65)return;this.dragStart={x:p.x,y:p.y,cx:this.cameras.main.scrollX,cy:this.cameras.main.scrollY};this.moved=false});
-   this.input.on('pointermove',p=>{if(!this.dragStart||!p.isDown)return;const dx=p.x-this.dragStart.x,dy=p.y-this.dragStart.y;if(Math.abs(dx)+Math.abs(dy)>7)this.moved=true;if(this.moved){this.cameras.main.scrollX=this.dragStart.cx-dx/this.cameras.main.zoom;this.cameras.main.scrollY=this.dragStart.cy-dy/this.cameras.main.zoom}});
-   this.input.on('pointerup',()=>{this.dragStart=null;this.time.delayedCall(80,()=>this.moved=false)});
-   this.input.on('wheel',(p,objs,dx,dy)=>{this.cameras.main.setZoom(Phaser.Math.Clamp(this.cameras.main.zoom+(dy<0?.08:-.08),.65,1.65))});
-   this.input.on('pointermove',p=>{if(this.input.pointer2&&this.input.pointer2.isDown&&this.input.pointer1.isDown){const d=Phaser.Math.Distance.Between(this.input.pointer1.x,this.input.pointer1.y,this.input.pointer2.x,this.input.pointer2.y);if(this.lastPinch){const change=d-this.lastPinch;this.cameras.main.setZoom(Phaser.Math.Clamp(this.cameras.main.zoom+change*.0015,.65,1.65))}this.lastPinch=d}else this.lastPinch=null});
-   this.input.on('gameout',()=>{this.dragStart=null});
+   // Enable a second native pointer: Phaser listens to only one touch by default.
+   this.input.addPointer(1);
+   this.lastPinch=0;this.dragStart=null;
+   this.input.on('pointerdown',p=>{
+    const p2=this.input.pointer2;
+    if(p2&&p2.isDown&&this.input.pointer1.isDown){this.dragStart=null;this.lastPinch=Phaser.Math.Distance.Between(this.input.pointer1.x,this.input.pointer1.y,p2.x,p2.y);return}
+    if(p.y>this.scale.height-78&&p.x>this.scale.width-78)return;
+    this.dragStart={x:p.x,y:p.y,cx:this.cameras.main.scrollX,cy:this.cameras.main.scrollY};this.moved=false;
+   });
+   this.input.on('pointermove',p=>{
+    const p2=this.input.pointer2;
+    if(p2&&p2.isDown&&this.input.pointer1.isDown){
+     const d=Phaser.Math.Distance.Between(this.input.pointer1.x,this.input.pointer1.y,p2.x,p2.y);
+     if(this.lastPinch>0){const factor=d/this.lastPinch;this.cameras.main.setZoom(Phaser.Math.Clamp(this.cameras.main.zoom*factor,.55,2.25))}
+     this.lastPinch=d;this.dragStart=null;return;
+    }
+    if(!this.dragStart||!p.isDown)return;
+    const dx=p.x-this.dragStart.x,dy=p.y-this.dragStart.y;
+    if(Math.abs(dx)+Math.abs(dy)>7)this.moved=true;
+    if(this.moved){this.cameras.main.scrollX=this.dragStart.cx-dx/this.cameras.main.zoom;this.cameras.main.scrollY=this.dragStart.cy-dy/this.cameras.main.zoom}
+   });
+   this.input.on('pointerup',()=>{this.dragStart=null;this.lastPinch=0;this.time.delayedCall(80,()=>this.moved=false)});
+   this.input.on('wheel',(p,objs,dx,dy)=>{this.cameras.main.setZoom(Phaser.Math.Clamp(this.cameras.main.zoom+(dy<0?.12:-.12),.55,2.25))});
+   this.input.on('gameout',()=>{this.dragStart=null;this.lastPinch=0});
    this.time.addEvent({delay:40,loop:true,callback:()=>{this.cars.forEach((car,i)=>{car.x+=1.4+i*.18;if(car.x>1800)car.x=-500});this.people.forEach((p,i)=>{p.x+=Math.sin(this.time.now/500+i)*.18})}});
   }
   selectLot(i){
@@ -287,7 +309,9 @@ canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);
 canvas.addEventListener('pointermove',e=>{if(!drag)return;let dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>6)drag.moved=true;if(drag.moved){camera.x=drag.cx+dx*canvas.width/canvas.clientWidth;camera.y=drag.cy+dy*canvas.height/canvas.clientHeight}});
 canvas.addEventListener('pointerup',e=>{if(!drag)return;if(!drag.moved){let p=screenToWorld(e),lot=plots.find(x=>p.x>=x.x&&p.x<=x.x+x.w&&p.y>=x.y&&p.y<=x.y+x.h);if(lot){s.selectedLot=lot.i;let b=selectedBuilding();if(b){openInterior(b);drag=null;return}$('selectionTitle').textContent=b?bizType(b).emoji+' '+bizType(b).name:'🏡 Lot '+(lot.i+1)+' kosong';$('selectionText').textContent=b?'Tahap '+b.level+' · Hasil terkumpul '+fmt(b.bank):lot.unlocked?'Pilih jenis perniagaan dan bina di sini.':'Lot terkunci. Naik level untuk buka.';$('buildBtn').disabled=!!b||!lot.unlocked;render();drawTools();}}drag=null});
 canvas.addEventListener('wheel',e=>{e.preventDefault();camera.scale=Math.max(.65,Math.min(1.6,camera.scale+(e.deltaY<0?.08:-.08)))},{passive:false});
-$('zin').onclick=()=>{const sc=phaserTownScene();if(sc)sc.cameras.main.setZoom(Math.min(1.65,sc.cameras.main.zoom+.12))};$('zout').onclick=()=>{const sc=phaserTownScene();if(sc)sc.cameras.main.setZoom(Math.max(.65,sc.cameras.main.zoom-.12))};$('home').onclick=()=>{const sc=phaserTownScene();if(sc){sc.cameras.main.setZoom(1);sc.cameras.main.centerOn(450,380)}};
+const changeTownZoom=delta=>{const sc=phaserTownScene();if(!sc||!sc.cameras||!sc.cameras.main)return;sc.cameras.main.setZoom(Phaser.Math.Clamp(sc.cameras.main.zoom+delta,.55,2.25))};
+['zin','zout','home'].forEach(id=>$(id).addEventListener('pointerdown',e=>e.stopPropagation()));
+$('zin').onclick=e=>{e.preventDefault();changeTownZoom(.18)};$('zout').onclick=e=>{e.preventDefault();changeTownZoom(-.18)};$('home').onclick=e=>{e.preventDefault();const sc=phaserTownScene();if(sc){sc.cameras.main.setZoom(1);sc.cameras.main.centerOn(450,380)}};
 let currentShop=null,cookTimer=null,cookRemaining=30,cookDone=[false,false,false];
 let liveCustomers=[],customerClock=null,customerSeq=0,activeOrder=null;
 const customerFaces=['🧔🏻','👩🏻','👨🏽','👩🏽','👨🏻','👩🏼','🧕🏻','👨🏾'],seatSpots=[{x:18,y:40},{x:55,y:40},{x:18,y:69},{x:55,y:69}];
