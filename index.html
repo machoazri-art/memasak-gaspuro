@@ -201,6 +201,65 @@ function renderInteriorStaff(){const el=$('insideStaffStatus');if(el)el.textCont
 function renderStaffSprites(){const layer=$('staffLayer');if(!layer)return;const roles=[{key:'kitchen',emoji:'👨‍🍳',label:'DAPUR',positions:[[73,57],[82,65],[70,73]]},{key:'cashier',emoji:'🧑‍💼',label:'CASHIER',positions:[[34,17],[26,25],[39,28]]},{key:'service',emoji:'🧑‍🍽️',label:'SERVIS',positions:[[43,43],[47,68],[56,51]]}];let html='';roles.forEach(role=>{const count=Math.max(0,Number(s.staff&&s.staff[role.key])||0);const shown=Math.min(count,role.positions.length);for(let i=0;i<shown;i++){const p=role.positions[i];html+='<div class="staffNpc '+role.key+'" style="left:'+p[0]+'%;top:'+p[1]+'%"><span class="staffAvatar">'+role.emoji+'</span><span class="staffTag">'+role.label+'</span></div>'}if(count>shown){const p=role.positions[role.positions.length-1];html+='<div class="staffMore" style="left:'+(p[0]+5)+'%;top:'+(p[1]+7)+'%">+'+(count-shown)+'</div>'}});layer.innerHTML=html}
 function startCustomerFlow(){clearInterval(customerClock);liveCustomers.forEach(x=>{clearInterval(x.waitTimer);clearTimeout(x.autoCookTimer);x.node.remove()});liveCustomers=[];activeOrder=null;customerHint('Pelanggan akan datang sebentar lagi…');customerClock=setInterval(spawnCustomer,customerSpawnDelay());setTimeout(spawnCustomer,2500);renderInteriorStaff()}
 
+/* Phaser 3 Hybrid Engine · Fasa 1: restaurant visual foundation.
+   Phaser draws the room; existing HTML systems remain authoritative for gameplay and saves. */
+let phaserRestaurantGame=null;
+function bootPhaserRestaurant(){
+  if(phaserRestaurantGame||!window.Phaser)return;
+  const room=document.querySelector('.room.topRoom'),mount=$('phaserWorld');
+  if(!room||!mount)return;
+  class GaspuroRestaurantScene extends Phaser.Scene{
+    constructor(){super({key:'GaspuroRestaurantScene'})}
+    create(){
+      const g=this.add.graphics(),W=900,H=760;
+      g.fillStyle(0xd9c49a,1);g.fillRect(0,0,W,H);
+      for(let y=0;y<H;y+=48)for(let x=0;x<W;x+=48){
+        g.fillStyle(((x/48+y/48)%2===0)?0xf0dfb8:0xe8d2a4,.42);
+        g.fillRoundedRect(x+2,y+2,44,44,5);
+        g.lineStyle(1,0xb89565,.22);g.strokeRoundedRect(x+2,y+2,44,44,5);
+      }
+      g.fillStyle(0x315b43,1);g.fillRoundedRect(12,12,876,112,18);
+      g.fillStyle(0x477653,1);g.fillRoundedRect(24,24,852,78,12);
+      g.fillStyle(0xf4d89d,1);g.fillRoundedRect(275,34,350,45,10);
+      this.add.text(450,56,'WARUNG GASPURO',{fontFamily:'system-ui',fontSize:'24px',fontStyle:'bold',color:'#31513a'}).setOrigin(.5);
+      g.fillStyle(0x8a5835,1);g.fillRoundedRect(42,151,220,104,15);
+      g.fillStyle(0xc88c50,1);g.fillRoundedRect(50,158,204,82,11);
+      g.fillStyle(0xf6e5bd,1);g.fillRoundedRect(72,174,160,48,8);
+      this.add.text(152,198,'KAUNTER BAYAR',{fontFamily:'system-ui',fontSize:'17px',fontStyle:'bold',color:'#67452b'}).setOrigin(.5);
+      const table=(x,y,emoji)=>{
+        g.fillStyle(0x765039,1);g.fillRoundedRect(x-52,y-38,104,76,15);
+        g.fillStyle(0xf3d49a,1);g.fillRoundedRect(x-46,y-32,92,64,12);
+        g.fillStyle(0xb46f42,1);g.fillRoundedRect(x-31,y-21,62,42,10);
+        this.add.text(x,y,emoji,{fontSize:'27px'}).setOrigin(.5);
+        [[-61,-22],[61,-22],[-61,22],[61,22]].forEach(([dx,dy])=>{
+          g.fillStyle(0x477653,1);g.fillRoundedRect(x+dx-10,y+dy-10,20,20,7);
+          g.lineStyle(2,0xf6e6c6,1);g.strokeRoundedRect(x+dx-10,y+dy-10,20,20,7);
+        });
+      };
+      table(390,270,'🍛');table(625,270,'🍜');table(390,465,'🥤');table(625,465,'🍽️');
+      g.fillStyle(0x6e8e70,1);g.fillRoundedRect(700,575,170,145,16);
+      g.fillStyle(0xf4e2bd,1);g.fillRoundedRect(716,591,138,112,12);
+      g.fillStyle(0xb56f43,1);g.fillRoundedRect(735,610,100,52,9);
+      this.add.text(785,636,'🍳',{fontSize:'35px'}).setOrigin(.5);
+      this.add.text(785,681,'DAPUR',{fontFamily:'system-ui',fontSize:'15px',fontStyle:'bold',color:'#65462f'}).setOrigin(.5);
+      [[42,660],[850,150]].forEach(([x,y])=>{
+        g.fillStyle(0x9a633e,1);g.fillRoundedRect(x-17,y-8,34,27,7);
+        this.add.text(x,y-23,'🪴',{fontSize:'31px'}).setOrigin(.5);
+      });
+      g.fillStyle(0x9c7449,1);g.fillRoundedRect(365,700,170,42,9);
+      this.add.text(450,721,'PINTU MASUK  🚪',{fontFamily:'system-ui',fontSize:'15px',fontStyle:'bold',color:'#fff5dc'}).setOrigin(.5);
+    }
+  }
+  phaserRestaurantGame=new Phaser.Game({
+    type:Phaser.CANVAS,parent:mount,width:900,height:760,transparent:false,
+    backgroundColor:'#d9c49a',render:{antialias:true,roundPixels:true},
+    scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},
+    scene:[GaspuroRestaurantScene],banner:false
+  });
+  room.classList.add('phaser-ready');
+  window.addEventListener('resize',()=>{if(phaserRestaurantGame)phaserRestaurantGame.scale.refresh()},{passive:true});
+}
+
 function openInterior(b){bootPhaserRestaurant();currentShop=b;$('insideName').textContent=bizType(b).emoji+' '+bizType(b).name;const floorLabel=document.querySelector('.floorLabel');if(floorLabel)floorLabel.textContent='RUANG MAKAN · '+bizType(b).name.toUpperCase();$('inside').classList.add('show');startCustomerFlow();renderInteriorStaff()}
 function closeInterior(){$('inside').classList.remove('show');$('cookModal').classList.remove('show');clearInterval(cookTimer);clearInterval(customerClock);liveCustomers.forEach(x=>{clearInterval(x.waitTimer);clearTimeout(x.autoCookTimer);x.node.remove()});liveCustomers=[];activeOrder=null}
 function startCooking(){if(!currentShop)return;if(liveCustomers.length&&!activeOrder)return toast('Tekan pelanggan dahulu untuk ambil pesanan.');cookDone=[false,false,false];cookRemaining=30+Math.min(45,(s.staff.kitchen||0)*15);$('cookTimer').textContent=cookRemaining+'s';$('cookDish').textContent='Pesanan: '+bizType(currentShop).name;$('cookResult').textContent='Mula dengan potong bahan!';$('cookScene').textContent='🥬';document.querySelectorAll('[data-step]').forEach(b=>{b.classList.remove('done');b.disabled=false});$('cookModal').classList.add('show');clearInterval(cookTimer);cookTimer=setInterval(()=>{cookRemaining--;$('cookTimer').textContent=cookRemaining+'s';if(cookRemaining<=0){clearInterval(cookTimer);$('cookResult').textContent='⏰ Masa tamat! Cuba sekali lagi.';document.querySelectorAll('[data-step]').forEach(b=>b.disabled=true)}},1000)}
