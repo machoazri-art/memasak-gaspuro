@@ -125,8 +125,16 @@ const types=[
 const townSprite=new Image();townSprite.src='./assets/town-buildings.svg';
 const defaultState={money:80,level:1,xp:0,customers:0,totalIncome:0,earned:0,workers:0,staff:{kitchen:0,cashier:0,service:0},rating:3,buildings:[{id:1,type:'warung',lot:1,level:1,bank:0,served:0}],selectedLot:1,selectedBuild:'warung',upgrades:{marketing:0,quality:0,traffic:0},missionClaimed:false,achievements:[],lastTick:Date.now(),legacyImported:false};
 let s=load();
+/* Fasa 5 · single source of truth + Phaser/HTML state bridge. */
+const GaspuroStateBridge=(()=>{
+ let revision=0,listeners=[];
+ const snapshot=()=>({revision,money:s.money,level:s.level,xp:s.xp,customers:s.customers,workers:s.workers,rating:s.rating,totalIncome:s.totalIncome,buildings:s.buildings.map(b=>({id:b.id,type:b.type,lot:b.lot,level:b.level,bank:b.bank,served:b.served})),staff:{...s.staff},upgrades:{...s.upgrades},selectedLot:s.selectedLot});
+ return {snapshot,subscribe(fn){if(typeof fn!=='function')return()=>{};listeners.push(fn);fn(snapshot());return()=>{listeners=listeners.filter(x=>x!==fn)}},publish(){revision++;const data=snapshot();listeners.slice().forEach(fn=>{try{fn(data)}catch(e){console.warn('Gaspuro state listener:',e)}});return data}};
+})();
+window.GaspuroState={getSnapshot:()=>GaspuroStateBridge.snapshot(),subscribe:fn=>GaspuroStateBridge.subscribe(fn)};
+
 function load(){let n=null;try{n=JSON.parse(localStorage.getItem('gaspuro-town-v1')||'null')}catch(e){}if(n)return {...defaultState,...n,upgrades:{...defaultState.upgrades,...n.upgrades},staff:{...defaultState.staff,...(n.staff||{})}};let old=null;try{old=JSON.parse(localStorage.getItem('gaspuro-v2')||'null')}catch(e){}let x={...defaultState};if(old){x.money=Math.max(80,Number(old.money)||80);x.level=Math.max(1,Number(old.level)||1);x.xp=Number(old.xp)||0;x.customers=Number(old.served)||0;x.totalIncome=Number(old.totalEarned)||0;x.earned=x.totalIncome;x.legacyImported=true}return x}
-function save(){s.lastTick=Date.now();localStorage.setItem('gaspuro-town-v1',JSON.stringify(s));render()}
+function save(){s.lastTick=Date.now();localStorage.setItem('gaspuro-town-v1',JSON.stringify(s));render();GaspuroStateBridge.publish()}
 function fmt(n){return 'RM'+Math.floor(n).toLocaleString('en-MY')}
 function toast(t){$('notice').textContent=t;$('notice').classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('notice').classList.remove('show'),2200)}
 function log(t){let d=document.createElement('div');d.textContent=t;$('feed').prepend(d);while($('feed').children.length>12)$('feed').lastChild.remove()}
@@ -180,7 +188,8 @@ function bootPhaserTown(){
    }
    this.people=[];for(let i=0;i<8;i++){const p=this.add.text(190+i*66,275+(i%3)*22,['🧍🏻','🧍🏽‍♀️','🧍🏼'][i%3],{fontSize:'19px'}).setOrigin(.5);this.world.add(p);this.people.push(p)}
    this.cars=[];for(let i=0;i<5;i++){const car=this.add.text(-500-i*180,105,['🚗','🚙','🛵'][i%3],{fontSize:'27px'}).setOrigin(.5);this.world.add(car);this.cars.push(car)}
-   this.refreshTown();this.cameras.main.setBounds(-700,-500,3000,2300);this.cameras.main.centerOn(450,380);
+   this.hud=this.add.text(14,14,'RM0 · Lv.1',{fontFamily:'system-ui',fontSize:'16px',fontStyle:'bold',color:'#fff9e8',backgroundColor:'#315b43',padding:{x:10,y:7}}).setScrollFactor(0).setDepth(1000);
+   this.refreshTown();this.syncState(GaspuroStateBridge.snapshot());this.cameras.main.setBounds(-700,-500,3000,2300);this.cameras.main.centerOn(450,380);
    this.input.on('pointerdown',p=>{if(p.y>this.scale.height-70&&p.x>this.scale.width-65)return;this.dragStart={x:p.x,y:p.y,cx:this.cameras.main.scrollX,cy:this.cameras.main.scrollY};this.moved=false});
    this.input.on('pointermove',p=>{if(!this.dragStart||!p.isDown)return;const dx=p.x-this.dragStart.x,dy=p.y-this.dragStart.y;if(Math.abs(dx)+Math.abs(dy)>7)this.moved=true;if(this.moved){this.cameras.main.scrollX=this.dragStart.cx-dx/this.cameras.main.zoom;this.cameras.main.scrollY=this.dragStart.cy-dy/this.cameras.main.zoom}});
    this.input.on('pointerup',()=>{this.dragStart=null;this.time.delayedCall(80,()=>this.moved=false)});
@@ -195,6 +204,10 @@ function bootPhaserTown(){
    $('selectionTitle').textContent='🏡 Lot '+(i+1)+' kosong';
    $('selectionText').textContent=unlocked?'Pilih jenis perniagaan dan bina di sini.':'Lot terkunci. Naik level untuk buka.';
    $('buildBtn').disabled=!unlocked;render();drawTools();this.refreshTown();
+  }
+  syncState(data){
+   if(this.hud)this.hud.setText('💰 RM'+Math.floor(data.money).toLocaleString('en-MY')+'   ⭐ Lv.'+data.level+'   🏪 '+data.buildings.length+'   👥 '+data.customers);
+   this.refreshTown();
   }
   refreshTown(){
    if(!this.lotNodes)return;
@@ -219,7 +232,7 @@ function bootPhaserTown(){
  phaserTownGame=new Phaser.Game({type:Phaser.CANVAS,parent:mount,width:900,height:760,backgroundColor:'#b7d99d',render:{antialias:true,roundPixels:true},scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},scene:[GaspuroTownScene],banner:false});
 }
 function phaserTownScene(){return phaserTownGame&&phaserTownGame.scene.getScene('GaspuroTownScene')}
-function refreshPhaserTown(){const scene=phaserTownScene();if(scene&&scene.refreshTown)scene.refreshTown()}
+function refreshPhaserTown(){const scene=phaserTownScene();if(scene&&scene.syncState)scene.syncState(GaspuroStateBridge.snapshot());else if(scene&&scene.refreshTown)scene.refreshTown();const restaurant=phaserScene();if(restaurant&&restaurant.syncState)restaurant.syncState(GaspuroStateBridge.snapshot())}
 
 const canvas=$('map'),ctx=canvas.getContext('2d');let camera={x:0,y:0,scale:1},plots=[],cars=[],people=[],drag=null,selectedTool='warung',tick=0;
 function lotPos(i){let col=i%4,row=Math.floor(i/4);return{x:145+col*175,y:140+row*180}}
@@ -386,6 +399,10 @@ function bootPhaserRestaurant(){
         this.staffActors.push({avatar,tag});
       })});
     }
+    syncState(data){
+      if(!this.stateHud)this.stateHud=this.add.text(18,136,'',{fontFamily:'system-ui',fontSize:'15px',fontStyle:'bold',color:'#fff9e8',backgroundColor:'#315b43',padding:{x:9,y:6}}).setDepth(50);
+      this.stateHud.setText('💰 RM'+Math.floor(data.money).toLocaleString('en-MY')+'  ⭐ Lv.'+data.level+'  👥 '+data.workers+' pekerja');
+    }
     setShopName(name){
       if(this.brandText&&name)this.brandText.setText(String(name).toLocaleUpperCase('ms-MY'));
     }
@@ -412,7 +429,7 @@ function startCooking(){if(!currentShop)return;if(liveCustomers.length&&!activeO
 document.querySelectorAll('[data-step]').forEach(btn=>btn.addEventListener('click',()=>{let i=+btn.dataset.step;if(cookDone[i]||cookRemaining<=0)return;if(i>0&&!cookDone[i-1])return $('cookResult').textContent='Ikut turutan: potong → masak → hidang.';cookDone[i]=true;btn.classList.add('done');$('cookScene').textContent=['🔪','🍳','🍽️'][i];$('cookResult').textContent=['Bahan dah dipotong! Seterusnya masak.','Sedang panas! Sekarang hidangkan.','Hidangan siap!'][i];if(cookDone.every(Boolean)){clearInterval(cookTimer);let earned=Math.floor(bizType(currentShop).base*(1+currentShop.level*.15));if(activeOrder){completeCustomerOrder(earned);$('cookResult').textContent='⭐ Hidangan siap! Tunggu pelanggan makan dan bayar di kaunter.';save()}else{s.money+=earned;s.totalIncome=(s.totalIncome||0)+earned;s.earned=(s.earned||0)+earned;currentShop.served++;s.customers++;s.xp+=12;levelCheck();log('🍽️ Jualan dapur '+bizType(currentShop).name+' +'+fmt(earned));$('cookResult').textContent='⭐ Sempurna! +'+fmt(earned)+' terus masuk baki duit bandar!';$('cash').textContent=fmt(s.money);save()}}}));
 $('closeInside').onclick=closeInterior;$('kitchenHot').onclick=startCooking;$('cookClose').onclick=()=>{$('cookModal').classList.remove('show');clearInterval(cookTimer);if(activeOrder&&activeOrder.state==='cooking'){const customer=activeOrder;activeOrder=null;customer.state='waiting';customer.node.classList.remove('waiting');customer.node.querySelector('.orderBubble').textContent='🍽️ SAMBUNG PESANAN';customer.wait=30;customer.waitTimer=setInterval(()=>{if(customer.state!=='waiting')return;if(--customer.wait<=0){clearInterval(customer.waitTimer);customer.state='leaving';customer.node.classList.add('leaving');setTimeout(()=>{customer.node.remove();liveCustomers=liveCustomers.filter(x=>x!==customer)},950);s.rating=Math.max(1,+(s.rating-.1).toFixed(1));customerHint('Pelanggan hilang sabar. Servis lebih pantas!');save()}},1000)}};$('insideMenu').onclick=()=>toast('Menu kedai: '+bizType(currentShop).name);$('insideStock').onclick=()=>toast('Stok dapur kedai boleh diurus melalui menu perniagaan.');$('insideUpgrade').onclick=()=>{if(currentShop)upgradeBiz(currentShop.id)};
 function drawTools(){$('buildTools').innerHTML=types.map(t=>'<button class="tool '+(s.selectedBuild===t.id?'active':'')+'" data-tool="'+t.id+'"><span>'+t.emoji+'</span>'+t.name+'<br><b>'+(t.cost?fmt(t.cost):'PERCUMA')+'</b></button>').join('');$('buildTools').querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{s.selectedBuild=b.dataset.tool;drawTools()})}
-function render(){refreshPhaserTown(); $('cash').textContent=fmt(s.money);$('level').textContent=s.level;$('customers').textContent=s.customers;$('businesses').textContent=s.buildings.length;$('income').textContent=fmt(s.totalIncome);$('rate').textContent=fmt(s.buildings.reduce((a,b)=>a+incomeRate(b),0));$('workers').textContent=s.workers;$('rating').textContent='⭐ '+s.rating.toFixed(1);$('levelBar').style.width=(s.xp/(s.level*100)*100)+'%';$('xpText').textContent=s.xp+' / '+(s.level*100)+' XP ke level seterusnya';let p=Math.min(100,s.buildings.length/2*50+s.customers/10*50);$('missionBar').style.width=p+'%';$('missionProgress').textContent=s.buildings.length+' / 2 perniagaan · '+s.customers+' / 10 pelanggan';$('mission').textContent=s.missionClaimed?'Misi selesai! Bandar semakin maju.':s.buildings.length>=2&&s.customers>=10?'Misi selesai — tekan kutip semua untuk terus berkembang.':'Bina perniagaan kedua dan capai 10 pelanggan.';
+function render(){GaspuroStateBridge.publish();refreshPhaserTown(); $('cash').textContent=fmt(s.money);$('level').textContent=s.level;$('customers').textContent=s.customers;$('businesses').textContent=s.buildings.length;$('income').textContent=fmt(s.totalIncome);$('rate').textContent=fmt(s.buildings.reduce((a,b)=>a+incomeRate(b),0));$('workers').textContent=s.workers;$('rating').textContent='⭐ '+s.rating.toFixed(1);$('levelBar').style.width=(s.xp/(s.level*100)*100)+'%';$('xpText').textContent=s.xp+' / '+(s.level*100)+' XP ke level seterusnya';let p=Math.min(100,s.buildings.length/2*50+s.customers/10*50);$('missionBar').style.width=p+'%';$('missionProgress').textContent=s.buildings.length+' / 2 perniagaan · '+s.customers+' / 10 pelanggan';$('mission').textContent=s.missionClaimed?'Misi selesai! Bandar semakin maju.':s.buildings.length>=2&&s.customers>=10?'Misi selesai — tekan kutip semua untuk terus berkembang.':'Bina perniagaan kedua dan capai 10 pelanggan.';
  $('businessList').innerHTML=s.buildings.map(b=>'<div class="card"><b>'+bizType(b).emoji+' '+bizType(b).name+'</b><small>Lot '+(b.lot+1)+' · Tahap '+b.level+' · '+fmt(incomeRate(b)*.6)+'/min</small><small>Dalam tabung: '+fmt(b.bank)+'</small><button class="btn gold" data-collect="'+b.id+'">💰 Kutip '+fmt(b.bank)+'</button><button class="btn" style="margin-top:5px" data-upbiz="'+b.id+'">⬆️ Upgrade · '+fmt(90*b.level)+'</button></div>').join('');
  $('staffList').innerHTML='<div class="card"><b>👥 Pasukan restoran</b><small>Pekerja boleh diagihkan mengikut tugas. Pekerja belum ditugaskan: '+Math.max(0,s.workers-assignedStaff())+'</small><b>'+s.workers+' orang · '+assignedStaff()+' ditugaskan</b><button class="btn" data-hire>Ambil pekerja · '+fmt(100+s.workers*85)+'</button></div>'+[['kitchen','👨‍🍳 Dapur','Tambah 5 saat masa memasak setiap pekerja (maksimum +15s).'],['cashier','🧑‍💼 Cashier','Mempercepatkan proses bayaran pelanggan.'],['service','🧑‍🍽️ Servis pelanggan','Tambah kesabaran pelanggan dan percepatkan ketibaan pelanggan.']].map(([k,n,d])=>'<div class="card"><b>'+n+'</b><small>'+d+'</small><b>'+s.staff[k]+' pekerja ditugaskan</b><div class="row" style="margin-top:7px;gap:5px"><button class="btn" data-assign="'+k+'" '+(assignedStaff()>=s.workers?'disabled':'')+'>＋ Tugaskan</button><button class="btn soft" data-unassign="'+k+'" '+(!s.staff[k]?'disabled':'')+'>− Keluarkan</button></div></div>').join('');
  const ups=[['marketing','📣 Marketing','Tambah hasil semua kedai 12%',150],['quality','⭐ Resipi premium','Tambah hasil semua kedai 8%',150],['traffic','🚗 Tarikan pelawat','Tambah kadar pelanggan bandar',150]];
