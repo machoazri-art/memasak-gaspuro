@@ -36,6 +36,7 @@ const types=[
 {id:'foodcourt',name:'Medan Selera',emoji:'🏬',cost:750,base:62,desc:'Pelbagai gerai dalam satu tempat',color:'#e1b85c'},
 {id:'restaurant',name:'Restoran Seafood',emoji:'🦐',cost:1100,base:90,desc:'Hidangan laut untuk seisi keluarga',color:'#76a9bc'}
 ];
+const townSprite=new Image();townSprite.src='./assets/town-buildings.svg';
 const defaultState={money:80,level:1,xp:0,customers:0,totalIncome:0,earned:0,workers:0,rating:3,buildings:[{id:1,type:'warung',lot:1,level:1,bank:0,served:0}],selectedLot:1,selectedBuild:'warung',upgrades:{marketing:0,quality:0,traffic:0},missionClaimed:false,achievements:[],lastTick:Date.now(),legacyImported:false};
 let s=load();
 function load(){let n=null;try{n=JSON.parse(localStorage.getItem('gaspuro-town-v1')||'null')}catch(e){}if(n)return {...defaultState,...n,upgrades:{...defaultState.upgrades,...n.upgrades}};let old=null;try{old=JSON.parse(localStorage.getItem('gaspuro-v2')||'null')}catch(e){}let x={...defaultState};if(old){x.money=Math.max(80,Number(old.money)||80);x.level=Math.max(1,Number(old.level)||1);x.xp=Number(old.xp)||0;x.customers=Number(old.served)||0;x.totalIncome=Number(old.totalEarned)||0;x.earned=x.totalIncome;x.legacyImported=true}return x}
@@ -75,7 +76,10 @@ function drawMap(){
  ctx.strokeStyle='#f8edcf';ctx.lineWidth=12;ctx.beginPath();ctx.moveTo(180,300);ctx.lineTo(700,300);ctx.moveTo(440,200);ctx.lineTo(440,400);ctx.stroke();
  // lots
  plots=[];for(let i=0;i<12;i++){let p=lotPos(i);let b=s.buildings.find(x=>x.lot===i);let unlocked=i<unlockedLots();rounded(p.x,p.y,142,118,12,unlocked?'#d6e5b9':'#aab69e','#fff8df');ctx.fillStyle='#9fb48b';ctx.fillRect(p.x+8,p.y+8,126,100);
- if(b){let type=bizType(b);ctx.fillStyle='#8c7052';ctx.fillRect(p.x+20,p.y+75,102,13);ctx.fillStyle=type.color;ctx.beginPath();ctx.moveTo(p.x+13,p.y+47);ctx.lineTo(p.x+71,p.y+8);ctx.lineTo(p.x+129,p.y+47);ctx.closePath();ctx.fill();rounded(p.x+25,p.y+42,92,48,5,'#fff2d1','#8b7659');ctx.fillStyle=type.color;ctx.fillRect(p.x+19,p.y+36,104,13);ctx.fillStyle='#5a4637';ctx.fillRect(p.x+63,p.y+58,18,32);ctx.font='23px system-ui';ctx.fillText(type.emoji,p.x+8,p.y+31);ctx.fillStyle='#344636';ctx.font='bold 12px system-ui';ctx.fillText('Lv.'+b.level,p.x+83,p.y+104);ctx.fillStyle='#fff9e9';ctx.beginPath();ctx.arc(p.x+115,p.y+15,13,0,7);ctx.fill();ctx.fillStyle='#38764b';ctx.font='bold 11px system-ui';ctx.fillText('$',p.x+111,p.y+19)}
+ if(b){let type=bizType(b);let si=({warung:0,mamak:1,satay:2,drink:3,cafe:3,foodcourt:2,restaurant:1})[b.type]||0;
+ if(townSprite.complete&&townSprite.naturalWidth){ctx.drawImage(townSprite,si*256,0,256,240,p.x+1,p.y-9,140,132)}
+ else{ctx.fillStyle='#8c7052';ctx.fillRect(p.x+20,p.y+75,102,13);ctx.fillStyle=type.color;ctx.beginPath();ctx.moveTo(p.x+13,p.y+47);ctx.lineTo(p.x+71,p.y+8);ctx.lineTo(p.x+129,p.y+47);ctx.closePath();ctx.fill();rounded(p.x+25,p.y+42,92,48,5,'#fff2d1','#8b7659');ctx.fillText(type.emoji,p.x+8,p.y+31)}
+ ctx.fillStyle='#344636';ctx.font='bold 12px system-ui';ctx.fillText('Lv.'+b.level,p.x+82,p.y+108);ctx.fillStyle='#fff9e9';ctx.beginPath();ctx.arc(p.x+119,p.y+15,13,0,7);ctx.fill();ctx.fillStyle='#38764b';ctx.font='bold 11px system-ui';ctx.fillText('$',p.x+115,p.y+19)}
  else{ctx.fillStyle=unlocked?'#f8f3d9':'#9aa58f';ctx.font='bold 25px system-ui';ctx.fillText(unlocked?'+':'🔒',p.x+59,p.y+65);ctx.fillStyle='#52664e';ctx.font='11px system-ui';ctx.fillText(unlocked?'LOT KOSONG':'LEVEL '+(Math.ceil(i/2)+1),p.x+32,p.y+91)}
  if(s.selectedLot===i){ctx.strokeStyle='#ffb72f';ctx.lineWidth=5;ctx.strokeRect(p.x+2,p.y+2,138,114)}
  plots.push({i,x:p.x,y:p.y,w:142,h:118,unlocked})
