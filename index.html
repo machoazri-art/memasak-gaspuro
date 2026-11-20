@@ -245,7 +245,6 @@ function bootPhaserTown(){
    const roofInset=this.add.rectangle(72,53,102,66,colors[1]).setStrokeStyle(2,0xffedc7);
    const ridge=this.add.rectangle(72,53,7,68,0x815b3d);
    const awning=this.add.rectangle(72,91,116,13,0xf6e8c7).setStrokeStyle(1,0x806348);
-   for(let k=0;k<5;k++){const stripe=this.add.rectangle(26+k*23,91,9,11,k%2?0xf7f0d9:colors[0]);lot.add(stripe);lot.getAt(lot.length-1).setDepth(3)}
    const door=this.add.rectangle(72,102,18,20,0x6b4a35).setStrokeStyle(2,0xf1d6a3);
    const icon=this.add.text(72,52,type.emoji,{fontSize:'28px'}).setOrigin(.5);
    const level=this.add.text(118,16,'Lv.'+b.level,{fontFamily:'system-ui',fontSize:'9px',fontStyle:'bold',color:'#fff9e9',backgroundColor:'#315b43',padding:{x:4,y:2}}).setOrigin(.5);
@@ -253,7 +252,7 @@ function bootPhaserTown(){
    lot.getAt(lot.length-1).setDepth(4);
    const label=this.add.text(72,137,type.name.length>18?type.name.slice(0,17)+'…':type.name,{fontFamily:'system-ui',fontSize:'9px',fontStyle:'bold',color:'#344636',backgroundColor:'#fff9e9',padding:{x:4,y:2},align:'center'}).setOrigin(.5);
    lot.add(label);
-   return [shadow,walls,roof,roofInset,ridge,awning,door,icon,level,label,...lot.list.slice(-5,-1)];
+   return [shadow,walls,roof,roofInset,ridge,awning,door,icon,level,label];
   }
   selectLot(i){s.selectedLot=i;const b=selectedBuilding(),unlocked=i<unlockedLots();if(b){openInterior(b);return}$('selectionTitle').textContent='🏡 Lot '+(i+1)+' kosong';$('selectionText').textContent=unlocked?'Pilih jenis perniagaan dan bina di sini.':'Lot terkunci. Naik level untuk buka.';$('buildBtn').disabled=!unlocked;render();drawTools();this.refreshTown()}
   syncState(data){this.refreshTown()}
