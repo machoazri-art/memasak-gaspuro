@@ -248,6 +248,31 @@ function bootPhaserRestaurant(){
       });
       g.fillStyle(0x9c7449,1);g.fillRoundedRect(365,700,170,42,9);
       this.add.text(450,721,'PINTU MASUK  🚪',{fontFamily:'system-ui',fontSize:'15px',fontStyle:'bold',color:'#fff5dc'}).setOrigin(.5);
+      // Warm pendant lights with a gentle cartoon glow.
+      this.gaspuroInteriorPolish=true;
+      this.brandText=this.add.text(450,56,'WARUNG GASPURO',{fontFamily:'system-ui',fontSize:'24px',fontStyle:'bold',color:'#31513a'}).setOrigin(.5);
+      // Steam drifting above the cooking counter.
+      this.steamPuffs=[];
+      for(let n=0;n<3;n++){
+        const puff=this.add.circle(785+(n-1)*17,590+n*7,7,0xffffff,.48);
+        puff.setDepth(2);this.steamPuffs.push(puff);
+        this.tweens.add({targets:puff,y:puff.y-54,x:puff.x+(n-1)*9,alpha:0,scale:1.8,duration:1500+n*260,delay:n*380,repeat:-1,
+          onRepeat:()=>{puff.y=590+n*7;puff.x=785+(n-1)*17;puff.alpha=.48;puff.scale=1}});
+      }
+      // A softly pulsing pendant lamp above the dining area.
+      const lampGlow=this.add.circle(510,157,27,0xffe49a,.12);
+      this.tweens.add({targets:lampGlow,alpha:.28,scale:1.18,duration:1250,yoyo:true,repeat:-1,ease:'Sine.easeInOut'});
+      this.add.circle(510,157,7,0xffe8ad,.9);
+      // Gentle idle movement on the chef icon.
+      const chef=this.add.text(785,568,'👨‍🍳',{fontSize:'34px'}).setOrigin(.5);
+      this.tweens.add({targets:chef,y:560,duration:850,yoyo:true,repeat:-1,ease:'Sine.easeInOut'});
+      // Decorative wall menu and food accents.
+      g.fillStyle(0xfff0c9,1);g.fillRoundedRect(286,145,240,66,10);
+      this.add.text(406,160,'MENU HARI INI',{fontFamily:'system-ui',fontSize:'13px',fontStyle:'bold',color:'#8a5835'}).setOrigin(.5);
+      this.add.text(406,184,'NASI LEMAK  ·  TEH TARIK',{fontFamily:'system-ui',fontSize:'12px',color:'#68482f'}).setOrigin(.5);
+    }
+    setShopName(name){
+      if(this.brandText&&name)this.brandText.setText(String(name).toLocaleUpperCase('ms-MY'));
     }
   }
   phaserRestaurantGame=new Phaser.Game({
@@ -260,7 +285,7 @@ function bootPhaserRestaurant(){
   window.addEventListener('resize',()=>{if(phaserRestaurantGame)phaserRestaurantGame.scale.refresh()},{passive:true});
 }
 
-function openInterior(b){bootPhaserRestaurant();currentShop=b;$('insideName').textContent=bizType(b).emoji+' '+bizType(b).name;const floorLabel=document.querySelector('.floorLabel');if(floorLabel)floorLabel.textContent='RUANG MAKAN · '+bizType(b).name.toUpperCase();$('inside').classList.add('show');startCustomerFlow();renderInteriorStaff()}
+function openInterior(b){bootPhaserRestaurant();currentShop=b;if(phaserRestaurantGame){const scene=phaserRestaurantGame.scene.getScene('GaspuroRestaurantScene');if(scene&&scene.setShopName)scene.setShopName(bizType(b).name)}$('insideName').textContent=bizType(b).emoji+' '+bizType(b).name;const floorLabel=document.querySelector('.floorLabel');if(floorLabel)floorLabel.textContent='RUANG MAKAN · '+bizType(b).name.toUpperCase();$('inside').classList.add('show');startCustomerFlow();renderInteriorStaff()}
 function closeInterior(){$('inside').classList.remove('show');$('cookModal').classList.remove('show');clearInterval(cookTimer);clearInterval(customerClock);liveCustomers.forEach(x=>{clearInterval(x.waitTimer);clearTimeout(x.autoCookTimer);x.node.remove()});liveCustomers=[];activeOrder=null}
 function startCooking(){if(!currentShop)return;if(liveCustomers.length&&!activeOrder)return toast('Tekan pelanggan dahulu untuk ambil pesanan.');cookDone=[false,false,false];cookRemaining=30+Math.min(45,(s.staff.kitchen||0)*15);$('cookTimer').textContent=cookRemaining+'s';$('cookDish').textContent='Pesanan: '+bizType(currentShop).name;$('cookResult').textContent='Mula dengan potong bahan!';$('cookScene').textContent='🥬';document.querySelectorAll('[data-step]').forEach(b=>{b.classList.remove('done');b.disabled=false});$('cookModal').classList.add('show');clearInterval(cookTimer);cookTimer=setInterval(()=>{cookRemaining--;$('cookTimer').textContent=cookRemaining+'s';if(cookRemaining<=0){clearInterval(cookTimer);$('cookResult').textContent='⏰ Masa tamat! Cuba sekali lagi.';document.querySelectorAll('[data-step]').forEach(b=>b.disabled=true)}},1000)}
 document.querySelectorAll('[data-step]').forEach(btn=>btn.addEventListener('click',()=>{let i=+btn.dataset.step;if(cookDone[i]||cookRemaining<=0)return;if(i>0&&!cookDone[i-1])return $('cookResult').textContent='Ikut turutan: potong → masak → hidang.';cookDone[i]=true;btn.classList.add('done');$('cookScene').textContent=['🔪','🍳','🍽️'][i];$('cookResult').textContent=['Bahan dah dipotong! Seterusnya masak.','Sedang panas! Sekarang hidangkan.','Hidangan siap!'][i];if(cookDone.every(Boolean)){clearInterval(cookTimer);let earned=Math.floor(bizType(currentShop).base*(1+currentShop.level*.15));if(activeOrder){completeCustomerOrder(earned);$('cookResult').textContent='⭐ Hidangan siap! Tunggu pelanggan makan dan bayar di kaunter.';save()}else{s.money+=earned;s.totalIncome=(s.totalIncome||0)+earned;s.earned=(s.earned||0)+earned;currentShop.served++;s.customers++;s.xp+=12;levelCheck();log('🍽️ Jualan dapur '+bizType(currentShop).name+' +'+fmt(earned));$('cookResult').textContent='⭐ Sempurna! +'+fmt(earned)+' terus masuk baki duit bandar!';$('cash').textContent=fmt(s.money);save()}}}));
