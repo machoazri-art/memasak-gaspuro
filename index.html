@@ -7,6 +7,8 @@
 /* Android installed app: keep the header clear of the overlaid status bar */
 html.android-installed body{padding-top:max(36px,env(safe-area-inset-top));}
 html.android-installed .wrap{padding-top:16px}
+/* iPhone installed app: add breathing room below the notch/status bar */
+html.ios-installed body{padding-top:calc(env(safe-area-inset-top) + 20px)}
 </style></head><body><div class="wrap">
 <header class="top"><div class="brand"><div class="logo">🍳</div><div><h1>Memasak Gaspuro</h1><p>Warung kecil, cita rasa besar 🇲🇾</p></div></div><div class="stats"><div class="stat"><small>💰 Duit</small><b id="money">RM 80</b></div><div class="stat"><small>⭐ Level</small><b id="level">1</b></div><div class="stat"><small>✨ XP</small><b id="xp">0/100</b></div><div class="stat"><small>🍽️ Jualan</small><b id="served">0</b></div></div></header>
 <section class="scene"><canvas id="scene" width="1000" height="300"></canvas><div class="scene-label">📍 WARUNG GASPURO · BUKA SEKARANG</div><div class="scene-tip" id="sceneTip">Dapur dah panas. Jom mula berniaga!</div></section>
@@ -44,5 +46,7 @@ function draw(){t++;let w=1000,h=300;ctx.clearRect(0,0,w,h);let g=ctx.createLine
                  window.matchMedia('(display-mode: fullscreen)').matches ||
                  window.navigator.standalone === true;
   if(android && installed) document.documentElement.classList.add('android-installed');
+  var ios = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if(ios && installed) document.documentElement.classList.add('ios-installed');
 })();
 </script></body></html>
