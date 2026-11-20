@@ -221,7 +221,7 @@ function bootPhaserRestaurant(){
       g.fillStyle(0x315b43,1);g.fillRoundedRect(12,12,876,112,18);
       g.fillStyle(0x477653,1);g.fillRoundedRect(24,24,852,78,12);
       g.fillStyle(0xf4d89d,1);g.fillRoundedRect(275,34,350,45,10);
-      this.add.text(450,56,'WARUNG GASPURO',{fontFamily:'system-ui',fontSize:'24px',fontStyle:'bold',color:'#31513a'}).setOrigin(.5);
+      this.brandText=this.add.text(450,56,'WARUNG GASPURO',{fontFamily:'system-ui',fontSize:'24px',fontStyle:'bold',color:'#31513a'}).setOrigin(.5);
       g.fillStyle(0x8a5835,1);g.fillRoundedRect(42,151,220,104,15);
       g.fillStyle(0xc88c50,1);g.fillRoundedRect(50,158,204,82,11);
       g.fillStyle(0xf6e5bd,1);g.fillRoundedRect(72,174,160,48,8);
@@ -250,7 +250,6 @@ function bootPhaserRestaurant(){
       this.add.text(450,721,'PINTU MASUK  🚪',{fontFamily:'system-ui',fontSize:'15px',fontStyle:'bold',color:'#fff5dc'}).setOrigin(.5);
       // Warm pendant lights with a gentle cartoon glow.
       this.gaspuroInteriorPolish=true;
-      this.brandText=this.add.text(450,56,'WARUNG GASPURO',{fontFamily:'system-ui',fontSize:'24px',fontStyle:'bold',color:'#31513a'}).setOrigin(.5);
       // Steam drifting above the cooking counter.
       this.steamPuffs=[];
       for(let n=0;n<3;n++){
