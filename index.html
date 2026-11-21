@@ -430,26 +430,15 @@ function drawMap(now=0){
  // Papan tanda arah dan tong sampah kini dipaparkan melalui Phaser.
  // Pokok teduhan sisi dipindahkan ke Phaser Graphics.
  // Ruang tengah dikekalkan sebagai rumput terbuka — petak plaza coklat dibuang.
- // 14 kawasan komersial; setiap kawasan 2x2 kedai, dipisahkan jalan raya.
- plots=[];for(let i=0;i<17;i++){let p=lotPos(i),b=s.buildings.find(x=>x.lot===i),unlocked=i<unlockedLots();
- const bx=p.x,by=p.y;
- // Kawasan tanah blok dengan lorong kecil di tengah; jalan pemisah dilukis di bawah blok.
- rounded(bx,by,326,252,12,unlocked?'#d6e5b9':'#aab69e','#fff8df');
- ctx.fillStyle='#9fb48b';ctx.fillRect(bx+7,by+7,312,238);
- const slots=[{x:bx+8,y:by+8},{x:bx+164,y:by+8},{x:bx+8,y:by+128},{x:bx+164,y:by+128}];
- for(let j=0;j<4;j++){const q=slots[j],shopIndex=i*4+j,shop=s.buildings.find(x=>x.lot===shopIndex),project=landProjectAt(shopIndex),structure=cityStructureAt(shopIndex),home=residentialAt(shopIndex),shopUnlocked=shopIndex<unlockedLots();
- const zone=(s.lotZones||{})[shopIndex]||'komersial',zonePalette={komersial:'#e4b84f',perumahan:'#6da7d5',pelancongan:'#52b9a2',industri:'#99958e',rekreasi:'#78b85e'},zoneColor=zonePalette[zone]||zonePalette.komersial;
- ctx.fillStyle=shop?'#88a879':shopUnlocked?'#b8d39a':'#9aa98e';ctx.fillRect(q.x,q.y,150,112);
- ctx.fillStyle=zoneColor+'33';ctx.fillRect(q.x,q.y,150,112);ctx.strokeStyle=zoneColor;ctx.lineWidth=3;ctx.strokeRect(q.x+1.5,q.y+1.5,147,109);
- ctx.fillStyle=zoneColor;ctx.fillRect(q.x+5,q.y+5,Math.min(88,zone.length*6+22),13);ctx.fillStyle='#26372c';ctx.font='bold 8px system-ui';ctx.fillText(({komersial:'KOMERSIAL',perumahan:'PERUMAHAN',pelancongan:'PELANCONGAN',industri:'INDUSTRI',rekreasi:'REKREASI'})[zone]||'KOMERSIAL',q.x+9,q.y+14);
- if(shop){/* Perniagaan komersial kini dilukis oleh Phaser Graphics. */
-  }else if(structure){/* Kemudahan bandar pemain kini dilukis oleh Phaser Graphics. */
-  }else if(home){/* Bangunan kediaman kini dilukis oleh Phaser Graphics. */
-  }else if(project){/* Projek mercu tanda dan francais dipaparkan oleh Phaser Graphics. */
- }else{ctx.fillStyle=shopUnlocked?'#f8f3d9':'#9aa58f';ctx.font='bold 19px system-ui';ctx.fillText(shopUnlocked?'+':'🔒',q.x+69,q.y+58);ctx.fillStyle='#52664e';ctx.font='10px system-ui';ctx.fillText(shopUnlocked?'LOT '+(shopIndex+1):'LEVEL '+(Math.ceil(shopIndex/2)+1),q.x+49,q.y+86)}
- if(s.selectedLot===shopIndex){ctx.strokeStyle='#ffb72f';ctx.lineWidth=4;ctx.strokeRect(q.x+2,q.y+2,146,108)}
- plots.push({i:shopIndex,x:q.x,y:q.y,w:150,h:112,unlocked:shopUnlocked});
- }
+ // Data 68 petak lot dikekalkan untuk input; paparan lot dipindahkan ke Phaser.
+ plots=[];
+ for(let i=0;i<17;i++){
+  const p=lotPos(i),bx=p.x,by=p.y;
+  const slots=[{x:bx+8,y:by+8},{x:bx+164,y:by+8},{x:bx+8,y:by+128},{x:bx+164,y:by+128}];
+  for(let j=0;j<4;j++){
+   const q=slots[j],shopIndex=i*4+j,shop=s.buildings.find(x=>x.lot===shopIndex),project=landProjectAt(shopIndex),structure=cityStructureAt(shopIndex),home=residentialAt(shopIndex);
+   plots.push({i:shopIndex,x:q.x,y:q.y,w:150,h:112,unlocked:shopIndex<unlockedLots(),occupied:!!(shop||project||structure||home),zone:(s.lotZones||{})[shopIndex]||'komersial',selected:s.selectedLot===shopIndex});
+  }
  }
  // Jalan dalaman, garisan lorong, lintasan dan kaki lima dipaparkan oleh Phaser sahaja.
  // Kemudahan bandar dinamik kini dipaparkan melalui Phaser Graphics.
@@ -834,6 +823,38 @@ function bootPhaserMapBridge(){
       g.lineStyle(2,0xc5e2c9,.75);g.beginPath();for(let y=500;y<1840;y+=32){g.moveTo(112,y);g.lineTo(112,y+12);g.moveTo(1360,y);g.lineTo(1360,y+12)}g.strokePath();
      };
      drawStreetFurniture();
+     // Petak lot, zon guna tanah, status kekosongan dan pilihan dipaparkan oleh Phaser.
+     const lotLayer=this.add.graphics();
+     const lotTextLayer=this.add.container(0,0);
+     const lotZoneLabels=[],lotEmptyLabels=[];
+     const zoneNames={komersial:'KOMERSIAL',perumahan:'PERUMAHAN',pelancongan:'PELANCONGAN',industri:'INDUSTRI',rekreasi:'REKREASI'};
+     const zoneColors={komersial:0xe4b84f,perumahan:0x6da7d5,pelancongan:0x52b9a2,industri:0x99958e,rekreasi:0x78b85e};
+     for(let n=0;n<68;n++){
+      const zoneLabel=this.add.text(0,0,'',{fontFamily:'system-ui',fontSize:'8px',fontStyle:'bold',color:'#26372c'}).setOrigin(0,0);
+      const emptyLabel=this.add.text(0,0,'',{fontFamily:'system-ui',fontSize:'bold 19px',color:'#f8f3d9',align:'center'}).setOrigin(.5,.5);
+      lotZoneLabels.push(zoneLabel);lotEmptyLabels.push(emptyLabel);lotTextLayer.add([zoneLabel,emptyLabel]);
+     }
+     const drawLots=()=>{
+      lotLayer.clear();
+      for(let n=0;n<68;n++){
+       const p=plots[n];if(!p)continue;
+       const x=p.x,y=p.y,c=zoneColors[p.zone]||zoneColors.komersial;
+       lotLayer.fillStyle(0xd6e5b9,1);lotLayer.fillRoundedRect(x-8,y-8,326,252,12);
+       lotLayer.lineStyle(2,0xfff8df,1);lotLayer.strokeRoundedRect(x-8,y-8,326,252,12);
+       lotLayer.fillStyle(0x9fb48b,1);lotLayer.fillRect(x-1,y-1,312,238);
+       lotLayer.fillStyle(p.occupied?0x88a879:p.unlocked?0xb8d39a:0x9aa98e,1);lotLayer.fillRect(x,y,150,112);
+       lotLayer.fillStyle(c,.20);lotLayer.fillRect(x,y,150,112);
+       lotLayer.lineStyle(3,c,1);lotLayer.strokeRect(x+1.5,y+1.5,147,109);
+       lotLayer.fillStyle(c,1);lotLayer.fillRect(x+5,y+5,Math.min(88,p.zone.length*6+22),13);
+       if(!p.occupied){
+        if(p.unlocked){lotEmptyLabels[n].setText('+');lotEmptyLabels[n].setPosition(x+75,y+58);lotEmptyLabels[n].setVisible(true)}
+        else{lotEmptyLabels[n].setText('🔒');lotEmptyLabels[n].setPosition(x+75,y+58);lotEmptyLabels[n].setVisible(true)}
+       }else lotEmptyLabels[n].setVisible(false);
+       lotZoneLabels[n].setText(zoneNames[p.zone]||'KOMERSIAL');lotZoneLabels[n].setPosition(x+9,y+6);
+       if(p.selected){lotLayer.lineStyle(4,0xffb72f,1);lotLayer.strokeRect(x+2,y+2,146,108)}
+      }
+     };
+     drawLots();
      // Kesan malam, orang ramai dan festival dipaparkan dalam lapisan Phaser.
      const nightLayer=this.add.graphics();
      const crowdLayer=this.add.graphics();
@@ -873,10 +894,10 @@ function bootPhaserMapBridge(){
       }
      };
      drawTownAtmosphere();
-     const syncRoadCamera=()=>{roadLayer.setPosition(camera.x,camera.y);roadLayer.setScale(camera.scale);roadLayer.setVisible(true);streetTextLayer.setPosition(camera.x,camera.y);streetTextLayer.setScale(camera.scale);civicTextLayer.setPosition(camera.x,camera.y);civicTextLayer.setScale(camera.scale);residentialTextLayer.setPosition(camera.x,camera.y);residentialTextLayer.setScale(camera.scale);commercialTextLayer.setPosition(camera.x,camera.y);commercialTextLayer.setScale(camera.scale);trafficLayer.setPosition(camera.x,camera.y);trafficLayer.setScale(camera.scale);cityStructureTextLayer.setPosition(camera.x,camera.y);cityStructureTextLayer.setScale(camera.scale);landProjectTextLayer.setPosition(camera.x,camera.y);landProjectTextLayer.setScale(camera.scale);nightLayer.setPosition(camera.x,camera.y);nightLayer.setScale(camera.scale);crowdLayer.setPosition(camera.x,camera.y);crowdLayer.setScale(camera.scale);festivalLayer.setPosition(camera.x,camera.y);festivalLayer.setScale(camera.scale);festivalTextLayer.setPosition(camera.x,camera.y);festivalTextLayer.setScale(camera.scale)};
+     const syncRoadCamera=()=>{roadLayer.setPosition(camera.x,camera.y);roadLayer.setScale(camera.scale);roadLayer.setVisible(true);streetTextLayer.setPosition(camera.x,camera.y);streetTextLayer.setScale(camera.scale);civicTextLayer.setPosition(camera.x,camera.y);civicTextLayer.setScale(camera.scale);residentialTextLayer.setPosition(camera.x,camera.y);residentialTextLayer.setScale(camera.scale);commercialTextLayer.setPosition(camera.x,camera.y);commercialTextLayer.setScale(camera.scale);trafficLayer.setPosition(camera.x,camera.y);trafficLayer.setScale(camera.scale);cityStructureTextLayer.setPosition(camera.x,camera.y);cityStructureTextLayer.setScale(camera.scale);landProjectTextLayer.setPosition(camera.x,camera.y);landProjectTextLayer.setScale(camera.scale);lotTextLayer.setPosition(camera.x,camera.y);lotTextLayer.setScale(camera.scale);nightLayer.setPosition(camera.x,camera.y);nightLayer.setScale(camera.scale);crowdLayer.setPosition(camera.x,camera.y);crowdLayer.setScale(camera.scale);festivalLayer.setPosition(camera.x,camera.y);festivalLayer.setScale(camera.scale);festivalTextLayer.setPosition(camera.x,camera.y);festivalTextLayer.setScale(camera.scale)};
      syncRoadCamera();
      this.scale.on('resize',(size)=>{if(phaserMapImage)phaserMapImage.setDisplaySize(size.width,size.height);syncRoadCamera()});
-     window.GaspuroMapBridge={refresh:()=>{if(phaserMapTexture)phaserMapTexture.refresh();syncRoadCamera();drawStreetLamps();drawStreetFurniture();drawCivicFacilities();drawResidentialBuildings();drawCommercialBuildings();drawCityStructures();drawTrafficAndPeople();drawLandProjects();drawTownAtmosphere()}};
+     window.GaspuroMapBridge={refresh:()=>{if(phaserMapTexture)phaserMapTexture.refresh();syncRoadCamera();drawStreetLamps();drawStreetFurniture();drawCivicFacilities();drawResidentialBuildings();drawCommercialBuildings();drawCityStructures();drawTrafficAndPeople();drawLandProjects();drawLots();drawTownAtmosphere()}};
      document.documentElement.classList.remove('town-legacy-mode');
      document.documentElement.classList.add('phaser-map-bridge-ready');
      if(phaserMapBootTimer){clearTimeout(phaserMapBootTimer);phaserMapBootTimer=null}
