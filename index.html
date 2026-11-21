@@ -609,8 +609,8 @@ function bootPhaserMapBridge(){
       const styles={terrace:{wall:0xd9a66f,roof:0x8d5542,trim:0xe7ddc8},apartment:{wall:0x8ba9b7,roof:0x486c82,trim:0xdce8e8},condo:{wall:0xa5b9c8,roof:0x526b85,trim:0xe4edf0},luxury:{wall:0xe2c28c,roof:0x916d4c,trim:0xf0e3c8}};
       for(const home of (s.residentialBuildings||[])){
        const lot=Number(home.lot);if(!Number.isInteger(lot)||lot<0)continue;
-       const bx=150+(lot%3)*410,by=150+Math.floor(lot/3)*340,j=lot%4;
-       const x=bx+8+(j%2)*164,y=by+8+(j>=2?128:0),st=styles[home.id]||styles.terrace,g=residentialLayer;
+       const block=Math.floor(lot/4),j=lot%4,plot=lotPos(block),bx=plot.x,by=plot.y;
+       const x=bx+8+(j%2)*156,y=by+8+(j>=2?120:0),st=styles[home.id]||styles.terrace,g=residentialLayer;
        g.fillStyle(0x263326,.22);g.fillEllipse(x+75,y+103,130,15);
        g.fillStyle(st.trim,1);g.fillRect(x+8,y+8,134,96);
        g.fillStyle(st.wall,1);g.fillRect(x+17,y+20,116,75);
@@ -631,8 +631,8 @@ function bootPhaserMapBridge(){
       const palettes={warung:[0x9e4938,0xd9a45d],mamak:[0x3c7180,0xe1c78c],satay:[0x98602f,0xd9ad65],drink:[0x3e887f,0xb7d5b7],cafe:[0x665044,0xc9a77a],foodcourt:[0x9a6840,0xd6b56f],restaurant:[0x7d4339,0xd7a66d],bakery:[0xb47a45,0xf1d59a],ramen:[0x9b453d,0xe5b85c],dessert:[0xb76f9d,0xf4c8df],bbq:[0x653d32,0xd68c4f],nightmarket:[0x9b4e37,0xf2c45b]};
       for(const shop of (s.buildings||[])){
        const lot=Number(shop.lot);if(!Number.isInteger(lot)||lot<0)continue;
-       const bx=150+(lot%3)*410,by=150+Math.floor(lot/3)*340,j=lot%4;
-       const x=bx+8+(j%2)*164,y=by+8+(j>=2?128:0),col=palettes[shop.type]||palettes.warung,g=commercialLayer;
+       const block=Math.floor(lot/4),j=lot%4,plot=lotPos(block),bx=plot.x,by=plot.y;
+       const x=bx+8+(j%2)*156,y=by+8+(j>=2?120:0),col=palettes[shop.type]||palettes.warung,g=commercialLayer;
        g.fillStyle(0x263326,.28);g.fillRoundedRect(x+2,y+14,140,91,5);
        g.fillStyle(0xdbc99c,1);g.fillRect(x+2,y+2,146,102);
        g.fillStyle(0x553f32,1);g.fillRect(x+8,y+6,134,84);
@@ -924,9 +924,9 @@ function screenToWorld(e){let r=canvas.getBoundingClientRect(),x=(e.clientX-r.le
 canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,cx:camera.x,cy:camera.y,moved:false}});
 canvas.addEventListener('pointermove',e=>{if(!drag)return;let dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>6)drag.moved=true;if(drag.moved){camera.x=drag.cx+dx*canvas.width/canvas.clientWidth;camera.y=drag.cy+dy*canvas.height/canvas.clientHeight}});
 canvas.addEventListener('pointerup',e=>{if(!drag)return;if(!drag.moved){let p=screenToWorld(e),lot=plots.find(x=>p.x>=x.x&&p.x<=x.x+x.w&&p.y>=x.y&&p.y<=x.y+x.h);if(lot){s.selectedLot=lot.i;if(selectedCityStructure){buildCityStructure(selectedCityStructure,lot.i);drag=null;return}if(selectedResidential){buildResidential(selectedResidential,lot.i);drag=null;return}if(selectedLandProject){buildLandProject(selectedLandProject);drag=null;return}let b=selectedBuilding();if(b){openInterior(b);drag=null;return}$('selectionTitle').textContent=b?bizType(b).emoji+' '+bizType(b).name:'🏡 Lot '+(lot.i+1)+' kosong';$('selectionText').textContent=b?'Tahap '+b.level+' · Hasil terkumpul '+fmt(b.bank):lot.unlocked?'Pilih jenis perniagaan dan bina di sini.':'Lot terkunci. Naik level untuk buka.';$('buildBtn').disabled=!!b||!lot.unlocked;render();drawTools();}}drag=null});
-canvas.addEventListener('wheel',e=>{e.preventDefault();camera.scale=Math.max(.65,Math.min(1.6,camera.scale+(e.deltaY<0?.08:-.08)))},{passive:false});
-const changeTownZoom=delta=>{const api=window.GaspuroTownCamera;if(api){api.zoom(delta);return}const sc=phaserTownScene();if(sc&&sc.setTownZoom){sc.setTownZoom(sc.cameras.main.zoom+delta);return}camera.scale=Math.max(.65,Math.min(1.8,camera.scale+delta));drawMap()};
-['zin','zout','home','mapFull'].forEach(id=>{const el=$(id);if(!el)return;el.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation()},{passive:false});el.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(id==='mapFull'){const box=document.querySelector('.mapbox'),active=box.classList.toggle('map-fullscreen');document.body.classList.toggle('map-is-fullscreen',active);el.textContent=active?'⤢':'⛶';setTimeout(()=>window.dispatchEvent(new Event('resize')),80)}else if(id==='zin')changeTownZoom(.2);else if(id==='zout')changeTownZoom(-.2);else if(window.GaspuroTownCamera)window.GaspuroTownCamera.reset();else{camera={x:0,y:0,scale:1};drawMap()}})});document.addEventListener('keydown',e=>{if(e.key==='Escape'){const box=document.querySelector('.mapbox');if(box&&box.classList.contains('map-fullscreen'))$('mapFull').click()}});
+canvas.addEventListener('wheel',e=>{e.preventDefault();changeTownZoom(e.deltaY<0?.08:-.08)},{passive:false});
+const changeTownZoom=delta=>{const oldScale=camera.scale,nextScale=Math.max(.45,Math.min(1.8,oldScale+delta));if(nextScale===oldScale)return;const cx=(canvas.width/2-camera.x)/oldScale,cy=(canvas.height/2-camera.y)/oldScale;camera.scale=nextScale;camera.x=canvas.width/2-cx*nextScale;camera.y=canvas.height/2-cy*nextScale;drawMap()};
+['zin','zout','home','mapFull'].forEach(id=>{const el=$(id);if(!el)return;el.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation()},{passive:false});el.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(id==='mapFull'){const box=document.querySelector('.mapbox'),active=box.classList.toggle('map-fullscreen');document.body.classList.toggle('map-is-fullscreen',active);el.textContent=active?'⤢':'⛶';setTimeout(()=>window.dispatchEvent(new Event('resize')),80)}else if(id==='zin')changeTownZoom(.2);else if(id==='zout')changeTownZoom(-.2);else{camera={x:0,y:0,scale:.65};drawMap()}})});document.addEventListener('keydown',e=>{if(e.key==='Escape'){const box=document.querySelector('.mapbox');if(box&&box.classList.contains('map-fullscreen'))$('mapFull').click()}});
 let currentShop=null,cookTimer=null,cookRemaining=30,cookDone=[false,false,false];
 let liveCustomers=[],customerClock=null,customerSeq=0,activeOrder=null;
 const customerFaces=['🧔🏻','👩🏻','👨🏽','👩🏽','👨🏻','👩🏼','🧕🏻','👨🏾'],seatSpots=[{x:18,y:40},{x:55,y:40},{x:18,y:69},{x:55,y:69}];
