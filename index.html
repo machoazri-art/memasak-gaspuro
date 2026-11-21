@@ -436,21 +436,8 @@ function drawMap(now=0){
  // houses and trees around
  for(let i=0;i<17;i++){let x=160+(i%6)*145,y=12+Math.floor(i/6)*62;if(y>70&&y<180)continue;ctx.fillStyle='#699b5d';ctx.beginPath();ctx.arc(x,y,17,0,7);ctx.fill();ctx.fillStyle='#4e854f';ctx.beginPath();ctx.arc(x-5,y-6,10,0,7);ctx.fill()}
  // Persekitaran bandar gaya pixel-art: kaki lima, lintasan dan landskap.
- // Corak jubin kaki lima di tepi jalan.
- ctx.fillStyle='#c9c5b5';ctx.fillRect(-700,94,2300,13);ctx.fillRect(-700,887,2300,13);
- ctx.fillRect(95,-700,12,1800);ctx.fillRect(850,-700,12,1800);
- for(let y=Math.max(78,Math.floor(viewTop/18)*18);y<Math.min(550,viewBottom);y+=18)for(let x=Math.max(-680,Math.floor(viewLeft/22)*22);x<Math.min(1550,viewRight);x+=22){
-   if((y>90&&y<160)||(y>450&&y<520))continue;
-   ctx.fillStyle=((x/22+y/18|0)%2===0)?'rgba(255,255,255,.12)':'rgba(91,104,87,.08)';
-   ctx.fillRect(x,y,20,15);
- }
- // Lintasan pejalan kaki pada simpang jalan.
- function crosswalk(x,y,vertical=false){
-   ctx.save();ctx.fillStyle='#eee8d5';
-   for(let n=0;n<7;n++){if(vertical)ctx.fillRect(x+n*9,y,5,54);else ctx.fillRect(x,y+n*9,54,5)}
-   ctx.restore();
- }
- crosswalk(15,20,true);crosswalk(875,920,true);crosswalk(330,12,false);crosswalk(1010,692,false);
+ // Kaki lima dan lintasan perimeter dilukis dalam Phaser.
+
  // Pokok berlapis, bayang, batang dan tompokan daun pixel-art.
  function townTree(x,y,scale=1){
    ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);
@@ -771,6 +758,22 @@ function bootPhaserMapBridge(){
      roadLayer.lineStyle(3,0xf6e9bd,1);
      for(let x=-700;x<1600;x+=42){roadLayer.lineBetween(x,47,Math.min(x+24,1600),47);roadLayer.lineBetween(x,2267,Math.min(x+24,1600),2267)}
      for(let y=-700;y<2400;y+=42){roadLayer.lineBetween(50,y,50,Math.min(y+24,2400));roadLayer.lineBetween(1430,y,1430,Math.min(y+24,2400))}
+     // Kaki lima dan lintasan pejalan kaki perimeter kini menjadi Phaser Graphics.
+     roadLayer.fillStyle(0xc9c5b5,1);
+     roadLayer.fillRect(-700,94,2300,13);roadLayer.fillRect(-700,887,2300,13);
+     roadLayer.fillRect(95,-700,12,1800);roadLayer.fillRect(850,-700,12,1800);
+     for(let y=78;y<550;y+=18)for(let x=-680;x<1550;x+=22){
+      if((y>90&&y<160)||(y>450&&y<520))continue;
+      roadLayer.fillStyle(((Math.floor(x/22+y/18)%2)===0)?0xe0e2d7:0xb9c3b3,.32);
+      roadLayer.fillRect(x,y,20,15);
+     }
+     roadLayer.fillStyle(0xeee8d5,1);
+     for(let n=0;n<7;n++){
+      roadLayer.fillRect(15+n*9,20,5,54);
+      roadLayer.fillRect(875+n*9,920,5,54);
+      roadLayer.fillRect(330,12+n*9,54,5);
+      roadLayer.fillRect(1010,692+n*9,54,5);
+     }
      const syncRoadCamera=()=>{roadLayer.setPosition(camera.x,camera.y);roadLayer.setScale(camera.scale);roadLayer.setVisible(true)};
      syncRoadCamera();
      this.scale.on('resize',(size)=>{if(phaserMapImage)phaserMapImage.setDisplaySize(size.width,size.height);syncRoadCamera()});
