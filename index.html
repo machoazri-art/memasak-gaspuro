@@ -496,13 +496,13 @@ function bootPhaserMapBridge(){
      }
      // Jalan dalaman, garisan tengah dan lintasan persimpangan dipindahkan ke Phaser.
      roadLayer.fillStyle(0xd8d2bc,1);
-     for(let y=402;y<=2442;y+=340)roadLayer.fillRect(95,y,1290,88);
+     for(let y=402;y<=2442;y+=340)roadLayer.fillRect(50,y,1380,88);
      for(let x=476;x<=886;x+=410)roadLayer.fillRect(x,94,84,2780);
      roadLayer.fillStyle(0x737e80,1);
-     for(let y=411;y<=2451;y+=340)roadLayer.fillRect(95,y,1290,70);
+     for(let y=411;y<=2451;y+=340)roadLayer.fillRect(50,y,1380,70);
      for(let x=483;x<=893;x+=410)roadLayer.fillRect(x,94,70,2780);
      roadLayer.lineStyle(3,0xf6e9bd,1);
-     for(let y=446;y<=2486;y+=340)for(let x=95;x<1385;x+=42)roadLayer.lineBetween(x,y,Math.min(x+24,1385),y);
+     for(let y=446;y<=2486;y+=340)for(let x=50;x<1430;x+=42)roadLayer.lineBetween(x,y,Math.min(x+24,1430),y);
      for(let x=518;x<=928;x+=410)for(let y=94;y<2880;y+=42)roadLayer.lineBetween(x,y,x,Math.min(y+24,2214));
      // Lintasan belang di simpang utama.
      roadLayer.fillStyle(0xf4efdc,1);
@@ -763,7 +763,7 @@ function bootPhaserMapBridge(){
       const trafficLayer=this.add.graphics();
       const drawTrafficAndPeople=()=>{
        const g=trafficLayer;g.clear();
-       // 130 kenderaan: 50 asal + 80 tambahan. Semua lorong dua hala dipenuhi secara seimbang.
+       // 166 kenderaan: trafik diagih pada semua jalan termasuk dua jalan perimeter kiri dan kanan.
        // Trafik menggunakan gelung jalan bersambung dengan selekoh lembut di persimpangan.
        const carColors=[0xc94f48,0x477fa8,0xe3ad43,0xe8e3d4,0x568b68,0x8c6ca5,0xd47b43,0x303d48,0x5c9c9a,0xb8a36c];
        const roadLoops=[
@@ -773,7 +773,9 @@ function bootPhaserMapBridge(){
         [[496,1448],[906,1448],[906,1788],[496,1788]],
         [[496,1788],[906,1788],[906,2128],[496,2128]],
         [[496,2128],[906,2128],[906,2468],[496,2468]],
-        [[50,47],[1430,47],[1430,2987],[50,2987]]
+        [[50,47],[1430,47],[1430,2987],[50,2987]],
+        [[35,428],[35,2828],[65,2828],[65,428]],
+        [[1415,428],[1415,2828],[1445,2828],[1445,428]]
        ];
        const buildSmoothLoop=(points,radius=58)=>{
         const sampled=[];
@@ -799,7 +801,7 @@ function bootPhaserMapBridge(){
         const k=Math.min(lo,route.lengths.length-1),t=(d-route.cumulative[k])/Math.max(.001,route.lengths[k]),a=route.points[k],b=route.points[(k+1)%route.points.length];
         return{x:a[0]+(b[0]-a[0])*t,y:a[1]+(b[1]-a[1])*t,angle:Math.atan2(b[1]-a[1],b[0]-a[0])};
        };
-       const carCount=130,vehiclesPerRoute=roadLoops.map((_,k)=>k===6?20:((k===5)?20:18));
+       const carCount=166,vehiclesPerRoute=roadLoops.map((_,k)=>k===6?20:18);
        const drawCar=(cx,cy,length,width,angle,color,kind)=>{
         const co=Math.cos(angle),si=Math.sin(angle),tr=(x,y)=>({x:cx+x*co-y*si,y:cy+x*si+y*co});
         const poly=(pts,fill)=>{g.fillStyle(fill,1);g.fillPoints(pts.map(([x,y])=>tr(x,y)),true)};
