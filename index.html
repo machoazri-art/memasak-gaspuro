@@ -453,12 +453,13 @@ function drawMap(){
  for(let i=0;i<12;i++){
    const route=walkRoute[i],dir=walkDir[i],speed=walkSpeed[i],loop=walkRoutes[route];
    const total=loop.reduce((sum,p,k)=>sum+Math.hypot(loop[(k+1)%loop.length][0]-p[0],loop[(k+1)%loop.length][1]-p[1]),0);
-   const travel=(walkOffset[i]+tick*speed*dir)%total;
+   const effectiveTick=tick-Math.floor((tick+i*83)/720)*34;
+   const travel=(walkOffset[i]+effectiveTick*speed*dir)%total;
    const pauseCycle=((tick+i*83)%720);
    const paused=pauseCycle<34;
    const pos=routePoint(route,travel-(paused?0:0));
    const step=paused?0:Math.sin(tick*.16+i*2.4)*1.2;
-   ctx.save();ctx.translate(pos.x,pos.y);ctx.rotate(pos.angle);
+   ctx.save();ctx.translate(pos.x,pos.y);ctx.rotate(pos.angle+Math.PI/2+(dir<0?Math.PI:0));
    // ground shadow
    ctx.fillStyle='rgba(45,62,42,.24)';ctx.beginPath();ctx.ellipse(0,8,5.5,3,0,0,Math.PI*2);ctx.fill();
    // legs with alternating stride, body and swinging arms
