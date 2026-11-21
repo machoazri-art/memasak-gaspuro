@@ -563,8 +563,9 @@ function bootPhaserMapBridge(){
       };
       for(let x=-570;x<1550;x+=190){lamp(x,5);lamp(x,89);lamp(x,3195);lamp(x,3285)}
       for(let y=-600;y<2200;y+=190){lamp(-3,y);lamp(93,y);lamp(863,y);lamp(957,y)}
-      for(let x=205;x<710;x+=125){lamp(x,275);lamp(x,455);lamp(x,635)}
-      for(let y=245;y<650;y+=180){lamp(130,y);lamp(835,y)}
+      // Lampu dalaman diletakkan di bahu jalan, bukan di tengah lot.
+      for(let y=390;y<1900;y+=340){lamp(112,y);lamp(470,y);lamp(565,y);lamp(880,y);lamp(975,y)}
+      for(let y=120;y<2200;y+=190){lamp(470,y);lamp(565,y);lamp(880,y);lamp(975,y)}
      };
      drawStreetLamps();
      // Kemudahan bandar yang dibina pemain dipaparkan berdasarkan data simpanan semasa.
@@ -704,7 +705,7 @@ function bootPhaserMapBridge(){
        for(let i=0;i<8;i++){
         const lane=i%4,group=Math.floor(i/4),dir=(lane===1||lane===3)?-1:1;
         const speed=[.72,1.05,.83,1.22][lane],span=2200,raw=(tick*speed*dir+group*970+lane*430)%span;
-        const x=dir>0?((raw+span)%span)-650:((span-raw+span)%span)-650,y=[27,65,427,465][lane],flip=dir<0?-1:1;
+        const x=dir>0?((raw+span)%span)-650:((span-raw+span)%span)-650,y=[27,65,427,465,767,805,1107,1145,1447,1485,1787,1825][i],flip=dir<0?-1:1;
         const px=(v)=>x+v*flip;
         g.fillStyle(0x192427,.3);g.fillEllipse(x+20*flip,y+5,52,24);
         g.fillStyle(0x222a2d,1);for(const wx of [5,31])for(const wy of [-10,10])g.fillRoundedRect(px(wx)-4,y+wy-3,9,6,2);
@@ -716,10 +717,11 @@ function bootPhaserMapBridge(){
         g.fillStyle(0xa93e3b,1);g.fillRoundedRect(px(2),y-7,3,5,1);g.fillRoundedRect(px(2),y+2,3,5,1);
         g.fillStyle(0x26353a,1);g.fillRoundedRect(px(7),y-13,7,4,2);g.fillRoundedRect(px(7),y+9,7,4,2);
        }
+       // Laluan pejalan kaki mengikuti bahu jalan dan koridor antara blok lot.
        const routes=[
-        [[115,270],[850,270],[850,450],[115,450]],
-        [[115,450],[850,450],[850,630],[115,630]],
-        [[115,630],[850,630],[850,270],[115,270]]
+        [[112,395],[1380,395],[1380,490],[112,490]],
+        [[112,735],[1380,735],[1380,830],[112,830]],
+        [[470,110],[565,110],[565,2200],[470,2200]]
        ];
        const speeds=[.43,.36,.49,.32,.40,.46,.34,.51,.38,.44,.35,.47],offsets=[0,91,177,263,351,442,529,618,704,793,882,971],routeIds=[0,1,2,0,1,2,1,0,2,1,0,2],dirs=[1,-1,1,-1,1,-1,1,-1,1,-1,1,-1];
        const shirts=[0x477fa8,0xd46c55,0x5d966c,0xd3a94e,0x8b6ca6,0xe7e0ce],skins=[0xe9b991,0xc98f69,0xf0c9a4,0xa96f50],hairs=[0x3d3029,0x272b2d,0x594332,0x332c28];
@@ -875,7 +877,7 @@ function bootPhaserMapBridge(){
       const crowdCount=Math.min(38,12+Math.floor(Math.log10((s.customers||0)+1)*5)+(s.landProjects||[]).length*2+(festivalNow()?12:0));
       const clothes=[0x477fa8,0xd46c55,0x5d966c,0xd3a94e,0x8b6ca6],skin=[0xe9b991,0xc98f69,0xf0c9a4,0xa96f50];
       for(let n=0;n<crowdCount-12;n++){
-       const x=120+(n*71)%710,y=285+(n*47)%350;
+       const x=112+(n*97)%1260,y=[395,490,735,830,1075,1170,1415,1510][n%8];
        crowdLayer.fillStyle(0x2d3e2a,.25);crowdLayer.fillEllipse(x,y+5,10,5);
        crowdLayer.fillStyle(clothes[n%clothes.length],1);crowdLayer.fillCircle(x,y,4.5);
        crowdLayer.fillStyle(skin[n%skin.length],1);crowdLayer.fillCircle(x,y-5,3);
