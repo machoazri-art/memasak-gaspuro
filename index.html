@@ -193,7 +193,7 @@ function bootPhaserTown(){
    this.userZoomed=false;this.input.addPointer(1);
    this.input.on('pointerdown',p=>{if(this.input.pointer1.isDown&&this.input.pointer2&&this.input.pointer2.isDown){this.dragStart=null;this.lastPinch=Phaser.Math.Distance.Between(this.input.pointer1.x,this.input.pointer1.y,this.input.pointer2.x,this.input.pointer2.y);return}this.dragStart={x:p.x,y:p.y,cx:cam.scrollX,cy:cam.scrollY};this.moved=false});
    this.input.on('pointermove',p=>{const a=this.input.pointer1,b=this.input.pointer2;if(a&&b&&a.isDown&&b.isDown){const d=Phaser.Math.Distance.Between(a.x,a.y,b.x,b.y);if(this.lastPinch>0){cam.setZoom(Phaser.Math.Clamp(cam.zoom*d/this.lastPinch,.35,2.4));this.userZoomed=true}this.lastPinch=d;this.dragStart=null;return}if(!this.dragStart||!p.isDown)return;const dx=p.x-this.dragStart.x,dy=p.y-this.dragStart.y;if(Math.abs(dx)+Math.abs(dy)>6)this.moved=true;if(this.moved){cam.scrollX=this.dragStart.cx-dx/cam.zoom;cam.scrollY=this.dragStart.cy-dy/cam.zoom}});
-   this.input.on('pointerup',()=>{this.dragStart=null;this.lastPinch=0;this.time.delayedCall(120,()=>this.moved=false)});
+   this.input.on('pointerup',p=>{if(!this.moved){const wp=cam.getWorldPoint(p.x,p.y);const i=this.lotNodes.findIndex(({lot})=>Math.abs(wp.x-lot.x)<=88&&Math.abs(wp.y-lot.y)<=82);if(i>=0)this.selectLot(i)}this.dragStart=null;this.lastPinch=0;this.time.delayedCall(120,()=>this.moved=false)});
    this.input.on('wheel',(p,o,dx,dy)=>this.setTownZoom(cam.zoom+(dy<0?.12:-.12)));
    this.input.on('gameout',()=>{this.dragStart=null;this.lastPinch=0});
    this.setTownZoom=(z)=>{cam.setZoom(Phaser.Math.Clamp(z,.35,2.4));this.userZoomed=true};
@@ -249,7 +249,7 @@ function bootPhaserTown(){
     const lot=this.add.container(p.x,p.y);this.world.add(lot);
     const pad=this.add.graphics();pad.fillStyle(0x789b61,.01);pad.fillRect(-88,-82,176,164);lot.add(pad);
     const marker=this.add.text(0,0,'＋',{fontFamily:'monospace',fontSize:'24px',fontStyle:'bold',color:'#58734b',backgroundColor:'#dce5b6',padding:{x:5,y:3}}).setOrigin(.5);lot.add(marker);
-    const hit=this.add.zone(0,0,176,164).setInteractive({useHandCursor:true});hit.on('pointerup',()=>{if(!this.moved)this.selectLot(i)});lot.add(hit);
+
     this.lotNodes.push({lot,pad,marker,i,dynamic:[]});
    });
   }
