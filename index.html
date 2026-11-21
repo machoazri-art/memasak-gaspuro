@@ -611,7 +611,7 @@ function bootPhaserMapBridge(){
       for(const home of (s.residentialBuildings||[])){
        const lot=Number(home.lot);if(!Number.isInteger(lot)||lot<0)continue;
        const block=Math.floor(lot/4),j=lot%4,plot=lotPos(block),bx=plot.x,by=plot.y;
-       const x=bx+8+(j%2)*156,y=by+8+(j>=2?120:0),st=styles[home.id]||styles.terrace,g=residentialLayer;
+       const x=bx+8+(j%2)*156,y=by+8+(j>=2?128:0),st=styles[home.id]||styles.terrace,g=residentialLayer;
        g.fillStyle(0x263326,.22);g.fillEllipse(x+75,y+103,130,15);
        g.fillStyle(st.trim,1);g.fillRect(x+8,y+8,134,96);
        g.fillStyle(st.wall,1);g.fillRect(x+17,y+20,116,75);
@@ -633,7 +633,7 @@ function bootPhaserMapBridge(){
       for(const shop of (s.buildings||[])){
        const lot=Number(shop.lot);if(!Number.isInteger(lot)||lot<0)continue;
        const block=Math.floor(lot/4),j=lot%4,plot=lotPos(block),bx=plot.x,by=plot.y;
-       const x=bx+8+(j%2)*156,y=by+8+(j>=2?120:0),col=palettes[shop.type]||palettes.warung,g=commercialLayer;
+       const x=bx+8+(j%2)*156,y=by+8+(j>=2?128:0),col=palettes[shop.type]||palettes.warung,g=commercialLayer;
        g.fillStyle(0x263326,.28);g.fillRoundedRect(x+2,y+14,140,91,5);
        g.fillStyle(0xdbc99c,1);g.fillRect(x+2,y+2,146,102);
        g.fillStyle(0x553f32,1);g.fillRect(x+8,y+6,134,84);
@@ -647,7 +647,7 @@ function bootPhaserMapBridge(){
        g.fillStyle(0xf7d77f,1);g.fillRect(x+17,y+9,5,5);g.fillRect(x+128,y+9,5,5);
        const type=bizType(shop);
        commercialTextLayer.add(this.add.text(x+75,y+3,type.emoji,{fontFamily:'system-ui',fontSize:'15px'}).setOrigin(.5,0));
-       commercialTextLayer.add(this.add.text(x+75,y+108,type.name.toUpperCase(),{fontFamily:'system-ui',fontSize:'9px',fontStyle:'bold',color:'#fff4d7',stroke:'#34583e',strokeThickness:2}).setOrigin(.5,0));
+       commercialTextLayer.add(this.add.text(x+75,y+100,type.name.toUpperCase(),{fontFamily:'system-ui',fontSize:'8px',fontStyle:'bold',color:'#fff4d7',stroke:'#34583e',strokeThickness:2}).setOrigin(.5,0));
        commercialTextLayer.add(this.add.text(x+132,y+4,'L'+(Number(shop.level)||1),{fontFamily:'monospace',fontSize:'9px',fontStyle:'bold',color:'#fff7d8',backgroundColor:'#34583e',padding:{x:3,y:2}}).setOrigin(.5,0));
       }
      };
@@ -706,8 +706,8 @@ function bootPhaserMapBridge(){
         const lane=i%4,group=Math.floor(i/4),dir=(lane===1||lane===3)?-1:1;
         // Kereta bergerak hanya di atas jalur mendatar yang benar-benar dilukis.
         // Jalan dalaman: x=95..1385; lorong dipusatkan pada y=446, 786, 1126.
-        const speed=[.72,1.05,.83,1.22][lane],span=1290,raw=(tick*speed*dir+group*640+lane*310)%span;
-        const x=95+((raw+span)%span),y=[428,464,768,804,1108,1144,1448,1484][i],flip=dir<0?-1:1;
+        const speed=[.72,1.05,.83,1.22][lane],span=1248,raw=(tick*speed*dir+group*640+lane*310)%span;
+        const x=95+(dir<0?42:0)+((raw+span)%span),y=[428,464,768,804,1108,1144,1448,1484][i],flip=dir<0?-1:1;
         const px=(v)=>x+v*flip;
         g.fillStyle(0x192427,.3);g.fillEllipse(x+20*flip,y+5,52,24);
         g.fillStyle(0x222a2d,1);for(const wx of [5,31])for(const wy of [-10,10])g.fillRoundedRect(px(wx)-4,y+wy-3,9,6,2);
