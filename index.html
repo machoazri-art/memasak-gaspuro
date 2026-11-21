@@ -357,10 +357,15 @@ function drawMap(){
  }
  const skinTones=['#e9b991','#c98f69','#f0c9a4','#a96f50'];
  const shirts=['#477fa8','#d46c55','#5d966c','#d3a94e','#8b6ca6','#e7e0ce'];
- for(let i=0;i<7;i++){
-   const x=185+(i*79+tick*.24)%520,y=275+(i%3)*25;
-   const step=Math.sin(tick*.12+i)*1.8;
-   ctx.save();ctx.translate(x,y);
+ // Penduduk bergerak bebas: arah, kelajuan dan laluan berbeza-beza.
+ const walkX=[.34,-.29,.12,-.38,.25,-.16,.31,.08,-.24];
+ const walkY=[.08,.22,-.31,.14,-.19,.28,.17,-.25,-.11];
+ for(let i=0;i<9;i++){
+   const x=185+((i*73+tick*walkX[i])%520+520)%520;
+   const y=215+((i*29+tick*walkY[i])%175+175)%175;
+   const phase=tick*.12+i*1.7,step=Math.sin(phase)*1.8;
+   const angle=Math.atan2(walkY[i],walkX[i]);
+   ctx.save();ctx.translate(x,y);ctx.rotate(angle+Math.PI/2);
    // bayang dan kaki bergerak
    ctx.fillStyle='rgba(45,62,42,.22)';ctx.beginPath();ctx.ellipse(0,15,8,4,0,0,Math.PI*2);ctx.fill();
    ctx.strokeStyle='#4b4540';ctx.lineWidth=3.2;ctx.lineCap='round';
