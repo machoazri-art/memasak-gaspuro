@@ -704,8 +704,10 @@ function bootPhaserMapBridge(){
        const carColors=[0xc94f48,0x477fa8,0xe3ad43,0xe8e3d4,0x568b68,0x8c6ca5];
        for(let i=0;i<8;i++){
         const lane=i%4,group=Math.floor(i/4),dir=(lane===1||lane===3)?-1:1;
-        const speed=[.72,1.05,.83,1.22][lane],span=2200,raw=(tick*speed*dir+group*970+lane*430)%span;
-        const x=dir>0?((raw+span)%span)-650:((span-raw+span)%span)-650,y=[27,65,427,465,767,805,1107,1145,1447,1485,1787,1825][i],flip=dir<0?-1:1;
+        // Kereta bergerak hanya di atas jalur mendatar yang benar-benar dilukis.
+        // Jalan dalaman: x=95..1385; lorong dipusatkan pada y=446, 786, 1126.
+        const speed=[.72,1.05,.83,1.22][lane],span=1290,raw=(tick*speed*dir+group*640+lane*310)%span;
+        const x=95+((raw+span)%span),y=[428,464,768,804,1108,1144,1448,1484][i],flip=dir<0?-1:1;
         const px=(v)=>x+v*flip;
         g.fillStyle(0x192427,.3);g.fillEllipse(x+20*flip,y+5,52,24);
         g.fillStyle(0x222a2d,1);for(const wx of [5,31])for(const wy of [-10,10])g.fillRoundedRect(px(wx)-4,y+wy-3,9,6,2);
