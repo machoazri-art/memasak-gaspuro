@@ -778,6 +778,13 @@ function bootPhaserMapBridge(){
      drawStreetLamps();
      // Perabot jalan: hentian bas, parkir, papan tanda, tong sampah dan lorong basikal.
      const streetFurnitureLayer=this.add.graphics();
+     const streetTextLayer=this.add.container(0,0);
+     const addStreetLabel=(x,y,label,size=8)=>{
+      const t=this.add.text(x,y,label,{fontFamily:'system-ui',fontSize:size+'px',fontStyle:'bold',color:'#33453d'});
+      t.setOrigin(0,0);streetTextLayer.add(t);
+     };
+     for(const p of [[111,430],[1308,770],[111,1110],[1308,1450]])addStreetLabel(p[0]+19,p[1]-8,'BUS',8);
+     for(const p of [[500,500,'PUSAT'],[910,840,'KEDAI'],[500,1180,'TAMAN'],[910,1520,'BANDAR']])addStreetLabel(p[0]+5,p[1]+2,p[2],7);
      const drawStreetFurniture=()=>{
       streetFurnitureLayer.clear();
       const g=streetFurnitureLayer;
@@ -816,7 +823,7 @@ function bootPhaserMapBridge(){
       g.lineStyle(2,0xc5e2c9,.75);g.beginPath();for(let y=500;y<1840;y+=32){g.moveTo(112,y);g.lineTo(112,y+12);g.moveTo(1360,y);g.lineTo(1360,y+12)}g.strokePath();
      };
      drawStreetFurniture();
-     const syncRoadCamera=()=>{roadLayer.setPosition(camera.x,camera.y);roadLayer.setScale(camera.scale);roadLayer.setVisible(true)};
+     const syncRoadCamera=()=>{roadLayer.setPosition(camera.x,camera.y);roadLayer.setScale(camera.scale);roadLayer.setVisible(true);streetTextLayer.setPosition(camera.x,camera.y);streetTextLayer.setScale(camera.scale)};
      syncRoadCamera();
      this.scale.on('resize',(size)=>{if(phaserMapImage)phaserMapImage.setDisplaySize(size.width,size.height);syncRoadCamera()});
      window.GaspuroMapBridge={refresh:()=>{if(phaserMapTexture)phaserMapTexture.refresh();syncRoadCamera();drawStreetLamps();drawStreetFurniture()}};
