@@ -206,7 +206,7 @@ function toast(t){$('notice').textContent=t;$('notice').classList.add('show');cl
 function log(t){let d=document.createElement('div');d.textContent=t;$('feed').prepend(d);while($('feed').children.length>12)$('feed').lastChild.remove()}
 function bizType(b){return types.find(t=>t.id===b.type)||types[0]}
 function incomeRate(b){return bizType(b).base*b.level*(1+s.upgrades.marketing*.12+s.upgrades.quality*.08+s.workers*.035)}
-function unlockedLots(){return 4+Math.min(10,Math.floor((s.level-1)/2)*2)}
+function unlockedLots(){return 4+Math.min(52,Math.floor((s.level-1)/2)*4)}
 function selectedBuilding(){return s.buildings.find(b=>b.lot===s.selectedLot)}
 function build(){let lot=s.selectedLot,t=s.selectedBuild;if(selectedBuilding())return toast('Lot ini sudah ada perniagaan!');let type=types.find(x=>x.id===t);if(!type)return;if(s.buildings.length>=unlockedLots())return toast('Naik level untuk buka lebih banyak lot!');if(s.money<type.cost)return toast('Duit tak cukup untuk bina!');s.money-=type.cost;s.buildings.push({id:Date.now(),type:t,lot,level:1,bank:0,served:0});s.xp+=25;log(type.emoji+' '+type.name+' berjaya dibuka!');toast('Perniagaan baharu dibuka!');s.selectedLot=lot;save();draw()}
 function upgradeBiz(id){let b=s.buildings.find(x=>x.id===id);if(!b)return;let cost=90*b.level;if(s.money<cost)return toast('Duit tak cukup!');s.money-=cost;b.level++;s.xp+=18;log('⬆️ '+bizType(b).name+' dinaik taraf ke tahap '+b.level);save();draw()}
@@ -432,7 +432,7 @@ function drawMap(){
  }
  }
  // Jalan raya mendatar dan menegak memisahkan setiap blok kawasan.
- ctx.fillStyle='#737e80';for(let row=0;row<7;row++)ctx.fillRect(105,420+row*300,700,18);
+ ctx.fillStyle='#737e80';ctx.fillRect(500,110,36,2200);for(let row=0;row<7;row++)ctx.fillRect(105,420+row*300,700,18);
  ctx.fillStyle='#d8d2bc';for(let row=0;row<7;row++)ctx.fillRect(105,414+row*300,700,30);
  ctx.fillStyle='#f6e9bd';ctx.setLineDash([18,14]);ctx.lineWidth=2;for(let row=0;row<7;row++){ctx.beginPath();ctx.moveTo(105,429+row*300);ctx.lineTo(805,429+row*300);ctx.stroke()}ctx.setLineDash([]);
 
