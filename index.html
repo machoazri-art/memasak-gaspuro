@@ -455,7 +455,7 @@ function drawMap(){
  const slots=[{x:bx+8,y:by+8},{x:bx+164,y:by+8},{x:bx+8,y:by+128},{x:bx+164,y:by+128}];
  for(let j=0;j<4;j++){const q=slots[j],shopIndex=i*4+j,shop=s.buildings.find(x=>x.lot===shopIndex),project=landProjectAt(shopIndex),shopUnlocked=shopIndex<unlockedLots();
  ctx.fillStyle=shop?'#88a879':shopUnlocked?'#b8d39a':'#9aa98e';ctx.fillRect(q.x,q.y,150,112);
- if(shop){const type=bizType(shop),si=({warung:0,mamak:1,satay:2,drink:3,cafe:3,foodcourt:2,restaurant:1})[shop.type]||0;
+ if(shop){const type=bizType(shop),si=({warung:0,mamak:1,satay:2,drink:3,cafe:4,foodcourt:5,restaurant:6,bakery:7,ramen:8,dessert:9,bbq:10,nightmarket:11})[shop.type]??0;
  if(townSprite.complete&&townSprite.naturalWidth)ctx.drawImage(townSprite,si*256,0,256,240,q.x+2,q.y-3,146,116);
  else{ctx.fillStyle=type.color;ctx.fillRect(q.x+12,q.y+20,126,78);ctx.fillStyle='#fff2d1';ctx.fillRect(q.x+20,q.y+38,110,50);ctx.font='22px system-ui';ctx.fillText(type.emoji,q.x+60,q.y+67)}
  ctx.fillStyle='#f7d77f';ctx.fillRect(q.x+15,q.y+8,5,5);ctx.fillRect(q.x+130,q.y+8,5,5);
