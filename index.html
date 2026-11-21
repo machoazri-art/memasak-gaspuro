@@ -415,24 +415,7 @@ function drawMap(now=0){
  for(let y=Math.max(-600,Math.floor(viewTop/54)*54);y<Math.min(2300,viewBottom);y+=54)for(let x=Math.max(-700,Math.floor(viewLeft/58)*58);x<Math.min(1800,viewRight);x+=58){ctx.fillStyle=(Math.floor(x/58+y/54)%3===0)?'#acd08f':'#c0dda4';ctx.fillRect(x,y,52,48)}
  // Jalan perimeter dipaparkan melalui Phaser Graphics.
 
- // Lampu jalan di sepanjang jalan perimeter dan laluan pejalan kaki.
- function drawStreetLamp(x,y){
-  ctx.save();ctx.translate(x,y);
-  const phase=townClock(),night=Math.max(0,Math.min(1,(Math.cos((phase-.5)*Math.PI*2)+.08)/1.08));
-  const glow=ctx.createRadialGradient(0,0,2,0,0,34);glow.addColorStop(0,'rgba(255,231,153,'+(night*.34)+')');glow.addColorStop(1,'rgba(255,231,153,0)');
-  ctx.fillStyle=glow;ctx.beginPath();ctx.arc(0,0,34,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='rgba(42,53,43,.22)';ctx.beginPath();ctx.ellipse(2,5,8,4,0,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#4b5550';ctx.beginPath();ctx.roundRect(-2,-2,4,9,2);ctx.fill();
-  ctx.strokeStyle='#46514c';ctx.lineWidth=3;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-24);ctx.lineTo(9,-29);ctx.stroke();
-  ctx.fillStyle='#303b38';ctx.beginPath();ctx.roundRect(5,-33,12,7,3);ctx.fill();
-  ctx.fillStyle='#ffe9a6';ctx.beginPath();ctx.roundRect(8,-32,7,4,2);ctx.fill();
-  ctx.fillStyle='rgba(255,239,184,.75)';ctx.beginPath();ctx.arc(11,-29,3+Math.sin(tick*.06)*.35,0,Math.PI*2);ctx.fill();
-  ctx.restore();
- }
- for(let x=-570;x<1550;x+=190){drawStreetLamp(x,5);drawStreetLamp(x,89);drawStreetLamp(x,3195);drawStreetLamp(x,3285)}
- for(let y=-600;y<2200;y+=190){drawStreetLamp(-3,y);drawStreetLamp(93,y);drawStreetLamp(863,y);drawStreetLamp(957,y)}
- for(let x=205;x<710;x+=125){drawStreetLamp(x,275);drawStreetLamp(x,455);drawStreetLamp(x,635)}
- for(let y=245;y<650;y+=180){drawStreetLamp(130,y);drawStreetLamp(835,y)}
+ // Lampu jalan perimeter dan laluan kini dipaparkan melalui Phaser Graphics.
  // houses and trees around
  for(let i=0;i<17;i++){let x=160+(i%6)*145,y=12+Math.floor(i/6)*62;if(y>70&&y<180)continue;ctx.fillStyle='#699b5d';ctx.beginPath();ctx.arc(x,y,17,0,7);ctx.fill();ctx.fillStyle='#4e854f';ctx.beginPath();ctx.arc(x-5,y-6,10,0,7);ctx.fill()}
  // Persekitaran bandar gaya pixel-art: kaki lima, lintasan dan landskap.
@@ -782,10 +765,30 @@ function bootPhaserMapBridge(){
      for(const p of [[300,275],[475,275],[650,275],[300,462],[475,462],[650,462],[300,642],[475,642]])planter(p[0],p[1]);
      for(const p of [[112,275],[842,275],[112,462],[842,462]])bench(p[0],p[1]);
      for(const p of [[110,190],[840,190],[110,450],[840,450],[110,635],[840,635],[250,645],[700,645]])tree(p[0],p[1],.75);
+     // Lampu jalan dengan cahaya malam dinamik dipindahkan ke Phaser.
+     const lampLayer=this.add.graphics();
+     const drawStreetLamps=()=>{
+      lampLayer.clear();
+      const phase=townClock(),night=Math.max(0,Math.min(1,(Math.cos((phase-.5)*Math.PI*2)+.08)/1.08));
+      const lamp=(x,y)=>{
+       if(night>0.01){lampLayer.fillStyle(0xffe799,night*.34);lampLayer.fillCircle(x,y,34)}
+       lampLayer.fillStyle(0x2a352b,.22);lampLayer.fillEllipse(x+2,y+5,16,8);
+       lampLayer.fillStyle(0x4b5550,1);lampLayer.fillRoundedRect(x-2,y-2,4,11,2);
+       lampLayer.lineStyle(3,0x46514c,1);lampLayer.beginPath();lampLayer.moveTo(x,y);lampLayer.lineTo(x,y-24);lampLayer.lineTo(x+9,y-29);lampLayer.strokePath();
+       lampLayer.fillStyle(0x303b38,1);lampLayer.fillRoundedRect(x+5,y-33,12,7,3);
+       lampLayer.fillStyle(0xffe9a6,1);lampLayer.fillRoundedRect(x+8,y-32,7,4,2);
+       lampLayer.fillStyle(0xffefb8,.75);lampLayer.fillCircle(x+11,y-29,3+Math.sin(tick*.06)*.35);
+      };
+      for(let x=-570;x<1550;x+=190){lamp(x,5);lamp(x,89);lamp(x,3195);lamp(x,3285)}
+      for(let y=-600;y<2200;y+=190){lamp(-3,y);lamp(93,y);lamp(863,y);lamp(957,y)}
+      for(let x=205;x<710;x+=125){lamp(x,275);lamp(x,455);lamp(x,635)}
+      for(let y=245;y<650;y+=180){lamp(130,y);lamp(835,y)}
+     };
+     drawStreetLamps();
      const syncRoadCamera=()=>{roadLayer.setPosition(camera.x,camera.y);roadLayer.setScale(camera.scale);roadLayer.setVisible(true)};
      syncRoadCamera();
      this.scale.on('resize',(size)=>{if(phaserMapImage)phaserMapImage.setDisplaySize(size.width,size.height);syncRoadCamera()});
-     window.GaspuroMapBridge={refresh:()=>{if(phaserMapTexture)phaserMapTexture.refresh();syncRoadCamera()}};
+     window.GaspuroMapBridge={refresh:()=>{if(phaserMapTexture)phaserMapTexture.refresh();syncRoadCamera();drawStreetLamps()}};
      document.documentElement.classList.remove('town-legacy-mode');
      document.documentElement.classList.add('phaser-map-bridge-ready');
      if(phaserMapBootTimer){clearTimeout(phaserMapBootTimer);phaserMapBootTimer=null}
