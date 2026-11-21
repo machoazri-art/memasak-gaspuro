@@ -421,25 +421,32 @@ function drawMap(){
  }
  const skinTones=['#e9b991','#c98f69','#f0c9a4','#a96f50'];
  const shirts=['#477fa8','#d46c55','#5d966c','#d3a94e','#8b6ca6','#e7e0ce'];
- // Penduduk bergerak bebas: arah, kelajuan dan laluan berbeza-beza.
- const walkX=[.34,-.29,.12,-.38,.25,-.16,.31,.08,-.24];
- const walkY=[.08,.22,-.31,.14,-.19,.28,.17,-.25,-.11];
+ // Penduduk berjalan perlahan dengan laluan dan rentak individu, bukan bergerak sebaris.
+ const walkSpeed=[.032,.047,.025,.055,.038,.029,.061,.034,.044];
+ const walkOffset=[0,83,171,246,319,407,478,552,621];
+ const walkLane=[0,1,2,0,1,2,0,1,2];
+ const walkDirection=[1,-1,1,-1,1,-1,1,-1,1];
  for(let i=0;i<9;i++){
-   const route=i%3;
-   const x=route===0?185+((i*71+tick*walkX[i]*18)%520+520)%520:route===1?[300,475,650][i%3]:[300,475,650][i%3];
-   const y=route===0?[282,462,642][i%3]:route===1?275+((i*19+tick*.24)%370):275+((i*19-tick*.22)%370+370)%370;
-   const phase=tick*.12+i*1.7,step=Math.sin(phase)*1.8;
-   // Kekalkan badan tegak dari pandangan atas; hanya kaki dan tangan berayun.
+   const lane=walkLane[i],speed=walkSpeed[i]*walkDirection[i],phase0=walkOffset[i];
+   let x,y;
+   if(lane===0){
+     x=175+((phase0+tick*speed+900)%900);
+     y=280+((i%3)*12)+Math.sin(tick*.012+i*2.1)*17;
+   }else if(lane===1){
+     y=260+((phase0+tick*speed+510)%510);
+     x=300+(i%3)*170+Math.sin(tick*.009+i*1.8)*22;
+   }else{
+     y=650-((phase0+tick*speed+510)%510);
+     x=330+(i%3)*155+Math.sin(tick*.011+i*2.7)*19;
+   }
+   const phase=tick*(.045+i*.003)+i*1.9,step=Math.sin(phase)*1.05;
    ctx.save();ctx.translate(x,y);
-   // bayang dan kaki bergerak
-   ctx.fillStyle='rgba(45,62,42,.22)';ctx.beginPath();ctx.ellipse(0,15,8,4,0,0,Math.PI*2);ctx.fill();
-   ctx.strokeStyle='#4b4540';ctx.lineWidth=3.2;ctx.lineCap='round';
+   ctx.fillStyle='rgba(45,62,42,.22)';ctx.beginPath();ctx.ellipse(0,15,7,3.5,0,0,Math.PI*2);ctx.fill();
+   ctx.strokeStyle='#4b4540';ctx.lineWidth=2.8;ctx.lineCap='round';
    ctx.beginPath();ctx.moveTo(-2,7);ctx.lineTo(-3-step,13);ctx.moveTo(2,7);ctx.lineTo(3+step,13);ctx.stroke();
    ctx.fillStyle=shirts[i%shirts.length];ctx.beginPath();ctx.roundRect(-5,-2,10,12,4);ctx.fill();
-   // lengan
-   ctx.strokeStyle=shirts[i%shirts.length];ctx.lineWidth=3.2;
-   ctx.beginPath();ctx.moveTo(-4,1);ctx.lineTo(-7-step*.4,7);ctx.moveTo(4,1);ctx.lineTo(7+step*.4,7);ctx.stroke();
-   // kepala, telinga dan rambut
+   ctx.strokeStyle=shirts[i%shirts.length];ctx.lineWidth=2.8;
+   ctx.beginPath();ctx.moveTo(-4,1);ctx.lineTo(-7-step*.35,7);ctx.moveTo(4,1);ctx.lineTo(7+step*.35,7);ctx.stroke();
    ctx.fillStyle=skinTones[i%skinTones.length];ctx.beginPath();ctx.arc(0,-7,4.7,0,Math.PI*2);ctx.fill();
    ctx.fillStyle=['#3d3029','#272b2d','#594332','#332c28'][i%4];
    ctx.beginPath();ctx.arc(0,-9,4.8,Math.PI,Math.PI*2);ctx.fill();
