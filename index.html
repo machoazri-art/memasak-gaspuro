@@ -1158,7 +1158,21 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.v
 
 function applyOffline(){let elapsed=Math.min(3600,Math.max(0,(Date.now()-(s.lastTick||Date.now()))/1000));if(elapsed>5){let earned=s.buildings.reduce((a,b)=>a+incomeRate(b),0)*elapsed/60;s.buildings.forEach(b=>b.bank+=incomeRate(b)*elapsed/60);log('⏱️ Perniagaan jana '+fmt(earned)+' semasa kau offline.');}}
 document.documentElement.classList.add('town-legacy-mode');
-if(window.Phaser){try{bootPhaserRestaurant();bootPhaserMapBridge()}catch(e){console.error('Phaser boot failed; map fallback remains active:',e);document.documentElement.classList.add('town-legacy-mode')}}
+function startGaspuroPhaser(){
+ if(!window.Phaser){console.error('Phaser library did not load; Canvas fallback remains active.');document.documentElement.classList.add('phaser-unavailable','town-legacy-mode');return}
+ document.documentElement.classList.remove('phaser-unavailable');
+ try{bootPhaserRestaurant();bootPhaserMapBridge()}
+ catch(e){console.error('Phaser boot failed; map fallback remains active:',e);fallbackPhaserMapBridge(e)}
+}
+// Phaser is loaded with defer, so the inline game script must wait for its load event.
+if(window.Phaser)startGaspuroPhaser();
+else{
+ const phaserScript=document.querySelector('script[src*="phaser@3.90.0"]');
+ if(phaserScript){
+  phaserScript.addEventListener('load',startGaspuroPhaser,{once:true});
+  phaserScript.addEventListener('error',()=>{document.documentElement.classList.add('phaser-unavailable','town-legacy-mode');console.error('Unable to load Phaser 3.90 CDN')},{once:true});
+ }else{window.addEventListener('load',startGaspuroPhaser,{once:true})}
+}
 
 window.addEventListener('pagehide',()=>{s.lastTick=Date.now();try{localStorage.setItem('gaspuro-town-v1',JSON.stringify(s))}catch(e){}});
 applyOffline();drawTools();render();drawMap();setInterval(simulate,2000);setInterval(()=>{const factor=cityDemandFactor();s.buildings.forEach(b=>b.bank+=incomeRate(b)*factor/6);save()},10000);
