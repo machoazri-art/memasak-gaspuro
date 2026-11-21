@@ -170,109 +170,139 @@ function unassignStaff(role){if(!s.staff[role])return;s.staff[role]--;refreshCus
 function upgrade(k){let names={marketing:'Promosi media sosial',quality:'Resipi premium',traffic:'Tarikan pelawat'},cost=150+(s.upgrades[k]||0)*125;if(s.money<cost)return toast('Duit tak cukup!');s.money-=cost;s.upgrades[k]++;toast(names[k]+' dinaik taraf!');save()}
 function levelCheck(){while(s.xp>=s.level*100){s.xp-=s.level*100;s.level++;s.money+=50;log('🎉 Bandar naik ke level '+s.level+'! Bonus RM50');toast('Level '+s.level+' dibuka! +RM50')}}
 
-/* Fasa 4 · Phaser Town Map — true top-down town layout. */
+/* Fasa 4 · Phaser town map — seamless top-down pixel-art neighbourhood. */
 let phaserTownGame=null;
 function bootPhaserTown(){
  if(phaserTownGame||!window.Phaser)return;
  const mount=$('townPhaserMount');if(!mount)return;
  class GaspuroTownScene extends Phaser.Scene{
-  constructor(){super({key:'GaspuroTownScene'});this.dragStart=null;this.moved=false;this.lastPinch=0}
-  preload(){this.load.spritesheet('gaspuroTownSprites','./assets/gaspuro-town-sprites.webp',{frameWidth:256,frameHeight:256});}
+  constructor(){super({key:'GaspuroTownScene'});this.dragStart=null;this.moved=false;this.lastPinch=0;this.lotNodes=[]}
   create(){
-   this.world=this.add.container(0,0);this.world.setSize(900,820);
-   const g=this.add.graphics();this.world.add(g);
-   // Continuous grass ground with subtle tile variation
-   g.fillStyle(0xaed18f,1);g.fillRect(0,0,900,820);
-   for(let y=0;y<820;y+=48)for(let x=0;x<900;x+=48){g.fillStyle(((x/48+y/48)%2===0)?0xb8d99a:0xa9ce89,.72);g.fillRect(x,y,44,44)}
-   // Tree belts and landscaping
-   for(let i=0;i<34;i++){const x=24+(i%17)*53,y=i<17?25:795;if(x>70&&x<830)continue;this.drawTree(x,y)}
-   // Main roads frame the neighbourhood
-   g.fillStyle(0xd5c9a8,1);g.fillRect(0,78,900,88);g.fillRect(0,730,900,90);g.fillRect(25,0,76,820);g.fillRect(799,0,76,820);
-   g.fillStyle(0x68777a,1);g.fillRect(0,88,900,68);g.fillRect(0,740,900,70);g.fillRect(35,0,56,820);g.fillRect(809,0,56,820);
-   g.lineStyle(3,0xf4e5b8,.9);g.lineBetween(0,122,900,122);g.lineBetween(0,775,900,775);g.lineBetween(63,0,63,820);g.lineBetween(837,0,837,820);
-   // Sidewalks and landscaped pedestrian lanes
-   g.fillStyle(0xe7d9b5,1);g.fillRect(105,150,690,16);g.fillRect(105,715,690,15);
-   g.fillStyle(0xd8c69a,1);g.fillRoundedRect(112,176,676,526,22);
-   g.fillStyle(0xe9dcb9,1);g.fillRoundedRect(120,184,660,510,18);
-   // Central pedestrian paths
-   g.fillStyle(0xc5b184,1);g.fillRect(120,414,660,22);g.fillRect(439,184,22,510);
-   // Small plaza
-   g.fillStyle(0xd9c89d,1);g.fillRoundedRect(355,360,190,115,18);
-   g.lineStyle(3,0xf7edcf,1);g.strokeRoundedRect(355,360,190,115,18);
-   this.add.text(450,378,'DATARAN MAKANAN',{fontFamily:'system-ui',fontSize:'14px',fontStyle:'bold',color:'#725c3c'}).setOrigin(.5);
-   this.add.text(450,24,'BANDAR GASPURO',{fontFamily:'system-ui',fontSize:'20px',fontStyle:'bold',color:'#31513a',backgroundColor:'#fff2d5',padding:{x:14,y:7}}).setOrigin(.5);
-   // Lots are landscaped plots, not UI cards
-   this.lotNodes=[];
-   for(let i=0;i<12;i++){
-    const col=i%4,row=Math.floor(i/4),x=125+col*165,y=188+row*170;
-    const lot=this.add.container(x,y);
-    const plot=this.add.graphics();
-    plot.fillStyle(0x8ba978,.28);plot.fillRoundedRect(0,0,145,132,12);
-    plot.fillStyle(0xcbbd91,1);plot.fillRoundedRect(4,4,137,124,10);
-    plot.fillStyle(0x9eb887,1);plot.fillRoundedRect(9,9,127,114,8);
-    plot.lineStyle(2,0xe9e2bf,.85);plot.strokeRoundedRect(9,9,127,114,8);
-    // entrance path leading to each plot
-    plot.fillStyle(0xe8d9b5,1);plot.fillRect(64,114,17,18);
-    lot.add(plot);
-    const sign=this.add.text(72,118,'LOT '+(i+1),{fontFamily:'system-ui',fontSize:'9px',fontStyle:'bold',color:'#53634a',backgroundColor:'#f4edcf',padding:{x:4,y:2}}).setOrigin(.5);
-    lot.add(sign);
-    const hit=this.add.zone(72,66,145,132).setInteractive({useHandCursor:true});
-    hit.on('pointerup',()=>{if(!this.moved)this.selectLot(i)});lot.add(hit);
-    this.world.add(lot);this.lotNodes.push({lot,plot,sign,i,dynamic:[]});
-   }
-   // People and vehicles are world actors, not decorations on top of cards
-   this.people=[];for(let i=0;i<9;i++){const p=this.textures.exists('gaspuroTownSprites')?this.add.image(180+(i%3)*245,300+Math.floor(i/3)*150,'gaspuroTownSprites',15).setDisplaySize(24,30):this.add.text(180+(i%3)*245,300+Math.floor(i/3)*150,['🧍🏻','🧍🏽‍♀️','🧍🏼'][i%3],{fontSize:'18px'}).setOrigin(.5);this.world.add(p);this.people.push(p)}
-   this.cars=[];for(let i=0;i<4;i++){const frame=i%3===1?14:(i%3===2?13:12);const car=this.textures.exists('gaspuroTownSprites')?this.add.image(-100-i*230,99,'gaspuroTownSprites',frame).setDisplaySize(42,48):this.add.text(-100-i*230,99,['🚗','🛵','🚙'][i%3],{fontSize:'25px'}).setOrigin(.5);this.world.add(car);this.cars.push(car)}
-   this.hud=null;this.refreshTown();this.syncState(GaspuroStateBridge.snapshot());
-   this.cameras.main.setBounds(0,0,900,820);
-   const fit=()=>{const cam=this.cameras.main;if(!cam)return;cam.setViewport(0,0,this.scale.width,this.scale.height);cam.setZoom(Phaser.Math.Clamp(Math.min(this.scale.width/900,this.scale.height/820),.45,1.05));cam.centerOn(450,410)};
+   this.world=this.add.container(0,0);
+   this.drawGround();
+   this.drawRoads();
+   this.drawLandscaping();
+   this.drawTownDecor();
+   this.createLots();
+   this.createTrafficAndPeople();
+   this.refreshTown();
+   this.cameras.main.setBounds(0,0,1200,1000);
+   const fit=()=>{const cam=this.cameras.main;if(!cam)return;cam.setViewport(0,0,this.scale.width,this.scale.height);cam.setZoom(Math.min(this.scale.width/1200,this.scale.height/1000)*1.12);cam.centerOn(600,500)};
    fit();this.scale.on('resize',fit);
    this.input.addPointer(1);
    this.input.on('pointerdown',p=>{const p2=this.input.pointer2;if(p2&&p2.isDown&&this.input.pointer1.isDown){this.dragStart=null;this.lastPinch=Phaser.Math.Distance.Between(this.input.pointer1.x,this.input.pointer1.y,p2.x,p2.y);return}this.dragStart={x:p.x,y:p.y,cx:this.cameras.main.scrollX,cy:this.cameras.main.scrollY};this.moved=false});
-   this.input.on('pointermove',p=>{const p2=this.input.pointer2;if(p2&&p2.isDown&&this.input.pointer1.isDown){const d=Phaser.Math.Distance.Between(this.input.pointer1.x,this.input.pointer1.y,p2.x,p2.y);if(this.lastPinch>0)this.cameras.main.setZoom(Phaser.Math.Clamp(this.cameras.main.zoom*d/this.lastPinch,.45,2.2));this.lastPinch=d;this.dragStart=null;return}if(!this.dragStart||!p.isDown)return;const dx=p.x-this.dragStart.x,dy=p.y-this.dragStart.y;if(Math.abs(dx)+Math.abs(dy)>7)this.moved=true;if(this.moved){this.cameras.main.scrollX=this.dragStart.cx-dx/this.cameras.main.zoom;this.cameras.main.scrollY=this.dragStart.cy-dy/this.cameras.main.zoom}});
-   this.input.on('pointerup',()=>{this.dragStart=null;this.lastPinch=0;this.time.delayedCall(90,()=>this.moved=false)});
-   this.input.on('wheel',(p,o,dx,dy)=>this.cameras.main.setZoom(Phaser.Math.Clamp(this.cameras.main.zoom+(dy<0?.12:-.12),.45,2.2)));
+   this.input.on('pointermove',p=>{const p2=this.input.pointer2;if(p2&&p2.isDown&&this.input.pointer1.isDown){const d=Phaser.Math.Distance.Between(this.input.pointer1.x,this.input.pointer1.y,p2.x,p2.y);if(this.lastPinch>0)this.cameras.main.setZoom(Phaser.Math.Clamp(this.cameras.main.zoom*d/this.lastPinch,.35,2.5));this.lastPinch=d;this.dragStart=null;return}if(!this.dragStart||!p.isDown)return;const dx=p.x-this.dragStart.x,dy=p.y-this.dragStart.y;if(Math.abs(dx)+Math.abs(dy)>7)this.moved=true;if(this.moved){this.cameras.main.scrollX=this.dragStart.cx-dx/this.cameras.main.zoom;this.cameras.main.scrollY=this.dragStart.cy-dy/this.cameras.main.zoom}});
+   this.input.on('pointerup',()=>{this.dragStart=null;this.lastPinch=0;this.time.delayedCall(100,()=>this.moved=false)});
+   this.input.on('wheel',(p,o,dx,dy)=>this.cameras.main.setZoom(Phaser.Math.Clamp(this.cameras.main.zoom+(dy<0?.12:-.12),.35,2.5)));
    this.input.on('gameout',()=>{this.dragStart=null;this.lastPinch=0});
-   this.time.addEvent({delay:45,loop:true,callback:()=>{this.cars.forEach((car,i)=>{car.x+=1.3+i*.22;if(car.x>950)car.x=-80});this.people.forEach((p,i)=>{p.x+=Math.sin(this.time.now/650+i)*.22;p.y+=Math.cos(this.time.now/800+i)*.12})}});
+   this.time.addEvent({delay:35,loop:true,callback:()=>this.animateTown()});
   }
-  drawTree(x,y){if(this.textures.exists('gaspuroTownSprites')){const palm=(Math.abs(Math.round(x+y))%3===0);const t=this.add.image(x,y,'gaspuroTownSprites',palm?9:8).setDisplaySize(palm?66:54,palm?72:62);this.world.add(t);return}const t=this.add.container(x,y);const sh=this.add.ellipse(4,9,35,15,0x476c43,.22);const trunk=this.add.rectangle(0,8,7,17,0x79583b);const crown=this.add.circle(0,-2,17,0x568c50);const shine=this.add.circle(-5,-8,7,0x83b66a);t.add([sh,trunk,crown,shine]);this.world.add(t)}
+  addG(graphics){this.world.add(graphics);return graphics}
+  drawGround(){
+   const g=this.add.graphics();g.fillStyle(0x6f985d,1);g.fillRect(0,0,1200,1000);
+   for(let y=0;y<1000;y+=32)for(let x=0;x<1200;x+=32){const n=((x/32*7+y/32*11)%5);g.fillStyle(n===0?0x83a96b:n===1?0x789f62:0x7da566,1);g.fillRect(x+2,y+2,28,28);if(n===2){g.fillStyle(0xa7c77f,.7);g.fillRect(x+7,y+7,3,3)}}
+   // neighbourhood blocks and garden lawns
+   for(let row=0;row<3;row++)for(let col=0;col<4;col++){const x=40+col*300,y=35+row*300;g.fillStyle(0x527b4c,.25);g.fillRoundedRect(x+7,y+8,266,238,12);g.fillStyle(0xa9c78a,1);g.fillRoundedRect(x,y,266,238,10);g.lineStyle(3,0xd1d9a2,.8);g.strokeRoundedRect(x+2,y+2,262,234,8)}
+   this.world.add(g);
+  }
+  drawRoads(){
+   const g=this.add.graphics();
+   // Main horizontal streets, kerbs and asphalt
+   [280,580,880].forEach(y=>{g.fillStyle(0xd9c99e,1);g.fillRect(0,y-12,1200,104);g.fillStyle(0x555f5c,1);g.fillRect(0,y,1200,80);g.fillStyle(0x69736d,1);g.fillRect(0,y+5,1200,70);g.lineStyle(3,0xf0dfa8,.9);g.lineBetween(0,y+40,1200,y+40);g.lineStyle(2,0x899087,.8);for(let x=20;x<1200;x+=95)g.lineBetween(x,y+7,x+38,y+7)});
+   // Cross streets connect the whole neighbourhood
+   [300,600,900].forEach(x=>{g.fillStyle(0xd9c99e,1);g.fillRect(x-12,0,104,1000);g.fillStyle(0x555f5c,1);g.fillRect(x,0,80,1000);g.fillStyle(0x69736d,1);g.fillRect(x+5,0,70,1000);g.lineStyle(3,0xf0dfa8,.9);g.lineBetween(x+40,0,x+40,1000);g.lineStyle(2,0x899087,.8);for(let y=20;y<1000;y+=95)g.lineBetween(x+7,y,x+7,y+38)});
+   // Pavement strips along building fronts
+   [260,560,860].forEach(y=>{g.fillStyle(0xe0d2ad,1);g.fillRect(0,y,1200,14);g.fillStyle(0xb9b18f,1);g.fillRect(0,y+12,1200,3)});
+   [280,580,880].forEach(x=>{g.fillStyle(0xe0d2ad,1);g.fillRect(x,0,14,1000);g.fillStyle(0xb9b18f,1);g.fillRect(x+12,0,3,1000)});
+   this.world.add(g);
+  }
+  drawLandscaping(){
+   const g=this.add.graphics();
+   // Garden beds, shrubs and small palms around the blocks
+   for(let row=0;row<3;row++)for(let col=0;col<4;col++){const bx=40+col*300,by=35+row*300;g.fillStyle(0x8fb274,1);g.fillRoundedRect(bx+12,by+12,242,214,8);g.fillStyle(0x6f965d,.5);g.fillRect(bx+18,by+18,230,5);g.fillStyle(0x9fbd7b,1);g.fillRect(bx+18,by+208,230,5)}
+   this.world.add(g);
+   for(let i=0;i<34;i++){const x=20+(i%12)*100,y=20+Math.floor(i/12)*330;this.drawTree(x,y+8);if(i%2===0)this.drawBush(x+42,y+40)}
+   for(let i=0;i<18;i++){const x=40+(i%6)*215,y=250+Math.floor(i/6)*300;this.drawBush(x,y)}
+  }
+  drawTree(x,y){
+   const c=this.add.container(x,y);
+   const sh=this.add.ellipse(5,15,48,22,0x344b35,.28);
+   const trunk=this.add.rectangle(0,8,12,25,0x765238).setStrokeStyle(2,0x4f3c2d);
+   const crown=this.add.circle(0,-7,27,0x397b48).setStrokeStyle(3,0x285c3b);
+   const a=this.add.circle(-12,-18,13,0x5e9b56),b=this.add.circle(13,-13,12,0x4e8b4e),shine=this.add.circle(-8,-21,5,0x9bc66d);
+   c.add([sh,trunk,crown,a,b,shine]);this.world.add(c);return c;
+  }
+  drawBush(x,y){const c=this.add.container(x,y);c.add([this.add.ellipse(0,5,30,12,0x355c3b,.22),this.add.circle(-7,0,9,0x4f8a4b),this.add.circle(5,-3,10,0x619c50),this.add.circle(13,1,7,0x3d7545)]);this.world.add(c)}
+  drawTownDecor(){
+   const g=this.add.graphics();
+   // zebra crossings and small pedestrian islands
+   [300,600,900].forEach(x=>{[280,580,880].forEach(y=>{g.fillStyle(0xe8e4ce,.9);for(let i=0;i<5;i++){g.fillRect(x-24+i*12,y-2,7,14);g.fillRect(x-24+i*12,y+68,7,14)}})});
+   // benches and street lamps
+   for(let i=0;i<10;i++){const x=120+(i%5)*235,y=i<5?265:865;g.fillStyle(0x5c4432,1);g.fillRect(x,y,30,6);g.fillStyle(0xdec28a,1);g.fillRect(x+3,y-5,24,5);g.fillStyle(0x3c493d,1);g.fillRect(x+14,y-20,3,18);g.fillStyle(0xf8e6a2,1);g.fillCircle(x+15,y-23,5)}
+   this.world.add(g);
+   this.add.text(600,18,'BANDAR GASPURO',{fontFamily:'monospace',fontSize:'23px',fontStyle:'bold',color:'#f7edca',stroke:'#34523a',strokeThickness:5}).setOrigin(.5);
+  }
+  createLots(){
+   this.lotNodes=[];
+   for(let i=0;i<12;i++){
+    const col=i%4,row=Math.floor(i/4),x=40+col*300+133,y=35+row*300+118;
+    const lot=this.add.container(x,y);this.world.add(lot);
+    const pad=this.add.graphics();pad.fillStyle(0x486c42,.18);pad.fillRoundedRect(-104,-76,208,152,5);pad.fillStyle(0x9cbb7c,1);pad.fillRect(-100,-72,200,144);pad.lineStyle(2,0xd5dca6,.9);pad.strokeRect(-100,-72,200,144);pad.fillStyle(0xb7cb8c,1);pad.fillRect(-93,-65,186,130);lot.add(pad);
+    // small path to street, no card-like frame
+    pad.fillStyle(0xd9c99e,1);pad.fillRect(-12,70,24,28);
+    const marker=this.add.text(0,3,'TAPAK KOSONG',{fontFamily:'monospace',fontSize:'11px',fontStyle:'bold',color:'#486345',backgroundColor:'#dce5b6',padding:{x:5,y:3}}).setOrigin(.5);lot.add(marker);
+    const hit=this.add.zone(0,0,200,144).setInteractive({useHandCursor:true});hit.on('pointerup',()=>{if(!this.moved)this.selectLot(i)});lot.add(hit);
+    this.lotNodes.push({lot,pad,marker,i,dynamic:[]});
+   }
+  }
   drawBuilding(lot,b,i){
-   const type=bizType(b),palette={warung:[0xc95c43,0xf1c778],mamak:[0x467f91,0xe6d5a7],satay:[0xb67a35,0xf2d28d],drink:[0x4b9d8c,0xd7ebcf],cafe:[0x795d49,0xe5c69b],foodcourt:[0x9b6b47,0xe8c887],restaurant:[0x9d5548,0xf0c98b]};
-   const colors=palette[b.type]||[0x648b72,0xe5d1a4];
-   const spriteFrames={warung:0,mamak:1,satay:2,restaurant:3,drink:4,cafe:5,foodcourt:6};
-   if(this.textures.exists('gaspuroTownSprites')){const frame=spriteFrames[b.type]??0;const sprite=this.add.image(72,65,'gaspuroTownSprites',frame).setDisplaySize(142,142);lot.add(sprite);const level=this.add.text(118,12,'Lv.'+b.level,{fontFamily:'system-ui',fontSize:'9px',fontStyle:'bold',color:'#fff9e9',backgroundColor:'#315b43',padding:{x:4,y:2}}).setOrigin(.5);lot.add(level);const label=this.add.text(72,137,type.name.length>18?type.name.slice(0,17)+'…':type.name,{fontFamily:'system-ui',fontSize:'9px',fontStyle:'bold',color:'#344636',backgroundColor:'#fff9e9',padding:{x:4,y:2},align:'center'}).setOrigin(.5);lot.add(label);return [sprite,level,label]}
-   // roof shadow, walls and roof planes create a readable overhead footprint
-   const shadow=this.add.ellipse(73,78,132,34,0x344b35,.28);
-   const walls=this.add.rectangle(72,68,112,86,0xe8d8b6).setStrokeStyle(3,0x806348);
-   const roof=this.add.rectangle(72,53,120,83,colors[0]).setStrokeStyle(4,0x694b38);
-   const roofInset=this.add.rectangle(72,53,102,66,colors[1]).setStrokeStyle(2,0xffedc7);
-   const ridge=this.add.rectangle(72,53,7,68,0x815b3d);
-   const awning=this.add.rectangle(72,91,116,13,0xf6e8c7).setStrokeStyle(1,0x806348);
-   const door=this.add.rectangle(72,102,18,20,0x6b4a35).setStrokeStyle(2,0xf1d6a3);
-   const icon=this.add.text(72,52,type.emoji,{fontSize:'28px'}).setOrigin(.5);
-   const level=this.add.text(118,16,'Lv.'+b.level,{fontFamily:'system-ui',fontSize:'9px',fontStyle:'bold',color:'#fff9e9',backgroundColor:'#315b43',padding:{x:4,y:2}}).setOrigin(.5);
-   lot.add([shadow,walls,roof,roofInset,ridge,awning,door,icon,level]);
-   lot.getAt(lot.length-1).setDepth(4);
-   const label=this.add.text(72,137,type.name.length>18?type.name.slice(0,17)+'…':type.name,{fontFamily:'system-ui',fontSize:'9px',fontStyle:'bold',color:'#344636',backgroundColor:'#fff9e9',padding:{x:4,y:2},align:'center'}).setOrigin(.5);
-   lot.add(label);
-   return [shadow,walls,roof,roofInset,ridge,awning,door,icon,level,label];
+   const palettes={warung:[0x9e4938,0xd9a45d],mamak:[0x3c7180,0xe1c78c],satay:[0x98602f,0xd9ad65],drink:[0x3e887f,0xb7d5b7],cafe:[0x665044,0xc9a77a],foodcourt:[0x9a6840,0xd6b56f],restaurant:[0x7d4339,0xd7a66d]};
+   const col=palettes[b.type]||palettes.warung,group=this.add.container(0,0);lot.add(group);
+   const g=this.add.graphics();
+   // cast shadow and building foundation
+   g.fillStyle(0x293e30,.3);g.fillRoundedRect(-76,-45,158,112,5);
+   g.fillStyle(0xdbc99c,1);g.fillRect(-82,-56,164,116);
+   g.fillStyle(0xeee0b9,1);g.fillRect(-77,-52,154,105);
+   // visible roof footprint and trim
+   g.fillStyle(0x553f32,1);g.fillRect(-75,-57,150,91);
+   g.fillStyle(col[0],1);g.fillRect(-70,-53,140,82);
+   g.fillStyle(col[1],1);g.fillRect(-64,-47,128,70);
+   g.lineStyle(4,0x684633,1);g.strokeRect(-70,-53,140,82);
+   // roof tiles in pixel-like rows
+   for(let y=-42;y<20;y+=12){g.lineStyle(1,0x8a6547,.55);g.lineBetween(-60,y,60,y);for(let x=-54;x<60;x+=24)g.lineBetween(x,y,x,y+12)}
+   // roof ridge and eaves
+   g.fillStyle(0x65432f,1);g.fillRect(-5,-52,10,78);g.fillStyle(0xf0d29a,1);g.fillRect(-73,27,146,8);
+   // awning, front door and side windows
+   g.fillStyle(0xead8ac,1);g.fillRect(-34,27,68,13);g.fillStyle(col[0],1);for(let x=-30;x<32;x+=12)g.fillRect(x,28,6,10);
+   g.fillStyle(0x5b4838,1);g.fillRect(-12,39,24,18);g.fillStyle(0x9cc4bd,1);g.fillRect(-8,42,8,8);g.fillStyle(0xe7c77d,1);g.fillCircle(8,49,2);
+   g.fillStyle(0x7ea9a2,1);g.fillRect(-61,0,15,16);g.fillRect(46,0,15,16);g.lineStyle(2,0xf2dfb2,1);g.strokeRect(-61,0,15,16);g.strokeRect(46,0,15,16);
+   group.add(g);
+   // shop sign at the street-facing edge
+   const type=bizType(b);const sign=this.add.text(0,76,type.name,{fontFamily:'monospace',fontSize:'11px',fontStyle:'bold',color:'#fff4d7',backgroundColor:'#34583e',padding:{x:5,y:3},align:'center'}).setOrigin(.5);group.add(sign);
+   const level=this.add.text(63,-59,'L'+b.level,{fontFamily:'monospace',fontSize:'10px',fontStyle:'bold',color:'#fff7d8',backgroundColor:'#34583e',padding:{x:4,y:2}}).setOrigin(.5);group.add(level);
+   return group;
   }
   selectLot(i){s.selectedLot=i;const b=selectedBuilding(),unlocked=i<unlockedLots();if(b){openInterior(b);return}$('selectionTitle').textContent='🏡 Lot '+(i+1)+' kosong';$('selectionText').textContent=unlocked?'Pilih jenis perniagaan dan bina di sini.':'Lot terkunci. Naik level untuk buka.';$('buildBtn').disabled=!unlocked;render();drawTools();this.refreshTown()}
-  syncState(data){this.refreshTown()}
+  syncState(){this.refreshTown()}
   refreshTown(){
    if(!this.lotNodes)return;
-   this.lotNodes.forEach(({lot,plot,sign,i,dynamic})=>{
+   this.lotNodes.forEach(({lot,pad,marker,i,dynamic})=>{
     dynamic.forEach(o=>o.destroy());dynamic.length=0;
     const b=s.buildings.find(x=>x.lot===i),unlocked=i<unlockedLots();
-    plot.clear();plot.fillStyle(unlocked?0xcbbd91:0x9aa58f,1);plot.fillRoundedRect(4,4,137,124,10);plot.fillStyle(unlocked?0x9eb887:0x87927e,1);plot.fillRoundedRect(9,9,127,114,8);plot.lineStyle(2,0xe9e2bf,.85);plot.strokeRoundedRect(9,9,127,114,8);
-    sign.setText(b?'':unlocked?'TAPAK BINAAN':'TERKUNCI');sign.setColor(unlocked?'#53634a':'#e8eddf');
-    if(b){const objects=this.drawBuilding(lot,b,i);dynamic.push(...objects);sign.setText('')}
-    else if(unlocked){const marker=this.add.text(72,61,'＋',{fontSize:'30px',color:'#52684d'}).setOrigin(.5);lot.add(marker);dynamic.push(marker)}
+    pad.clear();pad.fillStyle(unlocked?0x9cbb7c:0x89947a,1);pad.fillRect(-100,-72,200,144);pad.lineStyle(2,0xd5dca6,.9);pad.strokeRect(-100,-72,200,144);pad.fillStyle(unlocked?0xb7cb8c:0x77836f,1);pad.fillRect(-93,-65,186,130);
+    marker.setText(b?'':unlocked?'TAPAK KOSONG':'TERKUNCI');
+    if(b){const obj=this.drawBuilding(lot,b,i);dynamic.push(obj);marker.setText('')}
+    else if(unlocked){const m=this.add.text(0,0,'＋',{fontFamily:'monospace',fontSize:'25px',color:'#54734b'}).setOrigin(.5);lot.add(m);dynamic.push(m)}
    });
   }
+  createTrafficAndPeople(){
+   this.cars=[];for(let i=0;i<5;i++){const car=this.add.container(-100-i*270,320);const g=this.add.graphics();g.fillStyle(0x283b35,1);g.fillRoundedRect(-22,-11,44,22,5);g.fillStyle([0xb64d3d,0xd5a345,0x477f9a,0x63965e,0xeee0b8][i],1);g.fillRoundedRect(-19,-9,38,16,4);g.fillStyle(0x9fc7c5,1);g.fillRect(-11,-7,18,7);g.fillStyle(0x252c29,1);g.fillCircle(-13,10,4);g.fillCircle(13,10,4);car.add(g);this.world.add(car);this.cars.push(car)}
+   this.people=[];for(let i=0;i<14;i++){const x=115+(i%4)*285,y=145+Math.floor(i/4)*260;const p=this.add.container(x,y);const g=this.add.graphics();g.fillStyle(0x344b37,.25);g.fillEllipse(1,8,15,7);g.fillStyle([0x416f91,0x9b5548,0xc49a4e,0x6c8652][i%4],1);g.fillCircle(0,-1,6);g.fillRect(-4,4,8,10);g.fillStyle(0xf0c69b,1);g.fillCircle(0,-9,4);p.add(g);this.world.add(p);this.people.push(p)}
+  }
+  animateTown(){this.cars.forEach((car,i)=>{car.x+=1.0+i*.18;if(car.x>1280)car.x=-90});this.people.forEach((p,i)=>{p.x+=Math.sin(this.time.now/700+i)*.18;p.y+=Math.cos(this.time.now/850+i)*.12})}
   update(){}
  }
- phaserTownGame=new Phaser.Game({type:Phaser.CANVAS,parent:mount,width:900,height:820,backgroundColor:'#aed18f',render:{antialias:true,roundPixels:true},scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},scene:[GaspuroTownScene],banner:false});
+ phaserTownGame=new Phaser.Game({type:Phaser.CANVAS,parent:mount,width:1200,height:1000,backgroundColor:'#6f985d',render:{antialias:false,roundPixels:true},scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},scene:[GaspuroTownScene],banner:false});
 }
 function phaserTownScene(){return phaserTownGame&&phaserTownGame.scene.getScene('GaspuroTownScene')}
 function refreshPhaserTown(){const scene=phaserTownScene();if(scene&&scene.syncState)scene.syncState(GaspuroStateBridge.snapshot());else if(scene&&scene.refreshTown)scene.refreshTown();const restaurant=phaserScene();if(restaurant&&restaurant.syncState)restaurant.syncState(GaspuroStateBridge.snapshot())}
