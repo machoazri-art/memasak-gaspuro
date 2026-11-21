@@ -291,6 +291,9 @@ function phaserTownScene(){return phaserTownGame&&phaserTownGame.scene.getScene(
 function refreshPhaserTown(){const scene=phaserTownScene();if(scene&&scene.syncState)scene.syncState(GaspuroStateBridge.snapshot());else if(scene&&scene.refreshTown)scene.refreshTown();const restaurant=phaserScene();if(restaurant&&restaurant.syncState)restaurant.syncState(GaspuroStateBridge.snapshot())}
 
 const canvas=$('map'),ctx=canvas.getContext('2d');let camera={x:0,y:0,scale:1},plots=[],cars=[],people=[],drag=null,selectedTool='warung',tick=0;
+const townClock=()=>((tick%36000)/36000);
+const festivalNow=()=>Math.floor(tick/18000)%4===1 && tick%18000<2700;
+const festivalNames=['Pesta Makanan','Pasar Malam Gaspuro','Festival Nasi Lemak','Karnival Minuman'];
 function lotPos(i){let col=i%4,row=Math.floor(i/4);return{x:145+col*175,y:140+row*180}}
 function rounded(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=3;ctx.stroke()}}
 function drawMap(){
@@ -331,23 +334,25 @@ function drawMap(){
  if(b){let type=bizType(b);let si=({warung:0,mamak:1,satay:2,drink:3,cafe:3,foodcourt:2,restaurant:1})[b.type]||0;
  if(townSprite.complete&&townSprite.naturalWidth){ctx.drawImage(townSprite,si*256,0,256,240,p.x+1,p.y-9,140,132)}
  else{ctx.fillStyle='#8c7052';ctx.fillRect(p.x+20,p.y+75,102,13);ctx.fillStyle=type.color;ctx.beginPath();ctx.moveTo(p.x+13,p.y+47);ctx.lineTo(p.x+71,p.y+8);ctx.lineTo(p.x+129,p.y+47);ctx.closePath();ctx.fill();rounded(p.x+25,p.y+42,92,48,5,'#fff2d1','#8b7659');ctx.fillText(type.emoji,p.x+8,p.y+31)}
- ctx.fillStyle='#344636';ctx.font='bold 12px system-ui';ctx.fillText('Lv.'+b.level,p.x+82,p.y+108);ctx.fillStyle='#fff9e9';ctx.beginPath();ctx.arc(p.x+119,p.y+15,13,0,7);ctx.fill();ctx.fillStyle='#38764b';ctx.font='bold 11px system-ui';ctx.fillText('$',p.x+115,p.y+19)}
+ // Perincian fasad: papan tanda, jalur awning dan lampu tingkap.
+  ctx.fillStyle='rgba(255,255,255,.35)';ctx.fillRect(p.x+24,p.y+47,94,5);ctx.fillStyle=type.color;ctx.fillRect(p.x+25,p.y+53,92,5);ctx.fillStyle='#fff1c4';ctx.beginPath();ctx.arc(p.x+31,p.y+77,3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(p.x+111,p.y+77,3,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#344636';ctx.font='bold 12px system-ui';ctx.fillText('Lv.'+b.level,p.x+82,p.y+108);ctx.fillStyle='#fff9e9';ctx.beginPath();ctx.arc(p.x+119,p.y+15,13,0,7);ctx.fill();ctx.fillStyle='#38764b';ctx.font='bold 11px system-ui';ctx.fillText('$',p.x+115,p.y+19)}
  else{ctx.fillStyle=unlocked?'#f8f3d9':'#9aa58f';ctx.font='bold 25px system-ui';ctx.fillText(unlocked?'+':'🔒',p.x+59,p.y+65);ctx.fillStyle='#52664e';ctx.font='11px system-ui';ctx.fillText(unlocked?'LOT KOSONG':'LEVEL '+(Math.ceil(i/2)+1),p.x+32,p.y+91)}
  if(s.selectedLot===i){ctx.strokeStyle='#ffb72f';ctx.lineWidth=5;ctx.strokeRect(p.x+2,p.y+2,138,114)}
  plots.push({i,x:p.x,y:p.y,w:142,h:118,unlocked})
  }
  // Kenderaan dan penduduk: gaya vector top-down yang lebih organik.
  const carColors=['#d9574f','#477fa8','#e8b94f','#eee5d2','#65966b'];
- for(let i=0;i<5;i++){
-   const x=((tick*1.15+i*190)%2150)-600, y=112+(i%2)*360;
-   ctx.save();ctx.translate(x,y);
-   // bayang badan dan tayar
+ for(let i=0;i<8;i++){
+   const lane=i%4,group=Math.floor(i/4),dir=(lane===1||lane===3)?-1:1;
+   const speed=[.72,1.05,.83,1.22][lane],span=2200;
+   const raw=(tick*speed*dir+group*970+lane*430)%span;
+   const x=dir>0?((raw+span)%span)-650:((span-raw+span)%span)-650;
+   const y=[105,151,465,511][lane];
+   ctx.save();ctx.translate(x,y);if(dir<0)ctx.scale(-1,1);
    ctx.fillStyle='rgba(37,52,39,.24)';ctx.beginPath();ctx.ellipse(20,5,25,11,0,0,Math.PI*2);ctx.fill();
-   ctx.fillStyle='#293337';
-   rounded(-2,-8,7,10,3,'#293337');rounded(35,-8,7,10,3,'#293337');
-   rounded(-2,8,7,10,3,'#293337');rounded(35,8,7,10,3,'#293337');
-   // badan kereta dengan bonet dan belakang membulat
-   rounded(0,-10,40,20,8,carColors[i%carColors.length],'#39484a');
+   ctx.fillStyle='#293337';rounded(-2,-8,7,10,3,'#293337');rounded(35,-8,7,10,3,'#293337');rounded(-2,8,7,10,3,'#293337');rounded(35,8,7,10,3,'#293337');
+   rounded(0,-10,40,20,8,carColors[(i+lane)%carColors.length],'#39484a');
    ctx.fillStyle='rgba(255,255,255,.2)';ctx.beginPath();ctx.roundRect(5,-8,29,16,6);ctx.fill();
    ctx.fillStyle='#9fc4cc';ctx.beginPath();ctx.roundRect(13,-7,15,14,4);ctx.fill();
    ctx.fillStyle='rgba(40,65,73,.55)';ctx.fillRect(20,-6,1,12);
@@ -381,7 +386,13 @@ function drawMap(){
    ctx.beginPath();ctx.ellipse(-4.5,-6,1.2,2,0,0,Math.PI*2);ctx.ellipse(4.5,-6,1.2,2,0,0,Math.PI*2);ctx.fill();
    ctx.restore();
  }
- ctx.restore();requestAnimationFrame(drawMap);tick++
+ // Kitaran siang-malam beransur dari siang ke malam dan subuh.
+  const phase=townClock(),night=Math.max(0,Math.min(1,(Math.cos(phase*Math.PI*2)+.18)/1.18));
+  if(night>.02){ctx.fillStyle='rgba(22,35,62,'+(night*.48)+')';ctx.fillRect(-1000,-1000,3000,3000);
+    ctx.save();ctx.globalAlpha=night*.8;for(let i=0;i<12;i++){const p=lotPos(i);if(s.buildings.some(b=>b.lot===i)){ctx.fillStyle='#ffe6a0';ctx.fillRect(p.x+34,p.y+63,12,12);ctx.fillRect(p.x+96,p.y+63,12,12)}}ctx.restore();
+  }
+  if(festivalNow()){const eventIndex=Math.floor(tick/18000)%festivalNames.length;ctx.save();ctx.fillStyle='rgba(66,48,35,.88)';ctx.beginPath();ctx.roundRect(300,185,280,34,12);ctx.fill();ctx.fillStyle='#ffe7a3';ctx.font='bold 15px system-ui';ctx.textAlign='center';ctx.fillText('🎉 '+festivalNames[eventIndex],440,208);ctx.textAlign='start';ctx.restore();}
+  ctx.restore();requestAnimationFrame(drawMap);tick++
 }
 function screenToWorld(e){let r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*canvas.width/r.width,y=(e.clientY-r.top)*canvas.height/r.height;return{x:(x-camera.x)/camera.scale,y:(y-camera.y)/camera.scale}}
 canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,cx:camera.x,cy:camera.y,moved:false}});
