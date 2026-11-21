@@ -381,9 +381,9 @@ function drawMap(){
  // grass texture
  for(let y=-600;y<2300;y+=54)for(let x=-700;x<1800;x+=58){ctx.fillStyle=(Math.floor(x/58+y/54)%3===0)?'#acd08f':'#c0dda4';ctx.fillRect(x,y,52,48)}
  // perimeter roads
- ctx.fillStyle='#d8d2bc';ctx.fillRect(-700,0,2300,94);ctx.fillRect(-700,2100,2300,94);ctx.fillRect(5,-700,90,2900);ctx.fillRect(865,-700,90,2900);
+ ctx.fillStyle='#d8d2bc';ctx.fillRect(-700,0,2300,94);ctx.fillRect(-700,3200,2300,94);ctx.fillRect(5,-700,90,2900);ctx.fillRect(865,-700,90,2900);
  ctx.fillStyle='#737e80';ctx.fillRect(-700,12,2300,70);ctx.fillRect(-700,2112,2300,70);ctx.fillRect(15,-700,70,2900);ctx.fillRect(875,-700,70,2900);
- ctx.strokeStyle='#f6e9bd';ctx.lineWidth=3;ctx.setLineDash([24,18]);ctx.beginPath();ctx.moveTo(-700,47);ctx.lineTo(1600,47);ctx.moveTo(-700,2147);ctx.lineTo(1600,2147);ctx.moveTo(50,-700);ctx.lineTo(50,2200);ctx.moveTo(910,-700);ctx.lineTo(910,2200);ctx.stroke();ctx.setLineDash([]);
+ ctx.strokeStyle='#f6e9bd';ctx.lineWidth=3;ctx.setLineDash([24,18]);ctx.beginPath();ctx.moveTo(-700,47);ctx.lineTo(1600,47);ctx.moveTo(-700,3247);ctx.lineTo(1600,3247);ctx.moveTo(50,-700);ctx.lineTo(50,2200);ctx.moveTo(910,-700);ctx.lineTo(910,2200);ctx.stroke();ctx.setLineDash([]);
  // Lampu jalan di sepanjang jalan perimeter dan laluan pejalan kaki.
  function drawStreetLamp(x,y){
   ctx.save();ctx.translate(x,y);
@@ -398,7 +398,7 @@ function drawMap(){
   ctx.fillStyle='rgba(255,239,184,.75)';ctx.beginPath();ctx.arc(11,-29,3+Math.sin(tick*.06)*.35,0,Math.PI*2);ctx.fill();
   ctx.restore();
  }
- for(let x=-570;x<1550;x+=190){drawStreetLamp(x,5);drawStreetLamp(x,89);drawStreetLamp(x,2095);drawStreetLamp(x,2185)}
+ for(let x=-570;x<1550;x+=190){drawStreetLamp(x,5);drawStreetLamp(x,89);drawStreetLamp(x,3195);drawStreetLamp(x,3285)}
  for(let y=-600;y<2200;y+=190){drawStreetLamp(-3,y);drawStreetLamp(93,y);drawStreetLamp(863,y);drawStreetLamp(957,y)}
  for(let x=205;x<710;x+=125){drawStreetLamp(x,275);drawStreetLamp(x,455);drawStreetLamp(x,635)}
  for(let y=245;y<650;y+=180){drawStreetLamp(130,y);drawStreetLamp(835,y)}
@@ -476,12 +476,12 @@ function drawMap(){
  // Garisan tepi jalan dan garisan tengah putus-putus.
  ctx.strokeStyle='rgba(246,233,189,.72)';ctx.lineWidth=2;ctx.setLineDash([]);
  ctx.beginPath();
- ctx.moveTo(483,100);ctx.lineTo(483,2450);ctx.moveTo(553,100);ctx.lineTo(553,2450);
- for(let row=0;row<6;row++){const cy=446+row*340;ctx.moveTo(95,411+row*340);ctx.lineTo(805,411+row*340);ctx.moveTo(95,481+row*340);ctx.lineTo(805,481+row*340)}
+ ctx.moveTo(483,100);ctx.lineTo(483,3200);ctx.moveTo(553,100);ctx.lineTo(553,3200);
+ for(let row=0;row<9;row++){const cy=446+row*340;ctx.moveTo(95,411+row*340);ctx.lineTo(805,411+row*340);ctx.moveTo(95,481+row*340);ctx.lineTo(805,481+row*340)}
  ctx.stroke();
  ctx.strokeStyle='#f6e9bd';ctx.lineWidth=3;ctx.setLineDash([24,18]);ctx.beginPath();
- ctx.moveTo(518,100);ctx.lineTo(518,2450);
- for(let row=0;row<6;row++){const cy=446+row*340;ctx.moveTo(95,cy);ctx.lineTo(805,cy)}
+ ctx.moveTo(518,100);ctx.lineTo(518,3200);
+ for(let row=0;row<9;row++){const cy=446+row*340;ctx.moveTo(95,cy);ctx.lineTo(805,cy)}
  ctx.stroke();ctx.setLineDash([]);
  // Lintasan zebra pada setiap simpang jalan tengah, jarak dan saiz konsisten.
  function roadCrosswalk(x,y,vertical=false){
@@ -491,14 +491,14 @@ function drawMap(){
      else ctx.fillRect(x,y+n*8,48,5);
    }
  }
- for(let row=0;row<6;row++){
+ for(let row=0;row<9;row++){
    const y=411+row*340;
    roadCrosswalk(477,y+10,true);roadCrosswalk(553,y+10,true);
    roadCrosswalk(494,y-1,false);
  }
  // Sambungan kaki lima di tepi setiap blok.
  ctx.fillStyle='#c9c5b5';
- for(let row=0;row<6;row++){const y=402+row*340;ctx.fillRect(165,y,311,8);ctx.fillRect(560,y,85,8);}
+ for(let row=0;row<9;row++){const y=402+row*340;ctx.fillRect(165,y,311,8);ctx.fillRect(560,y,85,8);}
 
  // Trafik bandar: kereta top-down dengan bentuk badan, cermin, bumbung, lampu dan bayang.
  const carColors=['#c94f48','#477fa8','#e3ad43','#e8e3d4','#568b68','#8c6ca5'];
