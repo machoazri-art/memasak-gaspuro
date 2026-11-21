@@ -186,100 +186,81 @@ function bootPhaserTown(){
    this.createLots();
    this.createTrafficAndPeople();
    this.refreshTown();
-   this.cameras.main.setBounds(0,0,1200,1000);
-   const fit=()=>{const cam=this.cameras.main;if(!cam)return;cam.setViewport(0,0,this.scale.width,this.scale.height);cam.setZoom(Math.min(this.scale.width/1200,this.scale.height/1000)*1.12);cam.centerOn(600,500)};
-   fit();this.scale.on('resize',fit);
-   this.input.addPointer(1);
-   this.input.on('pointerdown',p=>{const p2=this.input.pointer2;if(p2&&p2.isDown&&this.input.pointer1.isDown){this.dragStart=null;this.lastPinch=Phaser.Math.Distance.Between(this.input.pointer1.x,this.input.pointer1.y,p2.x,p2.y);return}this.dragStart={x:p.x,y:p.y,cx:this.cameras.main.scrollX,cy:this.cameras.main.scrollY};this.moved=false});
-   this.input.on('pointermove',p=>{const p2=this.input.pointer2;if(p2&&p2.isDown&&this.input.pointer1.isDown){const d=Phaser.Math.Distance.Between(this.input.pointer1.x,this.input.pointer1.y,p2.x,p2.y);if(this.lastPinch>0)this.cameras.main.setZoom(Phaser.Math.Clamp(this.cameras.main.zoom*d/this.lastPinch,.35,2.5));this.lastPinch=d;this.dragStart=null;return}if(!this.dragStart||!p.isDown)return;const dx=p.x-this.dragStart.x,dy=p.y-this.dragStart.y;if(Math.abs(dx)+Math.abs(dy)>7)this.moved=true;if(this.moved){this.cameras.main.scrollX=this.dragStart.cx-dx/this.cameras.main.zoom;this.cameras.main.scrollY=this.dragStart.cy-dy/this.cameras.main.zoom}});
-   this.input.on('pointerup',()=>{this.dragStart=null;this.lastPinch=0;this.time.delayedCall(100,()=>this.moved=false)});
-   this.input.on('wheel',(p,o,dx,dy)=>this.cameras.main.setZoom(Phaser.Math.Clamp(this.cameras.main.zoom+(dy<0?.12:-.12),.35,2.5)));
+   const cam=this.cameras.main;cam.setBounds(0,0,1200,1000);
+   this.fitZoom=Math.min(this.scale.width/1200,this.scale.height/1000)*1.08;
+   this.fitZoom=Phaser.Math.Clamp(this.fitZoom,.42,.9);cam.setZoom(this.fitZoom);cam.centerOn(600,500);
+   this.scale.on('resize',(size)=>{cam.setViewport(0,0,size.width,size.height);this.fitZoom=Phaser.Math.Clamp(Math.min(size.width/1200,size.height/1000)*1.08,.42,.9);if(!this.userZoomed)cam.setZoom(this.fitZoom);cam.centerOn(600,500)});
+   this.userZoomed=false;this.input.addPointer(1);
+   this.input.on('pointerdown',p=>{if(this.input.pointer1.isDown&&this.input.pointer2&&this.input.pointer2.isDown){this.dragStart=null;this.lastPinch=Phaser.Math.Distance.Between(this.input.pointer1.x,this.input.pointer1.y,this.input.pointer2.x,this.input.pointer2.y);return}this.dragStart={x:p.x,y:p.y,cx:cam.scrollX,cy:cam.scrollY};this.moved=false});
+   this.input.on('pointermove',p=>{const a=this.input.pointer1,b=this.input.pointer2;if(a&&b&&a.isDown&&b.isDown){const d=Phaser.Math.Distance.Between(a.x,a.y,b.x,b.y);if(this.lastPinch>0){cam.setZoom(Phaser.Math.Clamp(cam.zoom*d/this.lastPinch,.35,2.4));this.userZoomed=true}this.lastPinch=d;this.dragStart=null;return}if(!this.dragStart||!p.isDown)return;const dx=p.x-this.dragStart.x,dy=p.y-this.dragStart.y;if(Math.abs(dx)+Math.abs(dy)>6)this.moved=true;if(this.moved){cam.scrollX=this.dragStart.cx-dx/cam.zoom;cam.scrollY=this.dragStart.cy-dy/cam.zoom}});
+   this.input.on('pointerup',()=>{this.dragStart=null;this.lastPinch=0;this.time.delayedCall(120,()=>this.moved=false)});
+   this.input.on('wheel',(p,o,dx,dy)=>this.setTownZoom(cam.zoom+(dy<0?.12:-.12)));
    this.input.on('gameout',()=>{this.dragStart=null;this.lastPinch=0});
+   this.setTownZoom=(z)=>{cam.setZoom(Phaser.Math.Clamp(z,.35,2.4));this.userZoomed=true};
+   this.resetTownView=()=>{this.userZoomed=false;cam.setZoom(this.fitZoom);cam.centerOn(600,500)};
+   window.GaspuroTownCamera={zoom:(d)=>this.setTownZoom(cam.zoom+d),reset:()=>this.resetTownView()};
+   this.time.addEvent({delay:35,loop:true,callback:()=>this.animateTown()});
    this.time.addEvent({delay:35,loop:true,callback:()=>this.animateTown()});
   }
   addG(graphics){this.world.add(graphics);return graphics}
   drawGround(){
-   const g=this.add.graphics();g.fillStyle(0x6f985d,1);g.fillRect(0,0,1200,1000);
-   for(let y=0;y<1000;y+=32)for(let x=0;x<1200;x+=32){const n=((x/32*7+y/32*11)%5);g.fillStyle(n===0?0x83a96b:n===1?0x789f62:0x7da566,1);g.fillRect(x+2,y+2,28,28);if(n===2){g.fillStyle(0xa7c77f,.7);g.fillRect(x+7,y+7,3,3)}}
-   // neighbourhood blocks and garden lawns
-   for(let row=0;row<3;row++)for(let col=0;col<4;col++){const x=40+col*300,y=35+row*300;g.fillStyle(0x527b4c,.25);g.fillRoundedRect(x+7,y+8,266,238,12);g.fillStyle(0xa9c78a,1);g.fillRoundedRect(x,y,266,238,10);g.lineStyle(3,0xd1d9a2,.8);g.strokeRoundedRect(x+2,y+2,262,234,8)}
+   const g=this.add.graphics();g.fillStyle(0x789b61,1);g.fillRect(0,0,1200,1000);
+   for(let y=0;y<1000;y+=36)for(let x=0;x<1200;x+=36){g.fillStyle(((x/36+y/36)%4===0)?0x83a66b:0x789b61,1);g.fillRect(x+2,y+2,32,32)}
+   // one continuous central compound for every business
+   g.fillStyle(0x526f49,.32);g.fillRoundedRect(142,132,916,736,20);
+   g.fillStyle(0xb4c88e,1);g.fillRoundedRect(130,120,940,740,18);
+   g.fillStyle(0xc5d29d,1);g.fillRoundedRect(146,136,908,708,12);
+   g.lineStyle(5,0xe7dfb6,1);g.strokeRoundedRect(130,120,940,740,18);
    this.world.add(g);
   }
   drawRoads(){
    const g=this.add.graphics();
-   // Main horizontal streets, kerbs and asphalt
-   [280,580,880].forEach(y=>{g.fillStyle(0xd9c99e,1);g.fillRect(0,y-12,1200,104);g.fillStyle(0x555f5c,1);g.fillRect(0,y,1200,80);g.fillStyle(0x69736d,1);g.fillRect(0,y+5,1200,70);g.lineStyle(3,0xf0dfa8,.9);g.lineBetween(0,y+40,1200,y+40);g.lineStyle(2,0x899087,.8);for(let x=20;x<1200;x+=95)g.lineBetween(x,y+7,x+38,y+7)});
-   // Cross streets connect the whole neighbourhood
-   [300,600,900].forEach(x=>{g.fillStyle(0xd9c99e,1);g.fillRect(x-12,0,104,1000);g.fillStyle(0x555f5c,1);g.fillRect(x,0,80,1000);g.fillStyle(0x69736d,1);g.fillRect(x+5,0,70,1000);g.lineStyle(3,0xf0dfa8,.9);g.lineBetween(x+40,0,x+40,1000);g.lineStyle(2,0x899087,.8);for(let y=20;y<1000;y+=95)g.lineBetween(x+7,y,x+7,y+38)});
-   // Pavement strips along building fronts
-   [260,560,860].forEach(y=>{g.fillStyle(0xe0d2ad,1);g.fillRect(0,y,1200,14);g.fillStyle(0xb9b18f,1);g.fillRect(0,y+12,1200,3)});
-   [280,580,880].forEach(x=>{g.fillStyle(0xe0d2ad,1);g.fillRect(x,0,14,1000);g.fillStyle(0xb9b18f,1);g.fillRect(x+12,0,3,1000)});
+   // continuous perimeter road encircling the entire shared business block
+   g.fillStyle(0xd7c49a,1);g.fillRoundedRect(28,28,1144,944,30);
+   g.fillStyle(0x4f5957,1);g.fillRoundedRect(42,42,1116,916,24);
+   g.fillStyle(0x68736e,1);g.fillRoundedRect(52,52,1096,896,20);
+   g.lineStyle(4,0xe8d9ad,.95);g.strokeRoundedRect(52,52,1096,896,20);
+   g.lineStyle(3,0xe8d9ad,.85);g.setLineDash([26,20]);g.strokeRoundedRect(80,80,1040,840,12);g.setLineDash([]);
+   // four access gates connect the road to the compound
+   g.fillStyle(0xc5d29d,1);g.fillRect(570,42,60,92);g.fillRect(570,866,60,92);g.fillRect(42,470,96,60);g.fillRect(1062,470,96,60);
    this.world.add(g);
   }
   drawLandscaping(){
-   const g=this.add.graphics();
-   // Garden beds, shrubs and small palms around the blocks
-   for(let row=0;row<3;row++)for(let col=0;col<4;col++){const bx=40+col*300,by=35+row*300;g.fillStyle(0x8fb274,1);g.fillRoundedRect(bx+12,by+12,242,214,8);g.fillStyle(0x6f965d,.5);g.fillRect(bx+18,by+18,230,5);g.fillStyle(0x9fbd7b,1);g.fillRect(bx+18,by+208,230,5)}
-   this.world.add(g);
-   for(let i=0;i<34;i++){const x=20+(i%12)*100,y=20+Math.floor(i/12)*330;this.drawTree(x,y+8);if(i%2===0)this.drawBush(x+42,y+40)}
-   for(let i=0;i<18;i++){const x=40+(i%6)*215,y=250+Math.floor(i/6)*300;this.drawBush(x,y)}
+   for(let i=0;i<32;i++){const x=28+(i%16)*76,y=i<16?22:978;this.drawTree(x,y)}
+   for(let i=0;i<10;i++){const x=i<5?20:1180,y=120+(i%5)*180;this.drawBush(x,y)}
   }
-  drawTree(x,y){
-   const c=this.add.container(x,y);
-   const sh=this.add.ellipse(5,15,48,22,0x344b35,.28);
-   const trunk=this.add.rectangle(0,8,12,25,0x765238).setStrokeStyle(2,0x4f3c2d);
-   const crown=this.add.circle(0,-7,27,0x397b48).setStrokeStyle(3,0x285c3b);
-   const a=this.add.circle(-12,-18,13,0x5e9b56),b=this.add.circle(13,-13,12,0x4e8b4e),shine=this.add.circle(-8,-21,5,0x9bc66d);
-   c.add([sh,trunk,crown,a,b,shine]);this.world.add(c);return c;
-  }
-  drawBush(x,y){const c=this.add.container(x,y);c.add([this.add.ellipse(0,5,30,12,0x355c3b,.22),this.add.circle(-7,0,9,0x4f8a4b),this.add.circle(5,-3,10,0x619c50),this.add.circle(13,1,7,0x3d7545)]);this.world.add(c)}
   drawTownDecor(){
    const g=this.add.graphics();
-   // zebra crossings and small pedestrian islands
-   [300,600,900].forEach(x=>{[280,580,880].forEach(y=>{g.fillStyle(0xe8e4ce,.9);for(let i=0;i<5;i++){g.fillRect(x-24+i*12,y-2,7,14);g.fillRect(x-24+i*12,y+68,7,14)}})});
-   // benches and street lamps
-   for(let i=0;i<10;i++){const x=120+(i%5)*235,y=i<5?265:865;g.fillStyle(0x5c4432,1);g.fillRect(x,y,30,6);g.fillStyle(0xdec28a,1);g.fillRect(x+3,y-5,24,5);g.fillStyle(0x3c493d,1);g.fillRect(x+14,y-20,3,18);g.fillStyle(0xf8e6a2,1);g.fillCircle(x+15,y-23,5)}
+   // pathways and landscaped islands inside the single shared compound
+   g.fillStyle(0xd9c99e,1);g.fillRoundedRect(165,160,870,660,10);
+   g.fillStyle(0xb8cb91,1);g.fillRoundedRect(180,175,840,630,8);
+   g.fillStyle(0xd9c99e,1);g.fillRect(190,475,820,34);g.fillRect(570,180,34,610);
+   // small garden beds
+   for(let i=0;i<8;i++){const x=205+(i%4)*265,y=i<4?185:735;g.fillStyle(0x7eaa68,1);g.fillRoundedRect(x,y,48,30,8);g.fillStyle(0x4d854b,1);for(let j=0;j<3;j++)g.fillCircle(x+12+j*12,y+13,7)}
    this.world.add(g);
-   this.add.text(600,18,'BANDAR GASPURO',{fontFamily:'monospace',fontSize:'23px',fontStyle:'bold',color:'#f7edca',stroke:'#34523a',strokeThickness:5}).setOrigin(.5);
+   for(let i=0;i<8;i++){const x=270+(i%4)*220,y=i<4?155:845;this.drawTree(x,y)}
+   this.add.text(600,145,'KAWASAN PERNIAGAAN GASPURO',{fontFamily:'monospace',fontSize:'18px',fontStyle:'bold',color:'#fff1c9',stroke:'#36543a',strokeThickness:5}).setOrigin(.5);
   }
   createLots(){
    this.lotNodes=[];
-   for(let i=0;i<12;i++){
-    const col=i%4,row=Math.floor(i/4),x=40+col*300+133,y=35+row*300+118;
-    const lot=this.add.container(x,y);this.world.add(lot);
-    const pad=this.add.graphics();pad.fillStyle(0x486c42,.18);pad.fillRoundedRect(-104,-76,208,152,5);pad.fillStyle(0x9cbb7c,1);pad.fillRect(-100,-72,200,144);pad.lineStyle(2,0xd5dca6,.9);pad.strokeRect(-100,-72,200,144);pad.fillStyle(0xb7cb8c,1);pad.fillRect(-93,-65,186,130);lot.add(pad);
-    // small path to street, no card-like frame
-    pad.fillStyle(0xd9c99e,1);pad.fillRect(-12,70,24,28);
-    const marker=this.add.text(0,3,'TAPAK KOSONG',{fontFamily:'monospace',fontSize:'11px',fontStyle:'bold',color:'#486345',backgroundColor:'#dce5b6',padding:{x:5,y:3}}).setOrigin(.5);lot.add(marker);
-    const hit=this.add.zone(0,0,200,144).setInteractive({useHandCursor:true});hit.on('pointerup',()=>{if(!this.moved)this.selectLot(i)});lot.add(hit);
+   const positions=[];
+   for(let row=0;row<3;row++)for(let col=0;col<4;col++)positions.push({x:270+col*220,y:280+row*220});
+   positions.forEach((p,i)=>{
+    const lot=this.add.container(p.x,p.y);this.world.add(lot);
+    const pad=this.add.graphics();pad.fillStyle(0x789b61,.01);pad.fillRect(-88,-82,176,164);lot.add(pad);
+    const marker=this.add.text(0,0,'＋',{fontFamily:'monospace',fontSize:'24px',fontStyle:'bold',color:'#58734b',backgroundColor:'#dce5b6',padding:{x:5,y:3}}).setOrigin(.5);lot.add(marker);
+    const hit=this.add.zone(0,0,176,164).setInteractive({useHandCursor:true});hit.on('pointerup',()=>{if(!this.moved)this.selectLot(i)});lot.add(hit);
     this.lotNodes.push({lot,pad,marker,i,dynamic:[]});
-   }
+   });
   }
   drawBuilding(lot,b,i){
    const palettes={warung:[0x9e4938,0xd9a45d],mamak:[0x3c7180,0xe1c78c],satay:[0x98602f,0xd9ad65],drink:[0x3e887f,0xb7d5b7],cafe:[0x665044,0xc9a77a],foodcourt:[0x9a6840,0xd6b56f],restaurant:[0x7d4339,0xd7a66d]};
    const col=palettes[b.type]||palettes.warung,group=this.add.container(0,0);lot.add(group);
-   const g=this.add.graphics();
-   // cast shadow and building foundation
-   g.fillStyle(0x293e30,.3);g.fillRoundedRect(-76,-45,158,112,5);
-   g.fillStyle(0xdbc99c,1);g.fillRect(-82,-56,164,116);
-   g.fillStyle(0xeee0b9,1);g.fillRect(-77,-52,154,105);
-   // visible roof footprint and trim
-   g.fillStyle(0x553f32,1);g.fillRect(-75,-57,150,91);
-   g.fillStyle(col[0],1);g.fillRect(-70,-53,140,82);
-   g.fillStyle(col[1],1);g.fillRect(-64,-47,128,70);
-   g.lineStyle(4,0x684633,1);g.strokeRect(-70,-53,140,82);
-   // roof tiles in pixel-like rows
-   for(let y=-42;y<20;y+=12){g.lineStyle(1,0x8a6547,.55);g.lineBetween(-60,y,60,y);for(let x=-54;x<60;x+=24)g.lineBetween(x,y,x,y+12)}
-   // roof ridge and eaves
-   g.fillStyle(0x65432f,1);g.fillRect(-5,-52,10,78);g.fillStyle(0xf0d29a,1);g.fillRect(-73,27,146,8);
-   // awning, front door and side windows
-   g.fillStyle(0xead8ac,1);g.fillRect(-34,27,68,13);g.fillStyle(col[0],1);for(let x=-30;x<32;x+=12)g.fillRect(x,28,6,10);
-   g.fillStyle(0x5b4838,1);g.fillRect(-12,39,24,18);g.fillStyle(0x9cc4bd,1);g.fillRect(-8,42,8,8);g.fillStyle(0xe7c77d,1);g.fillCircle(8,49,2);
-   g.fillStyle(0x7ea9a2,1);g.fillRect(-61,0,15,16);g.fillRect(46,0,15,16);g.lineStyle(2,0xf2dfb2,1);g.strokeRect(-61,0,15,16);g.strokeRect(46,0,15,16);
-   group.add(g);
-   // shop sign at the street-facing edge
-   const type=bizType(b);const sign=this.add.text(0,76,type.name,{fontFamily:'monospace',fontSize:'11px',fontStyle:'bold',color:'#fff4d7',backgroundColor:'#34583e',padding:{x:5,y:3},align:'center'}).setOrigin(.5);group.add(sign);
-   const level=this.add.text(63,-59,'L'+b.level,{fontFamily:'monospace',fontSize:'10px',fontStyle:'bold',color:'#fff7d8',backgroundColor:'#34583e',padding:{x:4,y:2}}).setOrigin(.5);group.add(level);
+   const g=this.add.graphics();g.fillStyle(0x344638,.28);g.fillRoundedRect(-70,-45,140,100,5);g.fillStyle(0xdbc99c,1);g.fillRect(-74,-56,148,104);g.fillStyle(0x553f32,1);g.fillRect(-68,-52,136,86);g.fillStyle(col[0],1);g.fillRect(-63,-47,126,76);g.fillStyle(col[1],1);g.fillRect(-57,-41,114,64);
+   for(let y=-36;y<18;y+=11){g.lineStyle(1,0x8a6547,.55);g.lineBetween(-54,y,54,y)}
+   g.fillStyle(0xead8ac,1);g.fillRect(-30,25,60,12);g.fillStyle(col[0],1);for(let x=-27;x<30;x+=12)g.fillRect(x,26,6,9);g.fillStyle(0x5b4838,1);g.fillRect(-11,37,22,13);g.fillStyle(0x9cc4bd,1);g.fillRect(-7,40,7,7);group.add(g);
+   const type=bizType(b);group.add(this.add.text(0,62,type.name,{fontFamily:'monospace',fontSize:'10px',fontStyle:'bold',color:'#fff4d7',backgroundColor:'#34583e',padding:{x:5,y:3},align:'center'}).setOrigin(.5));
+   group.add(this.add.text(57,-50,'L'+b.level,{fontFamily:'monospace',fontSize:'10px',fontStyle:'bold',color:'#fff7d8',backgroundColor:'#34583e',padding:{x:4,y:2}}).setOrigin(.5));
    return group;
   }
   selectLot(i){s.selectedLot=i;const b=selectedBuilding(),unlocked=i<unlockedLots();if(b){openInterior(b);return}$('selectionTitle').textContent='🏡 Lot '+(i+1)+' kosong';$('selectionText').textContent=unlocked?'Pilih jenis perniagaan dan bina di sini.':'Lot terkunci. Naik level untuk buka.';$('buildBtn').disabled=!unlocked;render();drawTools();this.refreshTown()}
@@ -289,10 +270,8 @@ function bootPhaserTown(){
    this.lotNodes.forEach(({lot,pad,marker,i,dynamic})=>{
     dynamic.forEach(o=>o.destroy());dynamic.length=0;
     const b=s.buildings.find(x=>x.lot===i),unlocked=i<unlockedLots();
-    pad.clear();pad.fillStyle(unlocked?0x9cbb7c:0x89947a,1);pad.fillRect(-100,-72,200,144);pad.lineStyle(2,0xd5dca6,.9);pad.strokeRect(-100,-72,200,144);pad.fillStyle(unlocked?0xb7cb8c:0x77836f,1);pad.fillRect(-93,-65,186,130);
-    marker.setText(b?'':unlocked?'TAPAK KOSONG':'TERKUNCI');
-    if(b){const obj=this.drawBuilding(lot,b,i);dynamic.push(obj);marker.setText('')}
-    else if(unlocked){const m=this.add.text(0,0,'＋',{fontFamily:'monospace',fontSize:'25px',color:'#54734b'}).setOrigin(.5);lot.add(m);dynamic.push(m)}
+    marker.setText(b?'':unlocked?'＋':'🔒');
+    if(b){dynamic.push(this.drawBuilding(lot,b,i));marker.setText('')}
    });
   }
   createTrafficAndPeople(){
@@ -346,9 +325,8 @@ canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);
 canvas.addEventListener('pointermove',e=>{if(!drag)return;let dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>6)drag.moved=true;if(drag.moved){camera.x=drag.cx+dx*canvas.width/canvas.clientWidth;camera.y=drag.cy+dy*canvas.height/canvas.clientHeight}});
 canvas.addEventListener('pointerup',e=>{if(!drag)return;if(!drag.moved){let p=screenToWorld(e),lot=plots.find(x=>p.x>=x.x&&p.x<=x.x+x.w&&p.y>=x.y&&p.y<=x.y+x.h);if(lot){s.selectedLot=lot.i;let b=selectedBuilding();if(b){openInterior(b);drag=null;return}$('selectionTitle').textContent=b?bizType(b).emoji+' '+bizType(b).name:'🏡 Lot '+(lot.i+1)+' kosong';$('selectionText').textContent=b?'Tahap '+b.level+' · Hasil terkumpul '+fmt(b.bank):lot.unlocked?'Pilih jenis perniagaan dan bina di sini.':'Lot terkunci. Naik level untuk buka.';$('buildBtn').disabled=!!b||!lot.unlocked;render();drawTools();}}drag=null});
 canvas.addEventListener('wheel',e=>{e.preventDefault();camera.scale=Math.max(.65,Math.min(1.6,camera.scale+(e.deltaY<0?.08:-.08)))},{passive:false});
-const changeTownZoom=delta=>{const sc=phaserTownScene();if(!sc||!sc.cameras||!sc.cameras.main)return;sc.cameras.main.setZoom(Phaser.Math.Clamp(sc.cameras.main.zoom+delta,.45,2.25))};
-['zin','zout','home'].forEach(id=>$(id).addEventListener('pointerdown',e=>e.stopPropagation()));
-$('zin').onclick=e=>{e.preventDefault();changeTownZoom(.18)};$('zout').onclick=e=>{e.preventDefault();changeTownZoom(-.18)};$('home').onclick=e=>{e.preventDefault();const sc=phaserTownScene();if(sc){sc.cameras.main.setZoom(1);sc.cameras.main.centerOn(450,380)}};
+const changeTownZoom=delta=>{const api=window.GaspuroTownCamera;if(api){api.zoom(delta);return}const sc=phaserTownScene();if(sc&&sc.setTownZoom)sc.setTownZoom(sc.cameras.main.zoom+delta)};
+['zin','zout','home'].forEach(id=>{const el=$(id);if(!el)return;el.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation()},{passive:false});el.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(id==='zin')changeTownZoom(.2);else if(id==='zout')changeTownZoom(-.2);else if(window.GaspuroTownCamera)window.GaspuroTownCamera.reset()})});
 let currentShop=null,cookTimer=null,cookRemaining=30,cookDone=[false,false,false];
 let liveCustomers=[],customerClock=null,customerSeq=0,activeOrder=null;
 const customerFaces=['🧔🏻','👩🏻','👨🏽','👩🏽','👨🏻','👩🏼','🧕🏻','👨🏾'],seatSpots=[{x:18,y:40},{x:55,y:40},{x:18,y:69},{x:55,y:69}];
