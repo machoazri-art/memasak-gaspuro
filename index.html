@@ -439,19 +439,10 @@ function drawMap(now=0){
  for(let y=420;y<=1780;y+=340){zebra(493,y+4,true);zebra(903,y+4,true)}
  for(let x=493;x<=903;x+=410){zebra(x+4,414,false);zebra(x+4,754,false);zebra(x+4,1094,false);zebra(x+4,1434,false);zebra(x+4,1774,false)}
  // Hentian bas mini, hentian dan papan tanda kini dipaparkan melalui Phaser.
- // Pembantu Canvas sementara untuk pokok teduhan di poket taman; akan dipindahkan bersama taman sisi.
- function townTree(x,y,scale=1){
-  ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);ctx.fillStyle='rgba(42,57,38,.22)';ctx.beginPath();ctx.ellipse(5,13,23,10,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#79583b';ctx.fillRect(-4,-1,9,22);ctx.fillStyle='#a47b4e';ctx.fillRect(-2,2,3,15);
-  const blobs=[[-12,-9,13,'#4c854b'],[1,-15,16,'#5f9b51'],[13,-7,13,'#397b49'],[-3,0,15,'#70a94f'],[10,4,10,'#4c8b45']];for(const b of blobs){ctx.fillStyle=b[3];ctx.beginPath();ctx.arc(b[0],b[1],b[2],0,Math.PI*2);ctx.fill()}ctx.restore();
- }
- function bench(x,y){ctx.fillStyle='rgba(45,53,42,.2)';ctx.fillRect(x-15,y+7,32,5);ctx.fillStyle='#594638';ctx.fillRect(x-15,y-5,31,5);ctx.fillRect(x-15,y+2,31,5);ctx.fillStyle='#bd9565';ctx.fillRect(x-13,y-4,27,3);ctx.fillRect(x-13,y+3,27,3);ctx.fillStyle='#414b48';ctx.fillRect(x-11,y+7,3,5);ctx.fillRect(x+10,y+7,3,5);}
- // Poket taman bandar di bahagian sisi: rumput, laluan batu, pokok dan bangku.
- function pocketPark(x,y){rounded(x,y,48,126,8,'#83b77a','#e6e1c9');ctx.fillStyle='#d8cdb0';ctx.fillRect(x+20,y+8,8,110);townTree(x+13,y+29,.48);townTree(x+35,y+95,.48);bench(x+24,y+64);ctx.fillStyle='#f3d77a';ctx.beginPath();ctx.arc(x+24,y+43,3,0,Math.PI*2);ctx.fill();}
- pocketPark(102,520);pocketPark(1320,860);pocketPark(102,1200);pocketPark(1320,1540);
+ // Poket taman dan pokok teduhan sisi kini dipaparkan melalui Phaser.
  // Parkir awam dan petak kereta kini dipaparkan melalui Phaser.
  // Papan tanda arah dan tong sampah kini dipaparkan melalui Phaser.
- // Laluan basikal pada sisi jalan kini dipaparkan melalui Phaser. Pokok teduhan kekal pada Canvas buat sementara.
- for(let y=540;y<1900;y+=170){townTree(130,y,.55);townTree(1342,y,.55)}
+ // Pokok teduhan sisi dipindahkan ke Phaser Graphics.
  // Ruang tengah dikekalkan sebagai rumput terbuka — petak plaza coklat dibuang.
  // 14 kawasan komersial; setiap kawasan 2x2 kedai, dipisahkan jalan raya.
  plots=[];for(let i=0;i<17;i++){let p=lotPos(i),b=s.buildings.find(x=>x.lot===i),unlocked=i<unlockedLots();
@@ -753,6 +744,16 @@ function bootPhaserMapBridge(){
       natureLayer.fillStyle(0xbd9565,1);natureLayer.fillRect(x-13,y-4,27,3);natureLayer.fillRect(x-13,y+3,27,3);
       natureLayer.fillStyle(0x414b48,1);natureLayer.fillRect(x-11,y+7,3,5);natureLayer.fillRect(x+10,y+7,3,5);
      };
+     const pocketPark=(x,y)=>{
+      natureLayer.fillStyle(0x5e8056,.18);natureLayer.fillEllipse(x+25,y+65,56,132);
+      natureLayer.fillStyle(0x83b77a,1);natureLayer.fillRoundedRect(x,y,48,126,8);
+      natureLayer.lineStyle(2,0xe6e1c9,1);natureLayer.strokeRoundedRect(x,y,48,126,8);
+      natureLayer.fillStyle(0xd8cdb0,1);natureLayer.fillRoundedRect(x+20,y+8,8,110,3);
+      tree(x+13,y+29,.48);tree(x+35,y+95,.48);bench(x+24,y+64);
+      natureLayer.fillStyle(0xf3d77a,1);natureLayer.fillCircle(x+24,y+43,3);
+     };
+     for(const p of [[102,520],[1320,860],[102,1200],[1320,1540]])pocketPark(p[0],p[1]);
+     for(let y=540;y<1900;y+=170){tree(130,y,.55);tree(1342,y,.55)}
      for(const p of [[300,275],[475,275],[650,275],[300,462],[475,462],[650,462],[300,642],[475,642]])planter(p[0],p[1]);
      for(const p of [[112,275],[842,275],[112,462],[842,462]])bench(p[0],p[1]);
      for(const p of [[110,190],[840,190],[110,450],[840,450],[110,635],[840,635],[250,645],[700,645]])tree(p[0],p[1],.75);
