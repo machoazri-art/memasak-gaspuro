@@ -137,6 +137,10 @@
 .phaser-unavailable #map{display:block!important;width:100%;height:min(68vh,590px);min-height:390px;touch-action:pan-y}
 .phaser-unavailable #townPhaserMount{display:none!important}
 /* Stable town-map input fallback: use the proven interactive 2D canvas while Phaser town input is repaired. */
+/* Phaser WebGL presentation bridge; invisible source canvas remains interactive. */
+.phaser-map-bridge-ready #map{display:block!important;position:absolute;inset:0;z-index:2!important;width:100%;height:100%;opacity:0!important;pointer-events:auto!important;touch-action:none}
+.phaser-map-bridge-ready #townPhaserMount{display:block!important;position:absolute;inset:0;z-index:1!important;pointer-events:none!important;overflow:hidden}
+.phaser-map-bridge-ready #townPhaserMount canvas{display:block;width:100%!important;height:100%!important;pointer-events:none!important}
 /* Header melekat supaya baki wang sentiasa kelihatan ketika scroll. */
 .top{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,#fffdf5,#f4ead3);box-shadow:0 3px 12px rgba(45,58,37,.14);padding-top:max(9px,env(safe-area-inset-top));}
 .cash{position:sticky;top:calc(env(safe-area-inset-top) + 5px);z-index:101;white-space:nowrap;box-shadow:0 2px 8px rgba(42,57,35,.16)}
@@ -735,7 +739,40 @@ function drawMap(now=0){
     ctx.save();ctx.globalAlpha=night*.95;for(let i=0;i<14;i++){const p=lotPos(i);if(s.buildings.some(b=>b.lot===i)){ctx.fillStyle='#ffe6a0';ctx.fillRect(p.x+34,p.y+63,12,12);ctx.fillRect(p.x+96,p.y+63,12,12)}}ctx.restore();
   }
   if(festivalNow()){const eventIndex=Math.floor(tick/72000)%festivalNames.length;ctx.save();ctx.fillStyle='rgba(66,48,35,.88)';ctx.beginPath();ctx.roundRect(300,637,280,34,12);ctx.fill();ctx.fillStyle='#ffe7a3';ctx.font='bold 15px system-ui';ctx.textAlign='center';ctx.fillText('🎉 '+festivalNames[eventIndex],440,660);ctx.textAlign='start';ctx.restore();}
-  ctx.restore();requestAnimationFrame(drawMap);tick++
+  ctx.restore();if(window.GaspuroMapBridge)window.GaspuroMapBridge.refresh();requestAnimationFrame(drawMap);tick++
+}
+/* Phaser WebGL map bridge: Canvas lama kekal sebagai sumber data dan input
+   sehingga semua objek bandar dipindahkan ke Game Objects secara berperingkat. */
+let phaserMapBridge=null,phaserMapTexture=null,phaserMapImage=null;
+function bootPhaserMapBridge(){
+ if(phaserMapBridge||!window.Phaser)return false;
+ const mount=$('townPhaserMount');
+ if(!mount||!canvas)return false;
+ try{
+  class GaspuroMapBridgeScene extends Phaser.Scene{
+   constructor(){super({key:'GaspuroMapBridgeScene'})}
+   create(){
+    const texture=this.textures.addCanvas('gaspuroLiveMap',canvas);
+    phaserMapTexture=texture;
+    phaserMapImage=this.add.image(0,0,texture).setOrigin(0,0).setDisplaySize(900,1000);
+    this.scale.on('resize',()=>phaserMapImage&&phaserMapImage.setDisplaySize(900,1000));
+    window.GaspuroMapBridge={refresh:()=>{if(phaserMapTexture)phaserMapTexture.refresh()}};
+    document.documentElement.classList.remove('town-legacy-mode');
+    document.documentElement.classList.add('phaser-map-bridge-ready');
+   }
+  }
+  phaserMapBridge=new Phaser.Game({
+   type:Phaser.WEBGL,parent:mount,width:900,height:1000,transparent:true,
+   render:{antialias:true,roundPixels:false,transparent:true,powerPreference:'high-performance'},
+   scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},
+   scene:[GaspuroMapBridgeScene],banner:false
+  });
+  return true;
+ }catch(err){
+  console.error('Phaser map bridge unavailable; using Canvas fallback:',err);
+  document.documentElement.classList.add('town-legacy-mode');
+  return false;
+ }
 }
 function screenToWorld(e){let r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*canvas.width/r.width,y=(e.clientY-r.top)*canvas.height/r.height;return{x:(x-camera.x)/camera.scale,y:(y-camera.y)/camera.scale}}
 canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,cx:camera.x,cy:camera.y,moved:false}});
@@ -977,7 +1014,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.v
 
 function applyOffline(){let elapsed=Math.min(3600,Math.max(0,(Date.now()-(s.lastTick||Date.now()))/1000));if(elapsed>5){let earned=s.buildings.reduce((a,b)=>a+incomeRate(b),0)*elapsed/60;s.buildings.forEach(b=>b.bank+=incomeRate(b)*elapsed/60);log('⏱️ Perniagaan jana '+fmt(earned)+' semasa kau offline.');}}
 document.documentElement.classList.add('town-legacy-mode');
-if(window.Phaser){try{bootPhaserRestaurant()}catch(e){console.error('Phaser restaurant boot failed:',e)}}
+if(window.Phaser){try{bootPhaserRestaurant();bootPhaserMapBridge()}catch(e){console.error('Phaser boot failed; map fallback remains active:',e);document.documentElement.classList.add('town-legacy-mode')}}
 
 window.addEventListener('pagehide',()=>{s.lastTick=Date.now();try{localStorage.setItem('gaspuro-town-v1',JSON.stringify(s))}catch(e){}});
 applyOffline();drawTools();render();drawMap();setInterval(simulate,2000);setInterval(()=>{const factor=cityDemandFactor();s.buildings.forEach(b=>b.bank+=incomeRate(b)*factor/6);save()},10000);
