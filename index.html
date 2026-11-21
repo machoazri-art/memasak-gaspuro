@@ -477,7 +477,10 @@ function drawMap(){
  ctx.fillStyle='#9fb48b';ctx.fillRect(bx+7,by+7,312,238);
  const slots=[{x:bx+8,y:by+8},{x:bx+164,y:by+8},{x:bx+8,y:by+128},{x:bx+164,y:by+128}];
  for(let j=0;j<4;j++){const q=slots[j],shopIndex=i*4+j,shop=s.buildings.find(x=>x.lot===shopIndex),project=landProjectAt(shopIndex),shopUnlocked=shopIndex<unlockedLots();
+ const zone=(s.lotZones||{})[shopIndex]||'komersial',zonePalette={komersial:'#e4b84f',perumahan:'#6da7d5',pelancongan:'#52b9a2',industri:'#99958e',rekreasi:'#78b85e'},zoneColor=zonePalette[zone]||zonePalette.komersial;
  ctx.fillStyle=shop?'#88a879':shopUnlocked?'#b8d39a':'#9aa98e';ctx.fillRect(q.x,q.y,150,112);
+ ctx.fillStyle=zoneColor+'33';ctx.fillRect(q.x,q.y,150,112);ctx.strokeStyle=zoneColor;ctx.lineWidth=3;ctx.strokeRect(q.x+1.5,q.y+1.5,147,109);
+ ctx.fillStyle=zoneColor;ctx.fillRect(q.x+5,q.y+5,Math.min(88,zone.length*6+22),13);ctx.fillStyle='#26372c';ctx.font='bold 8px system-ui';ctx.fillText(({komersial:'KOMERSIAL',perumahan:'PERUMAHAN',pelancongan:'PELANCONGAN',industri:'INDUSTRI',rekreasi:'REKREASI'})[zone]||'KOMERSIAL',q.x+9,q.y+14);
  if(shop){const type=bizType(shop),si=({warung:0,mamak:1,satay:2,drink:3,cafe:4,foodcourt:5,restaurant:6,bakery:7,ramen:8,dessert:9,bbq:10,nightmarket:11})[shop.type]??0;
  if(townSprite.complete&&townSprite.naturalWidth)ctx.drawImage(townSprite,si*256,0,256,240,q.x+2,q.y-3,146,116);
  else{ctx.fillStyle=type.color;ctx.fillRect(q.x+12,q.y+20,126,78);ctx.fillStyle='#fff2d1';ctx.fillRect(q.x+20,q.y+38,110,50);ctx.font='22px system-ui';ctx.fillText(type.emoji,q.x+60,q.y+67)}
@@ -558,6 +561,27 @@ function drawMap(){
  ctx.fillStyle='#c9c5b5';
  for(let row=0;row<6;row++){const y=402+row*340;ctx.fillRect(165,y,311,8);ctx.fillRect(560,y,311,8);ctx.fillRect(970,y,326,8);}
 
+ // Kemudahan bandar pada PETA CANVAS UTAMA (bukan lapisan Phaser).
+ // Diletakkan pada jalur hijau di sebelah timur kawasan lot supaya jelas kelihatan.
+ const civicServices=(s.city&&s.city.services)||{};
+ const civicDefs=[
+  {id:'bus',x:1328,y:235,label:'TERMINAL',color:'#477f9a'},
+  {id:'police',x:1328,y:585,label:'POLIS',color:'#547da8'},
+  {id:'parking',x:1328,y:935,label:'PARKIR',color:'#777f82'},
+  {id:'parks',x:1328,y:1285,label:'TAMAN',color:'#5e9b55'}
+ ];
+ for(const f of civicDefs){const level=Number(civicServices[f.id])||0;if(level<1)continue;
+  ctx.save();ctx.translate(f.x,f.y);
+  ctx.fillStyle='rgba(35,48,35,.25)';ctx.beginPath();ctx.ellipse(0,22,39,9,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#e2d2aa';ctx.fillRect(-36,-24,72,48);
+  ctx.fillStyle=f.color;ctx.fillRect(-31,-19,62,38);
+  if(f.id==='parks'){ctx.fillStyle='#397a45';for(let n=0;n<3;n++){ctx.beginPath();ctx.arc(-19+n*19,-5,10,0,Math.PI*2);ctx.fill()}ctx.fillStyle='#75553b';ctx.fillRect(-21,4,4,11);ctx.fillRect(-2,4,4,11);ctx.fillRect(17,4,4,11)}
+  else if(f.id==='parking'){ctx.fillStyle='#e8e6d8';ctx.font='bold 29px system-ui';ctx.textAlign='center';ctx.fillText('P',0,11);ctx.textAlign='start';ctx.strokeStyle='#f4e8c6';ctx.lineWidth=2;ctx.strokeRect(-27,-15,54,30)}
+  else if(f.id==='police'){ctx.fillStyle='#eaf2f5';ctx.fillRect(-23,-12,46,23);ctx.fillStyle='#31577b';ctx.fillRect(-7,-12,14,23);ctx.fillStyle='#e8d37b';ctx.beginPath();ctx.arc(0,-17,5,0,Math.PI*2);ctx.fill()}
+  else {ctx.fillStyle='#d9e8e2';ctx.fillRect(-25,-10,50,21);ctx.fillStyle='#f0d47f';ctx.fillRect(-7,0,14,12);ctx.fillStyle='#c84e43';ctx.fillRect(-28,-23,56,9);ctx.fillStyle='#fff0c9';ctx.font='bold 7px system-ui';ctx.textAlign='center';ctx.fillText('BAS',0,-16);ctx.textAlign='start'}
+  ctx.fillStyle='#fff3d0';ctx.font='bold 8px system-ui';ctx.textAlign='center';ctx.fillText(f.label+' T'+level,0,38);ctx.textAlign='start';
+  ctx.restore();
+ }
  // Trafik bandar: kereta top-down dengan bentuk badan, cermin, bumbung, lampu dan bayang.
  const carColors=['#c94f48','#477fa8','#e3ad43','#e8e3d4','#568b68','#8c6ca5'];
  for(let i=0;i<8;i++){
