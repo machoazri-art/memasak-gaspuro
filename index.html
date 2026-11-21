@@ -470,6 +470,38 @@ function drawMap(){
  for(const p of [[300,275],[475,275],[650,275],[300,462],[475,462],[650,462],[300,642],[475,642]])planter(p[0],p[1]);
  for(const p of [[112,275],[842,275],[112,462],[842,462]])bench(p[0],p[1]);
  for(const p of [[110,190],[840,190],[110,450],[840,450],[110,635],[840,635],[250,645],[700,645]])townTree(p[0],p[1],.75);
+ // Rangkaian jalan dalaman: jalan penghubung di ruang antara blok lot (tidak menutup tapak binaan).
+ ctx.fillStyle='#d8d2bc';
+ for(let y=402;y<=1762;y+=340)ctx.fillRect(95,y,1290,88);
+ for(let x=476;x<=886;x+=410)ctx.fillRect(x,94,84,2120);
+ ctx.fillStyle='#737e80';
+ for(let y=411;y<=1771;y+=340)ctx.fillRect(95,y,1290,70);
+ for(let x=483;x<=893;x+=410)ctx.fillRect(x,94,70,2120);
+ ctx.strokeStyle='#f6e9bd';ctx.lineWidth=2.5;ctx.setLineDash([20,16]);ctx.beginPath();
+ for(let y=446;y<=1806;y+=340){ctx.moveTo(95,y);ctx.lineTo(1385,y)}
+ for(let x=518;x<=928;x+=410){ctx.moveTo(x,94);ctx.lineTo(x,2214)}
+ ctx.stroke();ctx.setLineDash([]);
+ // Lintasan belang di setiap persimpangan utama.
+ function zebra(x,y,horizontal=true){ctx.fillStyle='#f4efdc';for(let n=0;n<6;n++){if(horizontal)ctx.fillRect(x+n*10,y,5,30);else ctx.fillRect(x,y+n*10,30,5)}}
+ for(let y=420;y<=1780;y+=340){zebra(493,y+4,true);zebra(903,y+4,true)}
+ for(let x=493;x<=903;x+=410){zebra(x+4,414,false);zebra(x+4,754,false);zebra(x+4,1094,false);zebra(x+4,1434,false);zebra(x+4,1774,false)}
+ // Hentian bas mini dengan bumbung, bangku dan papan tanda.
+ function busStop(x,y){ctx.fillStyle='rgba(39,52,42,.2)';ctx.beginPath();ctx.ellipse(x+23,y+34,27,7,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#536a69';ctx.fillRect(x,y+5,4,29);ctx.fillRect(x+43,y+5,4,29);ctx.fillStyle='#6f9c9a';ctx.fillRect(x-3,y,53,5);ctx.fillStyle='rgba(225,242,231,.78)';ctx.fillRect(x+5,y+8,33,19);ctx.fillStyle='#344c4b';ctx.fillRect(x+9,y+28,26,4);ctx.fillStyle='#f5d36f';ctx.fillRect(x+18,y-8,13,12);ctx.fillStyle='#33453d';ctx.font='bold 8px system-ui';ctx.fillText('BUS',x+19,y);}
+ busStop(111,430);busStop(1308,770);busStop(111,1110);busStop(1308,1450);
+ // Poket taman bandar di bahagian sisi: rumput, laluan batu, pokok dan bangku.
+ function pocketPark(x,y){rounded(x,y,48,126,8,'#83b77a','#e6e1c9');ctx.fillStyle='#d8cdb0';ctx.fillRect(x+20,y+8,8,110);townTree(x+13,y+29,.48);townTree(x+35,y+95,.48);bench(x+24,y+64);ctx.fillStyle='#f3d77a';ctx.beginPath();ctx.arc(x+24,y+43,3,0,Math.PI*2);ctx.fill();}
+ pocketPark(102,520);pocketPark(1320,860);pocketPark(102,1200);pocketPark(1320,1540);
+ // Parkir awam kecil berhampiran jalan utama, dengan petak dan kereta.
+ function parkingBay(x,y){rounded(x,y,74,42,5,'#858e8b','#e5e0ce');ctx.strokeStyle='#f5edcf';ctx.lineWidth=2;for(let n=0;n<3;n++){ctx.strokeRect(x+5+n*23,y+5,18,31)}ctx.fillStyle='#4d83a2';ctx.fillRect(x+8,y+13,12,17);ctx.fillStyle='#c96d57';ctx.fillRect(x+31,y+13,12,17);ctx.fillStyle='#e2c66e';ctx.fillRect(x+54,y+13,12,17);ctx.fillStyle='#d9e5e4';ctx.fillRect(x+10,y+15,8,4);ctx.fillRect(x+33,y+15,8,4);ctx.fillRect(x+56,y+15,8,4);}
+ parkingBay(486,468);parkingBay(896,808);parkingBay(486,1148);parkingBay(896,1488);
+ // Papan tanda arah bandar di persimpangan dan tong sampah awam.
+ function waySign(x,y,label){ctx.fillStyle='#46554b';ctx.fillRect(x+13,y+9,3,27);rounded(x,y,54,15,3,'#477c68','#e9e2c9');ctx.fillStyle='#fff5d7';ctx.font='bold 7px system-ui';ctx.textAlign='center';ctx.fillText(label,x+27,y+10);ctx.textAlign='start'}
+ function publicBin(x,y){rounded(x,y,12,17,3,'#4f8065','#315843');ctx.fillStyle='#d7e7d4';ctx.fillRect(x+2,y+3,8,2);ctx.fillRect(x+2,y+8,8,2)}
+ waySign(500,500,'PUSAT');waySign(910,840,'KEDAI');waySign(500,1180,'TAMAN');waySign(910,1520,'BANDAR');
+ publicBin(150,520);publicBin(1275,860);publicBin(150,1200);publicBin(1275,1540);
+ // Laluan basikal pada sisi jalan dan pokok teduhan di ruang tepi.
+ ctx.strokeStyle='#5d9a79';ctx.lineWidth=5;ctx.setLineDash([8,8]);ctx.beginPath();ctx.moveTo(112,500);ctx.lineTo(112,1840);ctx.moveTo(1360,500);ctx.lineTo(1360,1840);ctx.stroke();ctx.setLineDash([]);
+ for(let y=540;y<1900;y+=170){townTree(130,y,.55);townTree(1342,y,.55)}
  // Ruang tengah dikekalkan sebagai rumput terbuka — petak plaza coklat dibuang.
  // 14 kawasan komersial; setiap kawasan 2x2 kedai, dipisahkan jalan raya.
  plots=[];for(let i=0;i<17;i++){let p=lotPos(i),b=s.buildings.find(x=>x.lot===i),unlocked=i<unlockedLots();
