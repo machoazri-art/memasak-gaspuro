@@ -438,9 +438,7 @@ function drawMap(now=0){
  function zebra(x,y,horizontal=true){ctx.fillStyle='#f4efdc';for(let n=0;n<6;n++){if(horizontal)ctx.fillRect(x+n*10,y,5,30);else ctx.fillRect(x,y+n*10,30,5)}}
  for(let y=420;y<=1780;y+=340){zebra(493,y+4,true);zebra(903,y+4,true)}
  for(let x=493;x<=903;x+=410){zebra(x+4,414,false);zebra(x+4,754,false);zebra(x+4,1094,false);zebra(x+4,1434,false);zebra(x+4,1774,false)}
- // Hentian bas mini dengan bumbung, bangku dan papan tanda.
- function busStop(x,y){ctx.fillStyle='rgba(39,52,42,.2)';ctx.beginPath();ctx.ellipse(x+23,y+34,27,7,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#536a69';ctx.fillRect(x,y+5,4,29);ctx.fillRect(x+43,y+5,4,29);ctx.fillStyle='#6f9c9a';ctx.fillRect(x-3,y,53,5);ctx.fillStyle='rgba(225,242,231,.78)';ctx.fillRect(x+5,y+8,33,19);ctx.fillStyle='#344c4b';ctx.fillRect(x+9,y+28,26,4);ctx.fillStyle='#f5d36f';ctx.fillRect(x+18,y-8,13,12);ctx.fillStyle='#33453d';ctx.font='bold 8px system-ui';ctx.fillText('BUS',x+19,y);}
- busStop(111,430);busStop(1308,770);busStop(111,1110);busStop(1308,1450);
+ // Hentian bas mini, hentian dan papan tanda kini dipaparkan melalui Phaser.
  // Pembantu Canvas sementara untuk pokok teduhan di poket taman; akan dipindahkan bersama taman sisi.
  function townTree(x,y,scale=1){
   ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);ctx.fillStyle='rgba(42,57,38,.22)';ctx.beginPath();ctx.ellipse(5,13,23,10,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#79583b';ctx.fillRect(-4,-1,9,22);ctx.fillStyle='#a47b4e';ctx.fillRect(-2,2,3,15);
@@ -450,16 +448,9 @@ function drawMap(now=0){
  // Poket taman bandar di bahagian sisi: rumput, laluan batu, pokok dan bangku.
  function pocketPark(x,y){rounded(x,y,48,126,8,'#83b77a','#e6e1c9');ctx.fillStyle='#d8cdb0';ctx.fillRect(x+20,y+8,8,110);townTree(x+13,y+29,.48);townTree(x+35,y+95,.48);bench(x+24,y+64);ctx.fillStyle='#f3d77a';ctx.beginPath();ctx.arc(x+24,y+43,3,0,Math.PI*2);ctx.fill();}
  pocketPark(102,520);pocketPark(1320,860);pocketPark(102,1200);pocketPark(1320,1540);
- // Parkir awam kecil berhampiran jalan utama, dengan petak dan kereta.
- function parkingBay(x,y){rounded(x,y,74,42,5,'#858e8b','#e5e0ce');ctx.strokeStyle='#f5edcf';ctx.lineWidth=2;for(let n=0;n<3;n++){ctx.strokeRect(x+5+n*23,y+5,18,31)}ctx.fillStyle='#4d83a2';ctx.fillRect(x+8,y+13,12,17);ctx.fillStyle='#c96d57';ctx.fillRect(x+31,y+13,12,17);ctx.fillStyle='#e2c66e';ctx.fillRect(x+54,y+13,12,17);ctx.fillStyle='#d9e5e4';ctx.fillRect(x+10,y+15,8,4);ctx.fillRect(x+33,y+15,8,4);ctx.fillRect(x+56,y+15,8,4);}
- parkingBay(486,468);parkingBay(896,808);parkingBay(486,1148);parkingBay(896,1488);
- // Papan tanda arah bandar di persimpangan dan tong sampah awam.
- function waySign(x,y,label){ctx.fillStyle='#46554b';ctx.fillRect(x+13,y+9,3,27);rounded(x,y,54,15,3,'#477c68','#e9e2c9');ctx.fillStyle='#fff5d7';ctx.font='bold 7px system-ui';ctx.textAlign='center';ctx.fillText(label,x+27,y+10);ctx.textAlign='start'}
- function publicBin(x,y){rounded(x,y,12,17,3,'#4f8065','#315843');ctx.fillStyle='#d7e7d4';ctx.fillRect(x+2,y+3,8,2);ctx.fillRect(x+2,y+8,8,2)}
- waySign(500,500,'PUSAT');waySign(910,840,'KEDAI');waySign(500,1180,'TAMAN');waySign(910,1520,'BANDAR');
- publicBin(150,520);publicBin(1275,860);publicBin(150,1200);publicBin(1275,1540);
- // Laluan basikal pada sisi jalan dan pokok teduhan di ruang tepi.
- ctx.strokeStyle='#5d9a79';ctx.lineWidth=5;ctx.setLineDash([8,8]);ctx.beginPath();ctx.moveTo(112,500);ctx.lineTo(112,1840);ctx.moveTo(1360,500);ctx.lineTo(1360,1840);ctx.stroke();ctx.setLineDash([]);
+ // Parkir awam dan petak kereta kini dipaparkan melalui Phaser.
+ // Papan tanda arah dan tong sampah kini dipaparkan melalui Phaser.
+ // Laluan basikal pada sisi jalan kini dipaparkan melalui Phaser. Pokok teduhan kekal pada Canvas buat sementara.
  for(let y=540;y<1900;y+=170){townTree(130,y,.55);townTree(1342,y,.55)}
  // Ruang tengah dikekalkan sebagai rumput terbuka — petak plaza coklat dibuang.
  // 14 kawasan komersial; setiap kawasan 2x2 kedai, dipisahkan jalan raya.
@@ -785,10 +776,50 @@ function bootPhaserMapBridge(){
       for(let y=245;y<650;y+=180){lamp(130,y);lamp(835,y)}
      };
      drawStreetLamps();
+     // Perabot jalan: hentian bas, parkir, papan tanda, tong sampah dan lorong basikal.
+     const streetFurnitureLayer=this.add.graphics();
+     const drawStreetFurniture=()=>{
+      streetFurnitureLayer.clear();
+      const g=streetFurnitureLayer;
+      const bus=(x,y)=>{
+       g.fillStyle(0x27342a,.2);g.fillEllipse(x+23,y+34,54,14);
+       g.fillStyle(0x536a69,1);g.fillRect(x,y+5,4,29);g.fillRect(x+43,y+5,4,29);
+       g.fillStyle(0x6f9c9a,1);g.fillRect(x-3,y,53,5);
+       g.fillStyle(0xe1f2e7,.78);g.fillRect(x+5,y+8,33,19);
+       g.fillStyle(0x344c4b,1);g.fillRect(x+9,y+28,26,4);
+       g.fillStyle(0xf5d36f,1);g.fillRect(x+18,y-8,13,12);
+       g.fillStyle(0x33453d,1);g.fillRect(x+19,y-2,1,1);
+      };
+      for(const p of [[111,430],[1308,770],[111,1110],[1308,1450]])bus(p[0],p[1]);
+      const parking=(x,y)=>{
+       g.fillStyle(0x858e8b,1);g.fillRoundedRect(x,y,74,42,5);
+       g.lineStyle(2,0xf5edcf,1);for(let n=0;n<3;n++)g.strokeRect(x+5+n*23,y+5,18,31);
+       g.fillStyle(0x4d83a2,1);g.fillRect(x+8,y+13,12,17);
+       g.fillStyle(0xc96d57,1);g.fillRect(x+31,y+13,12,17);
+       g.fillStyle(0xe2c66e,1);g.fillRect(x+54,y+13,12,17);
+       g.fillStyle(0xd9e5e4,1);g.fillRect(x+10,y+15,8,4);g.fillRect(x+33,y+15,8,4);g.fillRect(x+56,y+15,8,4);
+      };
+      for(const p of [[486,468],[896,808],[486,1148],[896,1488]])parking(p[0],p[1]);
+      const sign=(x,y)=>{
+       g.fillStyle(0x46554b,1);g.fillRect(x+13,y+9,3,27);
+       g.fillStyle(0x477c68,1);g.fillRoundedRect(x,y,54,15,3);
+       g.lineStyle(1,0xe9e2c9,1);g.strokeRoundedRect(x,y,54,15,3);
+      };
+      for(const p of [[500,500],[910,840],[500,1180],[910,1520]])sign(p[0],p[1]);
+      const bin=(x,y)=>{
+       g.fillStyle(0x315843,1);g.fillRoundedRect(x,y,12,17,3);
+       g.fillStyle(0x4f8065,1);g.fillRoundedRect(x+1,y+1,10,15,2);
+       g.fillStyle(0xd7e7d4,1);g.fillRect(x+2,y+3,8,2);g.fillRect(x+2,y+8,8,2);
+      };
+      for(const p of [[150,520],[1275,860],[150,1200],[1275,1540]])bin(p[0],p[1]);
+      g.lineStyle(5,0x5d9a79,1);g.beginPath();g.moveTo(112,500);g.lineTo(112,1840);g.moveTo(1360,500);g.lineTo(1360,1840);g.strokePath();
+      g.lineStyle(2,0xc5e2c9,.75);g.beginPath();for(let y=500;y<1840;y+=32){g.moveTo(112,y);g.lineTo(112,y+12);g.moveTo(1360,y);g.lineTo(1360,y+12)}g.strokePath();
+     };
+     drawStreetFurniture();
      const syncRoadCamera=()=>{roadLayer.setPosition(camera.x,camera.y);roadLayer.setScale(camera.scale);roadLayer.setVisible(true)};
      syncRoadCamera();
      this.scale.on('resize',(size)=>{if(phaserMapImage)phaserMapImage.setDisplaySize(size.width,size.height);syncRoadCamera()});
-     window.GaspuroMapBridge={refresh:()=>{if(phaserMapTexture)phaserMapTexture.refresh();syncRoadCamera();drawStreetLamps()}};
+     window.GaspuroMapBridge={refresh:()=>{if(phaserMapTexture)phaserMapTexture.refresh();syncRoadCamera();drawStreetLamps();drawStreetFurniture()}};
      document.documentElement.classList.remove('town-legacy-mode');
      document.documentElement.classList.add('phaser-map-bridge-ready');
      if(phaserMapBootTimer){clearTimeout(phaserMapBootTimer);phaserMapBootTimer=null}
