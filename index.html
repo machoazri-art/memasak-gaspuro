@@ -418,7 +418,7 @@ function drawMap(){
  // decorative paths
  ctx.strokeStyle='#f8edcf';ctx.lineWidth=12;ctx.beginPath();ctx.moveTo(180,300);ctx.lineTo(700,300);ctx.moveTo(440,200);ctx.lineTo(440,400);ctx.stroke();
  // lots
- plots=[];for(let i=0;i<12;i++){let p=lotPos(i);let b=s.buildings.find(x=>x.lot===i);let unlocked=i<unlockedLots();rounded(p.x,p.y,142,118,12,unlocked?'#d6e5b9':'#aab69e','#fff8df');ctx.fillStyle='#9fb48b';ctx.fillRect(p.x+8,p.y+8,126,100);
+ plots=[];for(let i=0;i<14;i++){let p=lotPos(i);let b=s.buildings.find(x=>x.lot===i);let unlocked=i<unlockedLots();rounded(p.x,p.y,142,118,12,unlocked?'#d6e5b9':'#aab69e','#fff8df');ctx.fillStyle='#9fb48b';ctx.fillRect(p.x+8,p.y+8,126,100);
  if(b){let type=bizType(b);let si=({warung:0,mamak:1,satay:2,drink:3,cafe:3,foodcourt:2,restaurant:1})[b.type]||0;
  if(townSprite.complete&&townSprite.naturalWidth){ctx.drawImage(townSprite,si*256,0,256,240,p.x+1,p.y-9,140,132)}
  else{ctx.fillStyle='#8c7052';ctx.fillRect(p.x+20,p.y+75,102,13);ctx.fillStyle=type.color;ctx.beginPath();ctx.moveTo(p.x+13,p.y+47);ctx.lineTo(p.x+71,p.y+8);ctx.lineTo(p.x+129,p.y+47);ctx.closePath();ctx.fill();rounded(p.x+25,p.y+42,92,48,5,'#fff2d1','#8b7659');ctx.fillText(type.emoji,p.x+8,p.y+31)}
@@ -533,7 +533,7 @@ function drawMap(){
  // Kitaran siang-malam: bermula siang, senja, malam dan kembali subuh.
   const phase=townClock(),night=Math.max(0,Math.min(1,(Math.cos((phase-.5)*Math.PI*2)+.08)/1.08));
   if(night>.015){ctx.fillStyle='rgba(22,35,62,'+(night*.50)+')';ctx.fillRect(-1000,-1000,3000,3000);
-    ctx.save();ctx.globalAlpha=night*.95;for(let i=0;i<12;i++){const p=lotPos(i);if(s.buildings.some(b=>b.lot===i)){ctx.fillStyle='#ffe6a0';ctx.fillRect(p.x+34,p.y+63,12,12);ctx.fillRect(p.x+96,p.y+63,12,12)}}ctx.restore();
+    ctx.save();ctx.globalAlpha=night*.95;for(let i=0;i<14;i++){const p=lotPos(i);if(s.buildings.some(b=>b.lot===i)){ctx.fillStyle='#ffe6a0';ctx.fillRect(p.x+34,p.y+63,12,12);ctx.fillRect(p.x+96,p.y+63,12,12)}}ctx.restore();
   }
   if(festivalNow()){const eventIndex=Math.floor(tick/72000)%festivalNames.length;ctx.save();ctx.fillStyle='rgba(66,48,35,.88)';ctx.beginPath();ctx.roundRect(300,637,280,34,12);ctx.fill();ctx.fillStyle='#ffe7a3';ctx.font='bold 15px system-ui';ctx.textAlign='center';ctx.fillText('🎉 '+festivalNames[eventIndex],440,660);ctx.textAlign='start';ctx.restore();}
   ctx.restore();requestAnimationFrame(drawMap);tick++
