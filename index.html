@@ -200,7 +200,7 @@ const types=[
 {id:'bbq',name:'Grill & BBQ House',emoji:'🥩',cost:1450,base:108,desc:'Daging panggang dan hidangan salai',color:'#a75d42'},
 {id:'nightmarket',name:'Bazaar Malam',emoji:'🏮',cost:1250,base:96,desc:'Deretan gerai street food dan minuman',color:'#d99a3c'}
 ];
-const townSprite=new Image();townSprite.src='./assets/town-buildings.svg';
+const townSprite=new Image();townSprite.onload=()=>{if(typeof drawMap==='function')drawMap()};townSprite.onerror=()=>{console.warn('Sprite kedai gagal dimuatkan; mod fallback digunakan.');if(typeof drawMap==='function')drawMap()};townSprite.src='./assets/town-buildings.svg?v=2';
 const defaultState={money:80,level:1,xp:0,customers:0,totalIncome:0,earned:0,workers:0,staff:{kitchen:0,cashier:0,service:0},rating:3,buildings:[{id:1,type:'warung',lot:1,level:1,bank:0,served:0}],selectedLot:1,selectedBuild:'warung',upgrades:{marketing:0,quality:0,traffic:0},menuPrices:{},furnitureLevel:0,reviews:[],missionClaimed:false,achievements:[],dailyQuest:null,claimedMilestones:[],ingredients:100,workerSkill:0,supplierLevel:0,districts:['Kampung Gaspuro'],franchises:0,landProjects:[],lastTick:Date.now(),legacyImported:false};
 let s=load();
 /* Fasa 5 · single source of truth + Phaser/HTML state bridge. */
