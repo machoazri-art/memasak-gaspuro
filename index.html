@@ -897,7 +897,7 @@ document.documentElement.classList.add('town-legacy-mode');
 if(window.Phaser){try{bootPhaserRestaurant()}catch(e){console.error('Phaser restaurant boot failed:',e)}}
 
 window.addEventListener('pagehide',()=>{s.lastTick=Date.now();try{localStorage.setItem('gaspuro-town-v1',JSON.stringify(s))}catch(e){}});
-applyOffline();drawTools();render();drawMap();setInterval(simulate,2000);setInterval(()=>{s.buildings.forEach(b=>b.bank+=incomeRate(b)/6);save()},10000);
+applyOffline();drawTools();render();drawMap();setInterval(simulate,2000);setInterval(()=>{const factor=cityDemandFactor();s.buildings.forEach(b=>b.bank+=incomeRate(b)*factor/6);save()},10000);
 
 /* Penasihat Pintar tempatan · analisis statistik game tanpa API luaran. */
 (()=>{
