@@ -438,31 +438,8 @@ function drawMap(now=0){
  // Persekitaran bandar gaya pixel-art: kaki lima, lintasan dan landskap.
  // Kaki lima dan lintasan perimeter dilukis dalam Phaser.
 
- // Pokok berlapis, bayang, batang dan tompokan daun pixel-art.
- function townTree(x,y,scale=1){
-   ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);
-   ctx.fillStyle='rgba(42,57,38,.22)';ctx.beginPath();ctx.ellipse(5,13,23,10,0,0,Math.PI*2);ctx.fill();
-   ctx.fillStyle='#79583b';ctx.fillRect(-4,-1,9,22);ctx.fillStyle='#a47b4e';ctx.fillRect(-2,2,3,15);
-   const blobs=[[-12,-9,13,'#4c854b'],[1,-15,16,'#5f9b51'],[13,-7,13,'#397b49'],[-3,0,15,'#70a94f'],[10,4,10,'#4c8b45']];
-   for(const b of blobs){ctx.fillStyle=b[3];ctx.beginPath();ctx.arc(b[0],b[1],b[2],0,Math.PI*2);ctx.fill()}
-   ctx.fillStyle='rgba(211,235,143,.32)';ctx.fillRect(-9,-20,7,4);ctx.fillRect(5,-10,6,4);
-   ctx.restore();
- }
- function planter(x,y){
-   rounded(x-13,y-7,26,15,3,'#a66e4e','#76533e');
-   ctx.fillStyle='#5a934b';ctx.beginPath();ctx.arc(x-5,y-8,7,0,7);ctx.arc(x+4,y-10,8,0,7);ctx.arc(x+9,y-5,5,0,7);ctx.fill();
-   ctx.fillStyle='#e9b6bc';ctx.fillRect(x-5,y-14,3,3);ctx.fillStyle='#f4d77b';ctx.fillRect(x+5,y-16,3,3);
- }
- function bench(x,y){
-   ctx.fillStyle='rgba(45,53,42,.2)';ctx.fillRect(x-15,y+7,32,5);
-   ctx.fillStyle='#594638';ctx.fillRect(x-15,y-5,31,5);ctx.fillRect(x-15,y+2,31,5);
-   ctx.fillStyle='#bd9565';ctx.fillRect(x-13,y-4,27,3);ctx.fillRect(x-13,y+3,27,3);
-   ctx.fillStyle='#414b48';ctx.fillRect(x-11,y+7,3,5);ctx.fillRect(x+10,y+7,3,5);
- }
- // Hiasan plaza dan taman kecil di sepanjang kaki lima.
- for(const p of [[300,275],[475,275],[650,275],[300,462],[475,462],[650,462],[300,642],[475,642]])planter(p[0],p[1]);
- for(const p of [[112,275],[842,275],[112,462],[842,462]])bench(p[0],p[1]);
- for(const p of [[110,190],[840,190],[110,450],[840,450],[110,635],[840,635],[250,645],[700,645]])townTree(p[0],p[1],.75);
+ // Pokok, pasu bunga dan bangku plaza kini dipaparkan melalui Phaser Graphics.
+
  // Rangkaian jalan dalaman: jalan penghubung di ruang antara blok lot (tidak menutup tapak binaan).
  ctx.fillStyle='#d8d2bc';
  for(let y=402;y<=1762;y+=340)ctx.fillRect(95,y,1290,88);
@@ -774,6 +751,31 @@ function bootPhaserMapBridge(){
       roadLayer.fillRect(330,12+n*9,54,5);
       roadLayer.fillRect(1010,692+n*9,54,5);
      }
+     // Pokok pixel-art, pasu bunga dan bangku dipindahkan daripada Canvas ke Phaser.
+     const natureLayer=this.add.graphics();
+     const tree=(x,y,scale=1)=>{
+      natureLayer.fillStyle(0x2a3926,.22);natureLayer.fillEllipse(x+5*scale,y+13*scale,46*scale,20*scale);
+      natureLayer.fillStyle(0x79583b,1);natureLayer.fillRect(x-4*scale,y-1*scale,9*scale,22*scale);
+      natureLayer.fillStyle(0xa47b4e,1);natureLayer.fillRect(x-2*scale,y+2*scale,3*scale,15*scale);
+      const blobs=[[-12,-9,13,0x4c854b],[1,-15,16,0x5f9b51],[13,-7,13,0x397b49],[-3,0,15,0x70a94f],[10,4,10,0x4c8b45]];
+      for(const b of blobs){natureLayer.fillStyle(b[3],1);natureLayer.fillCircle(x+b[0]*scale,y+b[1]*scale,b[2]*scale)}
+      natureLayer.fillStyle(0xd3eb8f,.32);natureLayer.fillRect(x-9*scale,y-20*scale,7*scale,4*scale);natureLayer.fillRect(x+5*scale,y-10*scale,6*scale,4*scale);
+     };
+     const planter=(x,y)=>{
+      natureLayer.fillStyle(0x76533e,1);natureLayer.fillRoundedRect(x-13,y-7,26,15,3);
+      natureLayer.fillStyle(0xa66e4e,1);natureLayer.fillRoundedRect(x-12,y-8,24,13,3);
+      natureLayer.fillStyle(0x5a934b,1);natureLayer.fillCircle(x-5,y-8,7);natureLayer.fillCircle(x+4,y-10,8);natureLayer.fillCircle(x+9,y-5,5);
+      natureLayer.fillStyle(0xe9b6bc,1);natureLayer.fillRect(x-5,y-14,3,3);natureLayer.fillStyle(0xf4d77b,1);natureLayer.fillRect(x+5,y-16,3,3);
+     };
+     const bench=(x,y)=>{
+      natureLayer.fillStyle(0x2d352a,.2);natureLayer.fillRect(x-15,y+7,32,5);
+      natureLayer.fillStyle(0x594638,1);natureLayer.fillRect(x-15,y-5,31,5);natureLayer.fillRect(x-15,y+2,31,5);
+      natureLayer.fillStyle(0xbd9565,1);natureLayer.fillRect(x-13,y-4,27,3);natureLayer.fillRect(x-13,y+3,27,3);
+      natureLayer.fillStyle(0x414b48,1);natureLayer.fillRect(x-11,y+7,3,5);natureLayer.fillRect(x+10,y+7,3,5);
+     };
+     for(const p of [[300,275],[475,275],[650,275],[300,462],[475,462],[650,462],[300,642],[475,642]])planter(p[0],p[1]);
+     for(const p of [[112,275],[842,275],[112,462],[842,462]])bench(p[0],p[1]);
+     for(const p of [[110,190],[840,190],[110,450],[840,450],[110,635],[840,635],[250,645],[700,645]])tree(p[0],p[1],.75);
      const syncRoadCamera=()=>{roadLayer.setPosition(camera.x,camera.y);roadLayer.setScale(camera.scale);roadLayer.setVisible(true)};
      syncRoadCamera();
      this.scale.on('resize',(size)=>{if(phaserMapImage)phaserMapImage.setDisplaySize(size.width,size.height);syncRoadCamera()});
