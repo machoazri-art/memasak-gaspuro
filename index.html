@@ -200,17 +200,11 @@ function bootPhaserTown(){
    this.resetTownView=()=>{this.userZoomed=false;cam.setZoom(this.fitZoom);cam.centerOn(600,500)};
    window.GaspuroTownCamera={zoom:(d)=>this.setTownZoom(cam.zoom+d),reset:()=>this.resetTownView()};
    this.time.addEvent({delay:35,loop:true,callback:()=>this.animateTown()});
-   this.time.addEvent({delay:35,loop:true,callback:()=>this.animateTown()});
   }
   addG(graphics){this.world.add(graphics);return graphics}
   drawGround(){
    const g=this.add.graphics();g.fillStyle(0x789b61,1);g.fillRect(0,0,1200,1000);
    for(let y=0;y<1000;y+=36)for(let x=0;x<1200;x+=36){g.fillStyle(((x/36+y/36)%4===0)?0x83a66b:0x789b61,1);g.fillRect(x+2,y+2,32,32)}
-   // one continuous central compound for every business
-   g.fillStyle(0x526f49,.32);g.fillRoundedRect(142,132,916,736,20);
-   g.fillStyle(0xb4c88e,1);g.fillRoundedRect(130,120,940,740,18);
-   g.fillStyle(0xc5d29d,1);g.fillRoundedRect(146,136,908,708,12);
-   g.lineStyle(5,0xe7dfb6,1);g.strokeRoundedRect(130,120,940,740,18);
    this.world.add(g);
   }
   drawRoads(){
@@ -223,6 +217,11 @@ function bootPhaserTown(){
    g.lineStyle(3,0xe8d9ad,.85);g.setLineDash([26,20]);g.strokeRoundedRect(80,80,1040,840,12);g.setLineDash([]);
    // four access gates connect the road to the compound
    g.fillStyle(0xc5d29d,1);g.fillRect(570,42,60,92);g.fillRect(570,866,60,92);g.fillRect(42,470,96,60);g.fillRect(1062,470,96,60);
+   // single shared business compound sits inside the surrounding road ring
+   g.fillStyle(0x526f49,.32);g.fillRoundedRect(142,132,916,736,20);
+   g.fillStyle(0xb4c88e,1);g.fillRoundedRect(130,120,940,740,18);
+   g.fillStyle(0xc5d29d,1);g.fillRoundedRect(146,136,908,708,12);
+   g.lineStyle(5,0xe7dfb6,1);g.strokeRoundedRect(130,120,940,740,18);
    this.world.add(g);
   }
   drawLandscaping(){
