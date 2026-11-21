@@ -604,6 +604,9 @@ function bootPhaserRestaurant(){
     constructor(){super({key:'GaspuroRestaurantScene'})}
     create(){
       const g=this.add.graphics(),W=900,H=760;
+      // Phaser Arcade Physics: zero-gravity interior with bounded character bodies.
+      this.physics.world.setBounds(18,18,W-36,H-36);
+      this.physics.world.gravity.set(0,0);
       g.fillStyle(0xd9c49a,1);g.fillRect(0,0,W,H);
       for(let y=0;y<H;y+=48)for(let x=0;x<W;x+=48){
         g.fillStyle(((x/48+y/48)%2===0)?0xf0dfb8:0xe8d2a4,.42);
@@ -668,6 +671,8 @@ function bootPhaserRestaurant(){
       const avatar=this.add.text(x,y,face,{fontFamily:'system-ui',fontSize:'34px',color:'#ffffff',stroke:'#684b36',strokeThickness:2,backgroundColor:'#fff2d9',padding:{x:7,y:5}}).setOrigin(.5).setDepth(11);
       const tag=this.add.text(x,y-38,bubble,{fontFamily:'system-ui',fontSize:'13px',fontStyle:'bold',color:'#49351f',backgroundColor:'#fff7df',padding:{x:7,y:5},align:'center'}).setOrigin(.5).setDepth(12);
       avatar.setInteractive({useHandCursor:true});avatar.on('pointerdown',onTap);
+      this.physics.add.existing(avatar);
+      avatar.body.setSize(25,34).setAllowGravity(false).setCollideWorldBounds(true).setImmovable(true);
       const actor={avatar,tag,shadow};this.customerActors.set(id,actor);
       this.tweens.add({targets:avatar,y:y-3,duration:650,yoyo:true,repeat:-1,ease:'Sine.easeInOut'});
       return actor;
@@ -697,6 +702,7 @@ function bootPhaserRestaurant(){
         const x=p[0]*9,y=p[1]*7.6;
         const avatar=this.add.text(x,y,role.emoji,{fontFamily:'system-ui',fontSize:'31px',backgroundColor:'#fff0d5',padding:{x:5,y:4},stroke:'#72533b',strokeThickness:2}).setOrigin(.5).setDepth(8);
         const tag=this.add.text(x,y+27,role.label,{fontFamily:'system-ui',fontSize:'10px',fontStyle:'bold',color:'#fff8df',backgroundColor:'#315b43',padding:{x:4,y:2}}).setOrigin(.5).setDepth(8);
+        this.physics.add.existing(avatar);avatar.body.setSize(25,34).setAllowGravity(false).setCollideWorldBounds(true).setImmovable(true);
         this.tweens.add({targets:avatar,y:y-3,duration:900+i*120,yoyo:true,repeat:-1,ease:'Sine.easeInOut'});
         this.staffActors.push({avatar,tag});
       })});
@@ -712,6 +718,7 @@ function bootPhaserRestaurant(){
   phaserRestaurantGame=new Phaser.Game({
     type:Phaser.CANVAS,parent:mount,width:900,height:760,transparent:false,
     backgroundColor:'#d9c49a',render:{antialias:true,roundPixels:true},
+    physics:{default:'arcade',arcade:{gravity:{x:0,y:0},debug:false}},
     scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},
     scene:[GaspuroRestaurantScene],banner:false
   });
