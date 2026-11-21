@@ -423,21 +423,7 @@ function drawMap(now=0){
 
  // Pokok, pasu bunga dan bangku plaza kini dipaparkan melalui Phaser Graphics.
 
- // Rangkaian jalan dalaman: jalan penghubung di ruang antara blok lot (tidak menutup tapak binaan).
- ctx.fillStyle='#d8d2bc';
- for(let y=402;y<=1762;y+=340)ctx.fillRect(95,y,1290,88);
- for(let x=476;x<=886;x+=410)ctx.fillRect(x,94,84,2120);
- ctx.fillStyle='#737e80';
- for(let y=411;y<=1771;y+=340)ctx.fillRect(95,y,1290,70);
- for(let x=483;x<=893;x+=410)ctx.fillRect(x,94,70,2120);
- ctx.strokeStyle='#f6e9bd';ctx.lineWidth=2.5;ctx.setLineDash([20,16]);ctx.beginPath();
- for(let y=446;y<=1806;y+=340){ctx.moveTo(95,y);ctx.lineTo(1385,y)}
- for(let x=518;x<=928;x+=410){ctx.moveTo(x,94);ctx.lineTo(x,2214)}
- ctx.stroke();ctx.setLineDash([]);
- // Lintasan belang di setiap persimpangan utama.
- function zebra(x,y,horizontal=true){ctx.fillStyle='#f4efdc';for(let n=0;n<6;n++){if(horizontal)ctx.fillRect(x+n*10,y,5,30);else ctx.fillRect(x,y+n*10,30,5)}}
- for(let y=420;y<=1780;y+=340){zebra(493,y+4,true);zebra(903,y+4,true)}
- for(let x=493;x<=903;x+=410){zebra(x+4,414,false);zebra(x+4,754,false);zebra(x+4,1094,false);zebra(x+4,1434,false);zebra(x+4,1774,false)}
+ // Jalan penghubung dalaman dan lintasan persimpangan kini dipaparkan melalui Phaser.
  // Hentian bas mini, hentian dan papan tanda kini dipaparkan melalui Phaser.
  // Poket taman dan pokok teduhan sisi kini dipaparkan melalui Phaser.
  // Parkir awam dan petak kereta kini dipaparkan melalui Phaser.
@@ -721,6 +707,24 @@ function bootPhaserMapBridge(){
       roadLayer.fillRect(875+n*9,920,5,54);
       roadLayer.fillRect(330,12+n*9,54,5);
       roadLayer.fillRect(1010,692+n*9,54,5);
+     }
+     // Jalan dalaman, garisan tengah dan lintasan persimpangan dipindahkan ke Phaser.
+     roadLayer.fillStyle(0xd8d2bc,1);
+     for(let y=402;y<=1762;y+=340)roadLayer.fillRect(95,y,1290,88);
+     for(let x=476;x<=886;x+=410)roadLayer.fillRect(x,94,84,2120);
+     roadLayer.fillStyle(0x737e80,1);
+     for(let y=411;y<=1771;y+=340)roadLayer.fillRect(95,y,1290,70);
+     for(let x=483;x<=893;x+=410)roadLayer.fillRect(x,94,70,2120);
+     roadLayer.lineStyle(3,0xf6e9bd,1);
+     for(let y=446;y<=1806;y+=340)for(let x=95;x<1385;x+=42)roadLayer.lineBetween(x,y,Math.min(x+24,1385),y);
+     for(let x=518;x<=928;x+=410)for(let y=94;y<2214;y+=42)roadLayer.lineBetween(x,y,x,Math.min(y+24,2214));
+     // Lintasan belang di simpang utama.
+     roadLayer.fillStyle(0xf4efdc,1);
+     for(let y=420;y<=1780;y+=340){
+      for(let n=0;n<6;n++){roadLayer.fillRect(493+n*10,y+4,5,30);roadLayer.fillRect(903+n*10,y+4,5,30)}
+     }
+     for(let x=493;x<=903;x+=410){
+      for(const y of [414,754,1094,1434,1774])for(let n=0;n<6;n++)roadLayer.fillRect(x+4,y+n*10,30,5);
      }
      // Pokok pixel-art, pasu bunga dan bangku dipindahkan daripada Canvas ke Phaser.
      const natureLayer=this.add.graphics();
