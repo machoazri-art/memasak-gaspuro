@@ -362,9 +362,9 @@ function drawMap(){
    ctx.fillStyle='#414b48';ctx.fillRect(x-11,y+7,3,5);ctx.fillRect(x+10,y+7,3,5);
  }
  // Hiasan plaza dan taman kecil di sepanjang kaki lima.
- for(const p of [[205,183],[680,183],[205,417],[680,417],[20,250],[875,250],[20,610],[875,610]])planter(p[0],p[1]);
- for(const p of [[270,178],[620,420],[15,330],[870,330]])bench(p[0],p[1]);
- for(const p of [[20,40],[920,40],[20,570],[920,570],[260,80],[650,560],[15,390],[885,390]])townTree(p[0],p[1],.85);
+ for(const p of [[300,275],[475,275],[650,275],[300,462],[475,462],[650,462],[300,642],[475,642]])planter(p[0],p[1]);
+ for(const p of [[112,275],[842,275],[112,462],[842,462]])bench(p[0],p[1]);
+ for(const p of [[110,190],[840,190],[110,450],[840,450],[110,635],[840,635],[250,645],[700,645]])townTree(p[0],p[1],.75);
  // market plaza
  rounded(155,190,570,220,18,'#e8d7ae','#fff5d7');
  ctx.fillStyle='#d0bb8d';ctx.fillRect(170,200,540,200);
@@ -451,7 +451,7 @@ function drawMap(){
   if(night>.02){ctx.fillStyle='rgba(22,35,62,'+(night*.48)+')';ctx.fillRect(-1000,-1000,3000,3000);
     ctx.save();ctx.globalAlpha=night*.8;for(let i=0;i<12;i++){const p=lotPos(i);if(s.buildings.some(b=>b.lot===i)){ctx.fillStyle='#ffe6a0';ctx.fillRect(p.x+34,p.y+63,12,12);ctx.fillRect(p.x+96,p.y+63,12,12)}}ctx.restore();
   }
-  if(festivalNow()){const eventIndex=Math.floor(tick/72000)%festivalNames.length;ctx.save();ctx.fillStyle='rgba(66,48,35,.88)';ctx.beginPath();ctx.roundRect(300,185,280,34,12);ctx.fill();ctx.fillStyle='#ffe7a3';ctx.font='bold 15px system-ui';ctx.textAlign='center';ctx.fillText('🎉 '+festivalNames[eventIndex],440,208);ctx.textAlign='start';ctx.restore();}
+  if(festivalNow()){const eventIndex=Math.floor(tick/72000)%festivalNames.length;ctx.save();ctx.fillStyle='rgba(66,48,35,.88)';ctx.beginPath();ctx.roundRect(300,637,280,34,12);ctx.fill();ctx.fillStyle='#ffe7a3';ctx.font='bold 15px system-ui';ctx.textAlign='center';ctx.fillText('🎉 '+festivalNames[eventIndex],440,660);ctx.textAlign='start';ctx.restore();}
   ctx.restore();requestAnimationFrame(drawMap);tick++
 }
 function screenToWorld(e){let r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*canvas.width/r.width,y=(e.clientY-r.top)*canvas.height/r.height;return{x:(x-camera.x)/camera.scale,y:(y-camera.y)/camera.scale}}
