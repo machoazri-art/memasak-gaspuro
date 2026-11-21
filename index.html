@@ -160,12 +160,12 @@
 <section class="panel"><h2>🎯 Misi bandar</h2><p class="muted" id="mission">Bina perniagaan kedua dan capai 10 pelanggan.</p><div class="progress"><i id="missionBar" style="width:0%"></i></div><p class="muted" id="missionProgress">0 / 2 perniagaan</p></section>
 <section class="panel"><h2>📰 Berita warung</h2><div class="feed" id="feed"><div>🌤️ Selamat datang ke Bandar Gaspuro!</div></div></section>
 <section class="panel" id="gaspuroAiPanel">
-<div class="row"><div><h2>🧠 Penasihat Pintar Gaspuro</h2><p class="muted">Memantau perkembangan bandar secara automatik menggunakan data permainan.</p></div><span id="aiStatus" class="maptag">Memantau</span></div>
-<div class="row" style="margin-top:8px"><button class="btn" id="aiAnalyse">🔍 Analisis sekarang</button><button class="btn soft" id="aiScreenshot">🖼️ Simpan snapshot peta</button></div>
-<div id="aiVisual" class="muted" style="margin-top:7px">Analisis automatik akan dikemas kini setiap 30 saat. Snapshot peta boleh disimpan untuk rujukan.</div>
+<div class="row"><div><h2>🏙️ AI City Inspector</h2><p class="muted">Memeriksa ekonomi, operasi dan susun atur lot bandar berdasarkan data permainan.</p></div><span id="aiStatus" class="maptag">Memantau</span></div>
+<div class="row" style="margin-top:8px"><button class="btn" id="aiAnalyse">🔍 Periksa bandar sekarang</button><button class="btn soft" id="aiScreenshot">🗺️ Simpan snapshot peta</button></div>
+<div id="aiVisual" class="muted" style="margin-top:7px">Pemeriksaan automatik setiap 30 saat · laporan ekonomi, operasi dan susun atur lot.</div>
 <div id="aiMessages" style="max-height:300px;overflow:auto;margin:9px 0;padding:8px;background:#f7f4e7;border-radius:12px;font-size:12px" aria-live="polite">🧠 Penasihat sedang membaca keadaan bandar...</div>
 <div class="row" style="align-items:stretch"><input id="aiQuestion" type="text" placeholder="Tanya: apa patut aku upgrade?" style="flex:1;min-width:0;padding:10px;border:1px solid #d9dfd0;border-radius:10px;background:#fffdf4;color:#334335"><button class="btn gold" id="aiSend">Tanya</button></div>
-<p class="muted" style="margin-top:7px">Nota: Ini penasihat pintar terbina dalam, bukan AI generatif. Ia membaca statistik permainan secara langsung dan memberi cadangan berdasarkan peraturan; tiada akaun, API key atau bayaran diperlukan. Ia tidak mengubah bandar secara automatik.</p>
+<p class="muted" style="margin-top:7px">Nota: City Inspector ini menggunakan analisis logik dalam game, bukan model AI visual/generatif. Ia membaca data bandar dan kedudukan lot; snapshot hanya untuk simpanan, bukan ditafsir secara visual. Tiada API key atau bayaran diperlukan.</p>
 </section></aside></div>
 <nav class="tabs"><button class="tab active" data-view="manage">🏪 Urus</button><button class="tab" data-view="staff">👨‍🍳 Pekerja</button><button class="tab" data-view="research">🌟 Upgrade</button><button class="tab" data-view="achieve">🏙️ Bandar & Misi</button></nav>
 <section class="panel view active" id="manage"><h2>🏪 Perniagaan kau</h2><p class="muted">Pilih perniagaan untuk kutip hasil atau naik taraf.</p><div class="card" style="border:2px solid #d9a441;background:#fff9e9;margin:10px 0"><b>🚀 MEMASAK GASPURO V3.0</b><small>Misi harian, pencapaian, festival, stok bahan, latihan pekerja, daerah dan francais kini tersedia.</small><button class="btn gold" id="openV3Features">Buka semua ciri V3.0 →</button></div><div class="grid" id="businessList"></div></section>
@@ -841,14 +841,14 @@ applyOffline();drawTools();render();drawMap();setInterval(simulate,2000);setInte
  const status=document.getElementById('aiStatus'),messages=document.getElementById('aiMessages'),visual=document.getElementById('aiVisual');
  const say=(who,txt)=>{const row=document.createElement('div');row.style.cssText='padding:7px 5px;border-bottom:1px solid #e4e4d6;white-space:pre-wrap;line-height:1.5';const b=document.createElement('b');b.textContent=who+': ';row.appendChild(b);row.appendChild(document.createTextNode(txt));messages.appendChild(row);messages.scrollTop=messages.scrollHeight};
  const capture=()=>{const canvases=[...document.querySelectorAll('.mapbox canvas')].filter(x=>x.width&&x.height);if(!canvases.length)throw new Error('Canvas peta belum tersedia.');const base=canvases.find(x=>x.id==='map')||canvases[0],out=document.createElement('canvas');out.width=base.width;out.height=base.height;const cx=out.getContext('2d');canvases.forEach(x=>{try{cx.drawImage(x,0,0,out.width,out.height)}catch(e){}});return out.toDataURL('image/jpeg',.82)};
- const getStats=()=>({money:Number(s.money)||0,level:Number(s.level)||1,xp:Number(s.xp)||0,customers:Number(s.customers)||0,workers:Number(s.workers)||0,assigned:Object.values(s.staff||{}).reduce((a,b)=>a+(Number(b)||0),0),rating:Number(s.rating)||0,businesses:s.buildings||[],ingredients:Number(s.ingredients)||0,workerSkill:Number(s.workerSkill)||0,supplierLevel:Number(s.supplierLevel)||0,franchises:Number(s.franchises)||0,projects:s.landProjects||[],districts:s.districts||[],upgrades:s.upgrades||{},festival:typeof festivalNow==='function'&&!!festivalNow()});
+ const getStats=()=>({money:Number(s.money)||0,level:Number(s.level)||1,xp:Number(s.xp)||0,customers:Number(s.customers)||0,workers:Number(s.workers)||0,assigned:Object.values(s.staff||{}).reduce((a,b)=>a+(Number(b)||0),0),staff:{...(s.staff||{})},rating:Number(s.rating)||0,businesses:s.buildings||[],ingredients:Number(s.ingredients)||0,workerSkill:Number(s.workerSkill)||0,supplierLevel:Number(s.supplierLevel)||0,franchises:Number(s.franchises)||0,projects:s.landProjects||[],districts:s.districts||[],upgrades:s.upgrades||{},festival:typeof festivalNow==='function'&&!!festivalNow(),vacantLots:Math.max(0,unlockedLots()-(s.buildings||[]).length-(s.landProjects||[]).length)});
  const analyse=()=>{
-  const x=getStats(),tips=[],notes=[],rate=x.businesses.reduce((a,b)=>a+(Number(incomeRate(b))||0),0),bank=x.businesses.reduce((a,b)=>a+(Number(b.bank)||0),0),unassigned=Math.max(0,x.workers-x.assigned),vacant=Math.max(0,12-x.businesses.length-x.projects.length);
+  const x=getStats(),tips=[],notes=[],rate=x.businesses.reduce((a,b)=>a+(Number(incomeRate(b))||0),0),bank=x.businesses.reduce((a,b)=>a+(Number(b.bank)||0),0),unassigned=Math.max(0,x.workers-x.assigned),vacant=x.vacantLots,lotGroups={};x.businesses.forEach(b=>{const p=lotPos(Number(b.lot)||0),key=(Number(b.lot)%2===0?'Kiri':'Kanan');lotGroups[key]=(lotGroups[key]||0)+1});const left=lotGroups.Kiri||0,right=lotGroups.Kanan||0;
   if(x.money<100)tips.push('Wang bandar rendah. Kutip tabung kedai dahulu dan tangguhkan pembelian besar.');
   else if(x.money>1000)tips.push('Tunai bandar agak selesa. Pertimbangkan bina perniagaan atau naik taraf yang mampu memberi pulangan.');
   if(x.businesses.length===0)tips.push('Bandar belum ada perniagaan. Bina warung dahulu untuk mula menjana hasil.');
   else if(x.businesses.length<3)tips.push('Tambah satu lagi perniagaan jika lot dan wang mencukupi supaya sumber hasil tidak bergantung pada satu kedai.');
-  if(unassigned>0)tips.push('Ada '+unassigned+' pekerja belum ditugaskan. Agihkan kepada dapur, cashier atau servis pelanggan.');
+  if(unassigned>0)tips.push('Ada '+unassigned+' pekerja belum ditugaskan. Agihkan kepada dapur, cashier atau servis pelanggan.');if(x.businesses.length>=2&&Math.abs(left-right)>=2)notes.push('Susun atur lot: '+left+' perniagaan di sebelah kiri dan '+right+' di sebelah kanan. Pertimbangkan seimbangkan pembangunan apabila lot sesuai dibuka.');if(x.businesses.length>=4&&vacant>0)notes.push('Masih ada '+vacant+' lot kosong yang telah dibuka untuk pengembangan.');
   if(x.workers===0)tips.push('Belum ada pekerja. Mengambil pekerja membantu operasi kedai.');
   if(x.ingredients<20)tips.push('Stok bahan mentah tinggal '+Math.floor(x.ingredients)+' unit. Semak sistem bekalan sebelum stok habis.');
   if(x.rating<3)tips.push('Rating bandar '+x.rating.toFixed(1)+'/5 agak rendah. Semak kualiti resipi, servis dan tenaga kerja.');
@@ -862,7 +862,7 @@ applyOffline();drawTools();render();drawMap();setInterval(simulate,2000);setInte
   const top=[...x.businesses].sort((a,b)=>(Number(incomeRate(b))||0)-(Number(incomeRate(a))||0))[0];
   const lines=['Ringkasan bandar: Level '+x.level+' · Tunai '+fmt(x.money)+' · '+x.businesses.length+' perniagaan · '+x.customers+' pelanggan.','Hasil operasi anggaran: '+fmt(rate*60)+'/jam · Tabung kedai: '+fmt(bank)+'.','Pekerja: '+x.workers+' orang ('+x.assigned+' ditugaskan) · Stok bahan: '+Math.floor(x.ingredients)+' unit · Rating: '+x.rating.toFixed(1)+'/5.'];
   if(top)lines.push('Kedai paling produktif sekarang: '+bizType(top).name+' di lot '+(top.lot+1)+'.');
-  lines.push('Lot kosong anggaran: '+vacant+'.');
+  lines.push('Pemeriksaan lot: '+x.businesses.length+' lot digunakan · '+vacant+' lot kosong yang sudah dibuka · agihan kiri/kanan '+left+'/'+right+'.');
   return '📊 '+lines.join('\n')+'\n\n💡 Cadangan utama:\n'+tips.slice(0,4).map((t,i)=>(i+1)+'. '+t).join('\n')+(notes.length?'\n\n✅ Perkara positif:\n'+notes.join('\n'):'');
  };
  const respond=q=>{
@@ -872,7 +872,7 @@ applyOffline();drawTools();render();drawMap();setInterval(simulate,2000);setInte
   if(/upgrade|naik taraf|level kedai/.test(a)){const b=[...x.businesses].sort((u,v)=>(Number(incomeRate(v))||0)-(Number(incomeRate(u))||0))[0];return b?'Kedai dengan kadar hasil tertinggi sekarang ialah '+bizType(b).name+' (Level '+b.level+'). Semak kos upgrade berbanding hasil anggaran '+fmt(incomeRate(b)*60)+'/jam sebelum buat keputusan.':'Bina perniagaan dahulu sebelum membuat upgrade.'}
   if(/stok|bahan|ingredient|bekalan/.test(a))return 'Stok bahan mentah sekarang '+Math.floor(x.ingredients)+' unit. Tahap pembekal: '+x.supplierLevel+'. '+(x.ingredients<20?'Stok rendah; semak bekalan dengan segera.':'Stok masih melebihi paras amaran 20 unit.');
   if(/rating|pelanggan|customer/.test(a))return 'Rating bandar '+x.rating.toFixed(1)+'/5 dengan '+x.customers+' pelanggan direkodkan. Pastikan pekerja ditugaskan dan stok bahan mencukupi.';
-  if(/peta|map|gambar|visual/.test(a))return 'Aku boleh sediakan snapshot peta untuk kau lihat atau simpan, tetapi penasihat tempatan ini tidak mempunyai keupayaan penglihatan komputer untuk mentafsir imej peta.';
+  if(/peta|map|gambar|visual|susun atur|lot/.test(a))return 'Pemeriksaan susun atur: '+x.businesses.length+' perniagaan dibina. Agihan lot kiri/kanan ialah '+x.businesses.filter(b=>Number(b.lot)%2===0).length+'/'+x.businesses.filter(b=>Number(b.lot)%2===1).length+'. Sistem boleh menilai agihan lot daripada data permainan, tetapi belum boleh mentafsir imej peta secara visual.';
   return analyse();
  };
  const run=(initial=false)=>{try{const report=analyse();if(initial)say('🧠 Analisis awal',report);else say('🧠 Pemantauan bandar',report);status.textContent='Dikemas kini · '+new Date().toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'});}catch(e){status.textContent='Ralat analisis';say('⚠️ Sistem',e.message)}};
@@ -880,6 +880,6 @@ applyOffline();drawTools();render();drawMap();setInterval(simulate,2000);setInte
  document.getElementById('aiScreenshot').addEventListener('click',()=>{try{const a=document.createElement('a');a.href=capture();a.download='gaspuro-live-map.jpg';a.click();visual.textContent='Snapshot peta berjaya disimpan. Penasihat tidak mentafsir imej secara visual.'}catch(e){visual.textContent=e.message}});
  const send=()=>{const input=document.getElementById('aiQuestion'),q=input.value.trim();if(!q)return;say('🧑‍🍳 Kau',q);say('🧠 Penasihat',respond(q));input.value='';};
  document.getElementById('aiSend').addEventListener('click',send);document.getElementById('aiQuestion').addEventListener('keydown',e=>{if(e.key==='Enter')send()});
- run(true);setInterval(()=>run(false),30000);status.textContent='Memantau secara tempatan';
+ run(true);setInterval(()=>run(false),30000);status.textContent='City Inspector · tempatan';
 })();
 </script></body></html>
