@@ -765,7 +765,7 @@ function bootPhaserMapBridge(){
        const g=trafficLayer;g.clear();
        // 50 kenderaan diagihkan sekata pada lapan lorong jalan mendatar.
        const carColors=[0xc94f48,0x477fa8,0xe3ad43,0xe8e3d4,0x568b68,0x8c6ca5,0xd47b43,0x303d48,0x5c9c9a,0xb8a36c];
-       const laneY=[428,464,768,804,1108,1144,1448,1484],carCount=50,perLane=Math.ceil(carCount/8),span=1248;
+       const laneY=[428,464,768,804,1108,1144,1448,1484,1788,1824],carCount=50,perLane=Math.ceil(carCount/laneY.length),span=1248;
        for(let i=0;i<carCount;i++){
         const lane=i%8,group=Math.floor(i/8),dir=(lane%2===1)?-1:1;
         const speed=.42+(i%7)*.075,bodyW=[42,46,54,50,42][i%5],y=laneY[lane];
@@ -791,15 +791,22 @@ function bootPhaserMapBridge(){
         g.fillStyle(0xfff1bd,1);g.fillRoundedRect(px(bodyW-4),y-7,3,5,1);g.fillRoundedRect(px(bodyW-4),y+2,3,5,1);
         g.fillStyle(0xa93e3b,1);g.fillRoundedRect(px(2),y-7,3,5,1);g.fillRoundedRect(px(2),y+2,3,5,1);
        }
-       // 100 pejalan kaki menggunakan laluan kaki lima sedia ada, bukan atas petak bangunan.
+       // 180 pejalan kaki (100 asal + 80 tambahan), diagih sekata pada kaki lima setiap blok hingga hujung selatan bandar.
        const routes=[
         [[112,395],[1380,395],[1380,490],[112,490]],
         [[112,735],[1380,735],[1380,830],[112,830]],
-        [[470,110],[565,110],[565,2200],[470,2200]]
+        [[112,1075],[1380,1075],[1380,1170],[112,1170]],
+        [[112,1415],[1380,1415],[1380,1510],[112,1510]],
+        [[112,1755],[1380,1755],[1380,1850],[112,1850]],
+        [[470,110],[565,110],[565,2200],[470,2200]],
+        [[880,110],[975,110],[975,2200],[880,2200]]
        ];
        const shirts=[0x477fa8,0xd46c55,0x5d966c,0xd3a94e,0x8b6ca6,0xe7e0ce,0x2f7774,0xc45c83,0x9a7048,0x477b9e];
        const skins=[0xe9b991,0xc98f69,0xf0c9a4,0xa96f50,0xd9a17d],hairs=[0x3d3029,0x272b2d,0x594332,0x332c28,0x78563b];
-       const routeCounts=[34,33,33],routeSeen=[0,0,0],routeSpeeds=[.22,.27,.19,.31,.24,.29,.17,.26];
+       const routeLengths=routes.map(pts=>pts.reduce((sum,p,k)=>sum+Math.hypot(pts[(k+1)%pts.length][0]-p[0],pts[(k+1)%pts.length][1]-p[1]),0));
+       const totalRouteLength=routeLengths.reduce((a,b)=>a+b,0),routeCounts=routeLengths.map(length=>Math.round(180*length/totalRouteLength));
+       routeCounts[0]+=180-routeCounts.reduce((a,b)=>a+b,0);
+       const routeSeen=routes.map(()=>0),routeSpeeds=[.22,.27,.19,.31,.24,.29,.17,.26];
        const pointAt=(route,distance)=>{
         const pts=routes[route],lengths=pts.map((p,k)=>Math.hypot(pts[(k+1)%pts.length][0]-p[0],pts[(k+1)%pts.length][1]-p[1]));
         const total=lengths.reduce((v,n)=>v+n,0);let d=((distance%total)+total)%total;
@@ -807,9 +814,10 @@ function bootPhaserMapBridge(){
         return{x:pts[0][0],y:pts[0][1],angle:0,total};
        };
        const local=(x,y,angle,lx,ly)=>({x:x+lx*Math.cos(angle)-ly*Math.sin(angle),y:y+lx*Math.sin(angle)+ly*Math.cos(angle)});
-       for(let i=0;i<100;i++){
-        const route=i%3,index=routeSeen[route]++,dir=(i%2===0)?1:-1,speed=routeSpeeds[i%routeSpeeds.length],sample=pointAt(route,0);
-        const distance=index*(sample.total/routeCounts[route])+((tick*speed*dir+i*11)%sample.total);
+       for(let i=0;i<180;i++){
+        const route=routes.findIndex((_,r)=>routeSeen[r]<routeCounts[r]);
+        const index=routeSeen[route]++,dir=(i%2===0)?1:-1,speed=routeSpeeds[i%routeSpeeds.length],sample=pointAt(route,0);
+        const distance=index*(sample.total/routeCounts[route])+((tick*speed*dir+i*11+sample.total)%sample.total);
         const pos=pointAt(route,distance),bob=Math.abs(Math.sin(tick*.12+i*1.71))*1.1,angle=pos.angle+Math.PI/2+(dir<0?Math.PI:0);
         const xy=(lx,ly)=>local(pos.x,pos.y,angle,lx,ly);
         const shirt=shirts[i%shirts.length],skin=skins[i%skins.length],hair=hairs[i%hairs.length];
