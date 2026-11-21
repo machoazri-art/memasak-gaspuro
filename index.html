@@ -255,7 +255,7 @@ function cityDemandFactor(){const event=cityEventNow();const traffic=cityMetrics
 function buyCityService(id){const defs={bus:{name:'Laluan bas',base:700,field:'bus',desc:'Kurangkan kesesakan dan tambah peluang kerja.'},parking:{name:'Tempat letak kereta',base:500,field:'parking',desc:'Kurangkan kesesakan berhampiran kedai.'},police:{name:'Balai keselamatan',base:650,field:'police',desc:'Tingkatkan keselamatan penduduk.'},parks:{name:'Taman awam',base:550,field:'parks',desc:'Tingkatkan kebahagiaan dan kebersihan.'}};const d=defs[id];if(!d)return;const c=s.city||(s.city={...defaultState.city});c.services={...defaultState.city.services,...(c.services||{})};const level=c.services[id]||0,cost=d.base*(level+1);if(s.money<cost)return toast('Wang bandar tidak mencukupi untuk '+d.name+'.');s.money-=cost;c.services[id]=level+1;c.infrastructure=Math.min(100,c.infrastructure+2);toast(d.name+' dinaik taraf ke tahap '+(level+1)+'!');log('🏗️ '+d.name+' dinaik taraf · '+fmt(cost));save()}
 function renderCityPhase1(){const panel=$('cityLivingPanel'),zonePanel=$('cityZonePanel');if(!panel||!zonePanel)return;const m=cityMetrics();const phase=cityPhaseInfo();const event=cityEventNow();const life=$('cityLifePanel');if(life)life.innerHTML='<div class="card"><b>'+phase.icon+' '+phase.name+'</b><small>Kitaran masa bandar bergerak secara automatik. Siang dan malam turut mengubah suasana bandar.</small><div class="progress"><i style="width:'+Math.round(townClock()*100)+'%"></i></div><small>1 hari bandar ≈ 10 minit masa permainan</small></div><div class="card"><b>🚦 Trafik bandar · '+m.traffic+'/100</b><small>'+(m.traffic>=75?'Kesesakan tinggi — pertimbangkan bas dan parkir.':m.traffic>=48?'Trafik sederhana — pantau pertumbuhan bandar.':'Laluan bandar lancar.')+'</small><div class="progress"><i style="width:'+m.traffic+'%"></i></div></div><div class="card"><b>'+(event?event.icon+' '+event.name:'🌤️ Tiada kejadian luar biasa')+'</b><small>'+(event?event.desc:'Bandar berjalan seperti biasa. Kejadian rawak boleh berlaku dari semasa ke semasa.')+'</small></div>';const services=$('cityServicesPanel');if(services){const defs=[['bus','🚌 Laluan bas',700,'Kurangkan kesesakan dan tambah peluang kerja.'],['parking','🅿️ Tempat letak kereta',500,'Kurangkan kesesakan berhampiran kedai.'],['police','🚓 Balai keselamatan',650,'Tingkatkan keselamatan penduduk.'],['parks','🌳 Taman awam',550,'Tingkatkan kebahagiaan dan kebersihan.']];const levels=s.city&&s.city.services||{};services.innerHTML=defs.map(([id,name,base,desc])=>{const level=levels[id]||0,cost=base*(level+1);return '<div class="card"><b>'+name+' · Tahap '+level+'</b><small>'+desc+'</small><button class="btn '+(s.money>=cost?'gold':'soft')+'" data-city-service="'+id+'" '+(s.money<cost?'disabled':'')+'>Naik taraf · '+fmt(cost)+'</button></div>'}).join('');services.querySelectorAll('[data-city-service]').forEach(b=>b.onclick=()=>buyCityService(b.dataset.cityService))}const metric=(label,value,unit='')=>'<div class="card"><b>'+label+'</b><div style="font-size:20px;font-weight:950;margin:4px 0">'+value+unit+'</div></div>';panel.innerHTML=metric('👥 Penduduk',m.population.toLocaleString('en-MY'))+metric('💼 Peluang kerja',m.jobs)+metric('💰 Ekonomi bandar',m.economy,'%')+metric('🚦 Trafik',m.traffic,'%')+metric('😊 Kebahagiaan',m.happiness,'%')+metric('🧹 Kebersihan',m.cleanliness,'%')+metric('🛡️ Keselamatan',m.safety,'%')+metric('🛣️ Infrastruktur',m.infrastructure,'%')+metric('🗺️ Lot berzon',m.zones);const built=s.buildings.slice().sort((a,b)=>a.lot-b.lot);const zoneOptions=cityZoneDefs.map(x=>'<option value="'+x.id+'">'+x.emoji+' '+x.name+'</option>').join('');zonePanel.innerHTML=built.length?'<div class="card zoneTools"><div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center"><select id="zoneFilter" aria-label="Tapis lot mengikut zon" style="flex:1;min-width:130px;padding:10px;border:1px solid #d9dfd0;border-radius:10px;background:#fff9e9;color:#334335"><option value="semua">Semua zon · '+built.length+' lot</option>'+cityZoneDefs.map(z=>'<option value="'+z.id+'">'+z.emoji+' '+z.name+'</option>').join('')+'</select><select id="zoneBulkSelect" aria-label="Zon untuk tindakan pukal" style="flex:1;min-width:130px;padding:10px;border:1px solid #d9dfd0;border-radius:10px;background:#fff9e9;color:#334335">'+zoneOptions+'</select><button class="btn gold" id="zoneBulkApply" style="margin:0;white-space:nowrap">Guna zon</button></div><small id="zoneBulkHint">Pilih zon sasaran. Tindakan pukal akan digunakan pada lot yang sedang ditapis.</small></div><div class="zoneLotList">'+built.map(b=>{const z=cityZoneFor(b.lot);return '<div class="card zoneLot" data-zone-current="'+z.id+'"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><b>Lot '+(b.lot+1)+' · '+bizType(b).name+'</b><small>'+z.emoji+' '+z.name+'</small></div><select data-city-zone="'+b.lot+'" aria-label="Tukar zon Lot '+(b.lot+1)+'" style="width:100%;margin-top:7px;padding:9px;border:1px solid #d9dfd0;border-radius:9px;background:#fff9e9;color:#334335">'+cityZoneDefs.map(x=>'<option value="'+x.id+'" '+(x.id===z.id?'selected':'')+'>'+x.emoji+' '+x.name+' · '+x.desc+'</option>').join('')+'</select></div>'}).join('')+'</div>':'<div class="card">Bina perniagaan untuk mula menetapkan zon bandar.</div>';zonePanel.querySelectorAll('[data-city-zone]').forEach(el=>el.onchange=()=>setLotZone(Number(el.dataset.cityZone),el.value));const filterEl=$('zoneFilter');if(filterEl){filterEl.onchange=()=>{const f=filterEl.value;let n=0;zonePanel.querySelectorAll('.zoneLot').forEach(card=>{const show=f==='semua'||card.dataset.zoneCurrent===f;card.style.display=show?'':'none';if(show)n++});$('zoneBulkHint').textContent=n+' lot dipaparkan. Tindakan pukal akan mengubah zon untuk lot yang dipaparkan.'};$('zoneBulkApply').onclick=applyZoneToVisible;}}
 function incomeRate(b){const districtBonus=(s.districts||[]).reduce((sum,id)=>sum+((districtDefs.find(d=>d.id===id)||{}).bonus||0),0);return bizType(b).base*b.level*cityZoneFor(b.lot).income*(1+s.upgrades.marketing*.12+s.upgrades.quality*.08+s.workers*.035+(s.franchises||0)*.03+districtBonus)}
-function unlockedLots(){return 4+Math.min(62,Math.floor((s.level-1)/2)*4)}
+function unlockedLots(){return 4+Math.min(82,Math.floor((s.level-1)/2)*4)}
 function selectedBuilding(){return s.buildings.find(b=>b.lot===s.selectedLot)}
 function build(){const lot=Number(s.selectedLot),t=s.selectedBuild,type=types.find(x=>x.id===t);if(!Number.isInteger(lot)||lot<0||lot>=unlockedLots())return toast('Pilih lot kosong yang sudah dibuka dahulu.');if(selectedBuilding()||landProjectAt(lot)||cityStructureAt(lot)||residentialAt(lot))return toast('Lot ini sudah digunakan!');if((s.buildings.length+(s.landProjects||[]).length)>=unlockedLots())return toast('Semua lot yang dibuka sudah digunakan. Naik level untuk buka lot baharu!');if(!type)return toast('Pilih jenis perniagaan dahulu.');if(s.money<type.cost)return toast('Duit tak cukup untuk bina!');s.money-=type.cost;s.buildings.push({id:Date.now(),type:t,lot,level:1,bank:0,served:0});s.xp+=25;levelCheck();checkAchievements();log(type.emoji+' '+type.name+' berjaya dibuka di Lot '+(lot+1)+'!');toast('Perniagaan baharu berjaya dibina!');s.selectedLot=lot;save();render();drawMap();$('selectionTitle').textContent=type.emoji+' '+type.name+' · Lot '+(lot+1);$('selectionText').textContent='Bangunan berjaya dibina. Pilih lot kosong lain untuk pengembangan.';$('buildBtn').disabled=true;}
 function upgradeBiz(id){let b=s.buildings.find(x=>x.id===id);if(!b)return;let cost=90*b.level;if(s.money<cost)return toast('Duit tak cukup!');s.money-=cost;b.level++;s.xp+=18;checkAchievements();log('⬆️ '+bizType(b).name+' dinaik taraf ke tahap '+b.level);save();render();drawMap()}
@@ -432,7 +432,7 @@ function drawMap(now=0){
  // Ruang tengah dikekalkan sebagai rumput terbuka — petak plaza coklat dibuang.
  // Data 68 petak lot dikekalkan untuk input; paparan lot dipindahkan ke Phaser.
  plots=[];
- for(let i=0;i<17;i++){
+ for(let i=0;i<22;i++){
   const p=lotPos(i),bx=p.x,by=p.y;
   const slots=[{x:bx+8,y:by+8},{x:bx+164,y:by+8},{x:bx+8,y:by+128},{x:bx+164,y:by+128}];
   for(let j=0;j<4;j++){
@@ -472,12 +472,12 @@ function bootPhaserMapBridge(){
      // Jalan perimeter kini dilukis sebagai Phaser Graphics, bukan pada Canvas sumber.
      const roadLayer=this.add.graphics();
      roadLayer.fillStyle(0xd8d2bc,1);
-     roadLayer.fillRect(-700,0,2300,94);roadLayer.fillRect(-700,2220,2300,94);roadLayer.fillRect(5,-700,90,3000);roadLayer.fillRect(1385,-700,90,3000);
+     roadLayer.fillRect(-700,0,2300,94);roadLayer.fillRect(-700,2940,2300,94);roadLayer.fillRect(5,-700,90,3700);roadLayer.fillRect(1385,-700,90,3000);
      roadLayer.fillStyle(0x737e80,1);
-     roadLayer.fillRect(-700,12,2300,70);roadLayer.fillRect(-700,2232,2300,70);roadLayer.fillRect(15,-700,70,3000);roadLayer.fillRect(1395,-700,70,3000);
+     roadLayer.fillRect(-700,12,2300,70);roadLayer.fillRect(-700,2952,2300,70);roadLayer.fillRect(15,-700,70,3700);roadLayer.fillRect(1395,-700,70,3000);
      roadLayer.lineStyle(3,0xf6e9bd,1);
-     for(let x=-700;x<1600;x+=42){roadLayer.lineBetween(x,47,Math.min(x+24,1600),47);roadLayer.lineBetween(x,2267,Math.min(x+24,1600),2267)}
-     for(let y=-700;y<2400;y+=42){roadLayer.lineBetween(50,y,50,Math.min(y+24,2400));roadLayer.lineBetween(1430,y,1430,Math.min(y+24,2400))}
+     for(let x=-700;x<1600;x+=42){roadLayer.lineBetween(x,47,Math.min(x+24,1600),47);roadLayer.lineBetween(x,2987,Math.min(x+24,1600),2987)}
+     for(let y=-700;y<3100;y+=42){roadLayer.lineBetween(50,y,50,Math.min(y+24,2400));roadLayer.lineBetween(1430,y,1430,Math.min(y+24,2400))}
      // Kaki lima dan lintasan pejalan kaki perimeter kini menjadi Phaser Graphics.
      roadLayer.fillStyle(0xc9c5b5,1);
      roadLayer.fillRect(-700,94,2300,13);roadLayer.fillRect(-700,887,2300,13);
@@ -496,21 +496,21 @@ function bootPhaserMapBridge(){
      }
      // Jalan dalaman, garisan tengah dan lintasan persimpangan dipindahkan ke Phaser.
      roadLayer.fillStyle(0xd8d2bc,1);
-     for(let y=402;y<=1762;y+=340)roadLayer.fillRect(95,y,1290,88);
-     for(let x=476;x<=886;x+=410)roadLayer.fillRect(x,94,84,2120);
+     for(let y=402;y<=2442;y+=340)roadLayer.fillRect(95,y,1290,88);
+     for(let x=476;x<=886;x+=410)roadLayer.fillRect(x,94,84,2780);
      roadLayer.fillStyle(0x737e80,1);
-     for(let y=411;y<=1771;y+=340)roadLayer.fillRect(95,y,1290,70);
-     for(let x=483;x<=893;x+=410)roadLayer.fillRect(x,94,70,2120);
+     for(let y=411;y<=2451;y+=340)roadLayer.fillRect(95,y,1290,70);
+     for(let x=483;x<=893;x+=410)roadLayer.fillRect(x,94,70,2780);
      roadLayer.lineStyle(3,0xf6e9bd,1);
-     for(let y=446;y<=1806;y+=340)for(let x=95;x<1385;x+=42)roadLayer.lineBetween(x,y,Math.min(x+24,1385),y);
-     for(let x=518;x<=928;x+=410)for(let y=94;y<2214;y+=42)roadLayer.lineBetween(x,y,x,Math.min(y+24,2214));
+     for(let y=446;y<=2486;y+=340)for(let x=95;x<1385;x+=42)roadLayer.lineBetween(x,y,Math.min(x+24,1385),y);
+     for(let x=518;x<=928;x+=410)for(let y=94;y<2880;y+=42)roadLayer.lineBetween(x,y,x,Math.min(y+24,2214));
      // Lintasan belang di simpang utama.
      roadLayer.fillStyle(0xf4efdc,1);
-     for(let y=420;y<=1780;y+=340){
+     for(let y=420;y<=2460;y+=340){
       for(let n=0;n<6;n++){roadLayer.fillRect(493+n*10,y+4,5,30);roadLayer.fillRect(903+n*10,y+4,5,30)}
      }
      for(let x=493;x<=903;x+=410){
-      for(const y of [414,754,1094,1434,1774])for(let n=0;n<6;n++)roadLayer.fillRect(x+4,y+n*10,30,5);
+      for(const y of [414,754,1094,1434,1774,2114,2454])for(let n=0;n<6;n++)roadLayer.fillRect(x+4,y+n*10,30,5);
      }
      // Pokok pixel-art, pasu bunga dan bangku dipindahkan daripada Canvas ke Phaser.
      const natureLayer=this.add.graphics();
@@ -543,7 +543,7 @@ function bootPhaserMapBridge(){
       natureLayer.fillStyle(0xf3d77a,1);natureLayer.fillCircle(x+24,y+43,3);
      };
      for(const p of [[102,520],[1320,860],[102,1200],[1320,1540]])pocketPark(p[0],p[1]);
-     for(let y=540;y<1900;y+=170){tree(130,y,.55);tree(1342,y,.55)}
+     for(let y=540;y<2700;y+=170){tree(130,y,.55);tree(1342,y,.55)}
      for(const p of [[300,275],[475,275],[650,275],[300,462],[475,462],[650,462],[300,642],[475,642]])planter(p[0],p[1]);
      for(const p of [[112,275],[842,275],[112,462],[842,462]])bench(p[0],p[1]);
      for(const p of [[110,190],[840,190],[110,450],[840,450],[110,635],[840,635],[250,645],[700,645]])tree(p[0],p[1],.75);
@@ -564,8 +564,8 @@ function bootPhaserMapBridge(){
       for(let x=-570;x<1550;x+=190){lamp(x,5);lamp(x,89);lamp(x,3195);lamp(x,3285)}
       for(let y=-600;y<2200;y+=190){lamp(-3,y);lamp(93,y);lamp(863,y);lamp(957,y)}
       // Lampu dalaman diletakkan di bahu jalan, bukan di tengah lot.
-      for(let y=390;y<1900;y+=340){lamp(112,y);lamp(470,y);lamp(565,y);lamp(880,y);lamp(975,y)}
-      for(let y=120;y<2200;y+=190){lamp(470,y);lamp(565,y);lamp(880,y);lamp(975,y)}
+      for(let y=390;y<2600;y+=340){lamp(112,y);lamp(470,y);lamp(565,y);lamp(880,y);lamp(975,y)}
+      for(let y=120;y<2900;y+=190){lamp(470,y);lamp(565,y);lamp(880,y);lamp(975,y)}
      };
      drawStreetLamps();
      // Kemudahan bandar yang dibina pemain dipaparkan berdasarkan data simpanan semasa.
@@ -763,7 +763,7 @@ function bootPhaserMapBridge(){
       const trafficLayer=this.add.graphics();
       const drawTrafficAndPeople=()=>{
        const g=trafficLayer;g.clear();
-       // 80 kenderaan: 50 asal + 30 tambahan. Semua 18 lorong termasuk perimeter mempunyai trafik.
+       // 130 kenderaan: 50 asal + 80 tambahan. Semua lorong dua hala dipenuhi secara seimbang.
        // Trafik menggunakan gelung jalan bersambung dengan selekoh lembut di persimpangan.
        const carColors=[0xc94f48,0x477fa8,0xe3ad43,0xe8e3d4,0x568b68,0x8c6ca5,0xd47b43,0x303d48,0x5c9c9a,0xb8a36c];
        const roadLoops=[
@@ -771,7 +771,9 @@ function bootPhaserMapBridge(){
         [[496,768],[906,768],[906,1108],[496,1108]],
         [[496,1108],[906,1108],[906,1448],[496,1448]],
         [[496,1448],[906,1448],[906,1788],[496,1788]],
-        [[50,47],[1430,47],[1430,2267],[50,2267]]
+        [[496,1788],[906,1788],[906,2128],[496,2128]],
+        [[496,2128],[906,2128],[906,2468],[496,2468]],
+        [[50,47],[1430,47],[1430,2987],[50,2987]]
        ];
        const buildSmoothLoop=(points,radius=58)=>{
         const sampled=[];
@@ -797,7 +799,7 @@ function bootPhaserMapBridge(){
         const k=Math.min(lo,route.lengths.length-1),t=(d-route.cumulative[k])/Math.max(.001,route.lengths[k]),a=route.points[k],b=route.points[(k+1)%route.points.length];
         return{x:a[0]+(b[0]-a[0])*t,y:a[1]+(b[1]-a[1])*t,angle:Math.atan2(b[1]-a[1],b[0]-a[0])};
        };
-       const carCount=80,vehiclesPerRoute=roadLoops.map((_,k)=>k===4?20:15);
+       const carCount=130,vehiclesPerRoute=roadLoops.map((_,k)=>k===6?20:((k===5)?20:18));
        const drawCar=(cx,cy,length,width,angle,color,kind)=>{
         const co=Math.cos(angle),si=Math.sin(angle),tr=(x,y)=>({x:cx+x*co-y*si,y:cy+x*si+y*co});
         const poly=(pts,fill)=>{g.fillStyle(fill,1);g.fillPoints(pts.map(([x,y])=>tr(x,y)),true)};
@@ -814,7 +816,8 @@ function bootPhaserMapBridge(){
        let carIndex=0;
        for(let routeIndex=0;routeIndex<trafficRoutes.length;routeIndex++){
         const route=trafficRoutes[routeIndex],count=vehiclesPerRoute[routeIndex];
-        const laneGroups=routeIndex===4?[{direction:1,count:10,lane:15},{direction:-1,count:10,lane:15}]:[{direction:1,count,lane:15}];
+        const laneCount=routeIndex===6?10:(routeIndex===5?10:9);
+        const laneGroups=[{direction:1,count:laneCount,lane:15},{direction:-1,count:laneCount,lane:15}];
         for(const group of laneGroups){
          for(let n=0;n<group.count;n++){
           const i=carIndex++,length=[43,48,54,50,44][i%5],width=[22,23,25,22,21][i%5],speed=.82+(i%7)*.065;
@@ -953,7 +956,7 @@ function bootPhaserMapBridge(){
       };
       for(const p of [[150,520],[1275,860],[150,1200],[1275,1540]])bin(p[0],p[1]);
       g.lineStyle(5,0x5d9a79,1);g.beginPath();g.moveTo(112,500);g.lineTo(112,1840);g.moveTo(1360,500);g.lineTo(1360,1840);g.strokePath();
-      g.lineStyle(2,0xc5e2c9,.75);g.beginPath();for(let y=500;y<1840;y+=32){g.moveTo(112,y);g.lineTo(112,y+12);g.moveTo(1360,y);g.lineTo(1360,y+12)}g.strokePath();
+      g.lineStyle(2,0xc5e2c9,.75);g.beginPath();for(let y=500;y<2700;y+=32){g.moveTo(112,y);g.lineTo(112,y+12);g.moveTo(1360,y);g.lineTo(1360,y+12)}g.strokePath();
      };
      drawStreetFurniture();
      // Petak lot, zon guna tanah, status kekosongan dan pilihan dipaparkan oleh Phaser.
@@ -962,14 +965,14 @@ function bootPhaserMapBridge(){
      const lotZoneLabels=[],lotEmptyLabels=[];
      const zoneNames={komersial:'KOMERSIAL',perumahan:'PERUMAHAN',pelancongan:'PELANCONGAN',industri:'INDUSTRI',rekreasi:'REKREASI'};
      const zoneColors={komersial:0xe4b84f,perumahan:0x6da7d5,pelancongan:0x52b9a2,industri:0x99958e,rekreasi:0x78b85e};
-     for(let n=0;n<68;n++){
+     for(let n=0;n<88;n++){
       const zoneLabel=this.add.text(0,0,'',{fontFamily:'system-ui',fontSize:'8px',fontStyle:'bold',color:'#26372c'}).setOrigin(0,0);
       const emptyLabel=this.add.text(0,0,'',{fontFamily:'system-ui',fontSize:'bold 19px',color:'#f8f3d9',align:'center'}).setOrigin(.5,.5);
       lotZoneLabels.push(zoneLabel);lotEmptyLabels.push(emptyLabel);lotTextLayer.add([zoneLabel,emptyLabel]);
      }
      const drawLots=()=>{
       lotLayer.clear();
-      for(let n=0;n<68;n++){
+      for(let n=0;n<88;n++){
        const p=plots[n];if(!p)continue;
        const x=p.x,y=p.y,c=zoneColors[p.zone]||zoneColors.komersial;
        lotLayer.fillStyle(0xd6e5b9,1);lotLayer.fillRoundedRect(x-4,y-4,158,120,8);
