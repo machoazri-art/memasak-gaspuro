@@ -458,6 +458,12 @@ function drawMap(now=0){
  // Hentian bas mini dengan bumbung, bangku dan papan tanda.
  function busStop(x,y){ctx.fillStyle='rgba(39,52,42,.2)';ctx.beginPath();ctx.ellipse(x+23,y+34,27,7,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#536a69';ctx.fillRect(x,y+5,4,29);ctx.fillRect(x+43,y+5,4,29);ctx.fillStyle='#6f9c9a';ctx.fillRect(x-3,y,53,5);ctx.fillStyle='rgba(225,242,231,.78)';ctx.fillRect(x+5,y+8,33,19);ctx.fillStyle='#344c4b';ctx.fillRect(x+9,y+28,26,4);ctx.fillStyle='#f5d36f';ctx.fillRect(x+18,y-8,13,12);ctx.fillStyle='#33453d';ctx.font='bold 8px system-ui';ctx.fillText('BUS',x+19,y);}
  busStop(111,430);busStop(1308,770);busStop(111,1110);busStop(1308,1450);
+ // Pembantu Canvas sementara untuk pokok teduhan di poket taman; akan dipindahkan bersama taman sisi.
+ function townTree(x,y,scale=1){
+  ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);ctx.fillStyle='rgba(42,57,38,.22)';ctx.beginPath();ctx.ellipse(5,13,23,10,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#79583b';ctx.fillRect(-4,-1,9,22);ctx.fillStyle='#a47b4e';ctx.fillRect(-2,2,3,15);
+  const blobs=[[-12,-9,13,'#4c854b'],[1,-15,16,'#5f9b51'],[13,-7,13,'#397b49'],[-3,0,15,'#70a94f'],[10,4,10,'#4c8b45']];for(const b of blobs){ctx.fillStyle=b[3];ctx.beginPath();ctx.arc(b[0],b[1],b[2],0,Math.PI*2);ctx.fill()}ctx.restore();
+ }
+ function bench(x,y){ctx.fillStyle='rgba(45,53,42,.2)';ctx.fillRect(x-15,y+7,32,5);ctx.fillStyle='#594638';ctx.fillRect(x-15,y-5,31,5);ctx.fillRect(x-15,y+2,31,5);ctx.fillStyle='#bd9565';ctx.fillRect(x-13,y-4,27,3);ctx.fillRect(x-13,y+3,27,3);ctx.fillStyle='#414b48';ctx.fillRect(x-11,y+7,3,5);ctx.fillRect(x+10,y+7,3,5);}
  // Poket taman bandar di bahagian sisi: rumput, laluan batu, pokok dan bangku.
  function pocketPark(x,y){rounded(x,y,48,126,8,'#83b77a','#e6e1c9');ctx.fillStyle='#d8cdb0';ctx.fillRect(x+20,y+8,8,110);townTree(x+13,y+29,.48);townTree(x+35,y+95,.48);bench(x+24,y+64);ctx.fillStyle='#f3d77a';ctx.beginPath();ctx.arc(x+24,y+43,3,0,Math.PI*2);ctx.fill();}
  pocketPark(102,520);pocketPark(1320,860);pocketPark(102,1200);pocketPark(1320,1540);
