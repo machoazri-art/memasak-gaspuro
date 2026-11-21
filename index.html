@@ -200,7 +200,7 @@ const types=[
 {id:'bbq',name:'Grill & BBQ House',emoji:'🥩',cost:1450,base:108,desc:'Daging panggang dan hidangan salai',color:'#a75d42'},
 {id:'nightmarket',name:'Bazaar Malam',emoji:'🏮',cost:1250,base:96,desc:'Deretan gerai street food dan minuman',color:'#d99a3c'}
 ];
-const townSprite=new Image();townSprite.onload=()=>{if(typeof drawMap==='function')drawMap()};townSprite.onerror=()=>{console.warn('Sprite kedai gagal dimuatkan; mod fallback digunakan.');if(typeof drawMap==='function')drawMap()};townSprite.src='./assets/town-buildings.svg?v=2';
+const townSprite=new Image();townSprite.onload=()=>{if(typeof drawMap==='function')drawMap()};townSprite.onerror=()=>{console.warn('Sprite kedai gagal dimuatkan; mod fallback digunakan.');if(typeof drawMap==='function')drawMap()};townSprite.src='./assets/town-buildings.svg?v=3';
 const defaultState={money:80,level:1,xp:0,customers:0,totalIncome:0,earned:0,workers:0,staff:{kitchen:0,cashier:0,service:0},rating:3,buildings:[{id:1,type:'warung',lot:1,level:1,bank:0,served:0}],selectedLot:1,selectedBuild:'warung',upgrades:{marketing:0,quality:0,traffic:0},menuPrices:{},furnitureLevel:0,reviews:[],missionClaimed:false,achievements:[],dailyQuest:null,claimedMilestones:[],ingredients:100,workerSkill:0,supplierLevel:0,districts:['Kampung Gaspuro'],franchises:0,landProjects:[],lastTick:Date.now(),legacyImported:false};
 let s=load();
 /* Fasa 5 · single source of truth + Phaser/HTML state bridge. */
@@ -459,7 +459,36 @@ function drawMap(){
  if(townSprite.complete&&townSprite.naturalWidth)ctx.drawImage(townSprite,si*256,0,256,240,q.x+2,q.y-3,146,116);
  else{ctx.fillStyle=type.color;ctx.fillRect(q.x+12,q.y+20,126,78);ctx.fillStyle='#fff2d1';ctx.fillRect(q.x+20,q.y+38,110,50);ctx.font='22px system-ui';ctx.fillText(type.emoji,q.x+60,q.y+67)}
  ctx.fillStyle='#f7d77f';ctx.fillRect(q.x+15,q.y+8,5,5);ctx.fillRect(q.x+130,q.y+8,5,5);
- }else if(project){const st=project.id==='Pusat Bandar'?{wall:'#71899a',roof:'#d8e3e8',label:'PUSAT BANDAR'}:project.id==='Kawasan Pelancongan'?{wall:'#4f987b',roof:'#f1d18a',label:'PELANCONGAN'}:{wall:'#b77c4d',roof:'#ffe0a1',label:'FRANCAIS'};ctx.fillStyle='#66543f';ctx.fillRect(q.x+10,q.y+17,130,88);ctx.fillStyle=st.wall;ctx.fillRect(q.x+16,q.y+22,118,78);ctx.fillStyle=st.roof;ctx.fillRect(q.x+12,q.y+15,126,13);ctx.fillStyle='#e7f5f2';for(let n=0;n<3;n++)ctx.fillRect(q.x+25+n*34,q.y+43,18,23);ctx.fillStyle='#61432f';ctx.fillRect(q.x+68,q.y+75,18,25);ctx.fillStyle='#314b3c';ctx.font='bold 10px system-ui';ctx.textAlign='center';ctx.fillText(st.label,q.x+75,q.y+11);ctx.textAlign='start';if(project.id==='Kawasan Pelancongan'){ctx.fillStyle='#3f8b50';ctx.beginPath();ctx.arc(q.x+124,q.y+88,13,0,Math.PI*2);ctx.fill();ctx.fillStyle='#f6d36d';ctx.fillRect(q.x+116,q.y+71,16,5)}}else{ctx.fillStyle=shopUnlocked?'#f8f3d9':'#9aa58f';ctx.font='bold 19px system-ui';ctx.fillText(shopUnlocked?'+':'🔒',q.x+69,q.y+58);ctx.fillStyle='#52664e';ctx.font='10px system-ui';ctx.fillText(shopUnlocked?'LOT '+(shopIndex+1):'LEVEL '+(Math.ceil(shopIndex/2)+1),q.x+49,q.y+86)}
+ }else if(project){
+ // Bangunan mercu tanda khas: siluet, bumbung, tingkap berkilat, pintu dan landskap berbeza.
+ const px=q.x,py=q.y;
+ ctx.fillStyle='rgba(39,53,38,.25)';ctx.beginPath();ctx.ellipse(px+76,py+104,68,9,0,0,Math.PI*2);ctx.fill();
+ if(project.id==='Pusat Bandar'){
+   // Dewan bandar moden dengan menara jam dan dataran hadapan.
+   ctx.fillStyle='#b9c8c5';ctx.fillRect(px+15,py+31,120,72);ctx.fillStyle='#607b88';ctx.fillRect(px+22,py+39,106,64);
+   ctx.fillStyle='#dce7e3';ctx.fillRect(px+13,py+28,124,12);ctx.fillStyle='#849da4';ctx.fillRect(px+58,py+9,36,94);
+   ctx.fillStyle='#e8eee5';ctx.beginPath();ctx.moveTo(px+53,py+12);ctx.lineTo(px+76,py-1);ctx.lineTo(px+99,py+12);ctx.closePath();ctx.fill();
+   ctx.fillStyle='#f4d77d';ctx.beginPath();ctx.arc(px+76,py+27,8,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#586b70';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(px+76,py+21);ctx.lineTo(px+76,py+27);ctx.lineTo(px+81,py+30);ctx.stroke();
+   ctx.fillStyle='#b9dce0';for(let n=0;n<4;n++){ctx.fillRect(px+29+n*24,py+51,14,25);ctx.fillStyle='#e9f3e9';ctx.fillRect(px+31+n*24,py+53,3,20);ctx.fillStyle='#b9dce0'}
+   ctx.fillStyle='#4b5e61';ctx.fillRect(px+69,py+77,15,26);ctx.fillStyle='#e3c58a';ctx.fillRect(px+8,py+102,134,5);
+   ctx.fillStyle='#314b3c';ctx.font='bold 9px system-ui';ctx.textAlign='center';ctx.fillText('DEWAN BANDAR',px+76,py+119);ctx.textAlign='start';
+ }else if(project.id==='Kawasan Pelancongan'){
+   // Resort/pusat pelawat dengan bumbung tropika, kolam dan pokok palma.
+   ctx.fillStyle='#e6d2a2';ctx.fillRect(px+17,py+35,116,68);ctx.fillStyle='#4c8c79';ctx.fillRect(px+23,py+42,104,61);
+   ctx.fillStyle='#8b583c';ctx.beginPath();ctx.moveTo(px+10,py+42);ctx.lineTo(px+75,py+8);ctx.lineTo(px+140,py+42);ctx.closePath();ctx.fill();
+   ctx.fillStyle='#f1d18a';ctx.fillRect(px+15,py+39,120,7);ctx.fillStyle='#b9e0dc';for(let n=0;n<3;n++){ctx.fillRect(px+34+n*30,py+54,18,24);ctx.fillStyle='#fff0c8';ctx.fillRect(px+36+n*30,py+56,4,20);ctx.fillStyle='#b9e0dc'}
+   ctx.fillStyle='#68452f';ctx.fillRect(px+68,py+77,16,26);ctx.fillStyle='#6ab6c3';ctx.beginPath();ctx.ellipse(px+76,py+107,36,7,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#d8f3e9';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(px+76,py+107,25,4,0,0,Math.PI*2);ctx.stroke();
+   for(const tx of [12,139]){ctx.fillStyle='#8a603c';ctx.fillRect(px+tx,py+68,4,35);ctx.fillStyle='#3f8b50';for(let a=0;a<5;a++){ctx.beginPath();ctx.ellipse(px+tx+2+Math.cos(a*1.25)*12,py+65+Math.sin(a*1.25)*7,12,4,a*1.25,0,Math.PI*2);ctx.fill()}}
+   ctx.fillStyle='#314b3c';ctx.font='bold 9px system-ui';ctx.textAlign='center';ctx.fillText('PUSAT PELAWAT',px+76,py+119);ctx.textAlign='start';
+ }else{
+   // Restoran francais premium dengan kanopi, papan tanda dan pintu kaca.
+   ctx.fillStyle='#744a34';ctx.fillRect(px+12,py+34,128,70);ctx.fillStyle='#b8794e';ctx.fillRect(px+19,py+42,114,62);
+   ctx.fillStyle='#f6d18b';ctx.fillRect(px+9,py+28,134,15);for(let n=0;n<6;n++){ctx.fillStyle=n%2?'#fff0ca':'#b94e42';ctx.fillRect(px+12+n*22,py+29,11,13)}
+   ctx.fillStyle='#fff1d0';ctx.fillRect(px+25,py+50,98,12);ctx.fillStyle='#70442f';ctx.font='bold 9px system-ui';ctx.textAlign='center';ctx.fillText('FRANCAIS',px+74,py+59);ctx.textAlign='start';
+   ctx.fillStyle='#b9dce0';ctx.fillRect(px+28,py+67,28,27);ctx.fillRect(px+95,py+67,28,27);ctx.fillStyle='#e8c98c';ctx.fillRect(px+68,py+72,16,32);
+   ctx.fillStyle='#f5dfac';ctx.fillRect(px+17,py+101,118,5);
+ }
+ }else{ctx.fillStyle=shopUnlocked?'#f8f3d9':'#9aa58f';ctx.font='bold 19px system-ui';ctx.fillText(shopUnlocked?'+':'🔒',q.x+69,q.y+58);ctx.fillStyle='#52664e';ctx.font='10px system-ui';ctx.fillText(shopUnlocked?'LOT '+(shopIndex+1):'LEVEL '+(Math.ceil(shopIndex/2)+1),q.x+49,q.y+86)}
  if(s.selectedLot===shopIndex){ctx.strokeStyle='#ffb72f';ctx.lineWidth=4;ctx.strokeRect(q.x+2,q.y+2,146,108)}
  plots.push({i:shopIndex,x:q.x,y:q.y,w:150,h:112,unlocked:shopUnlocked});
  }
@@ -479,10 +508,16 @@ function drawMap(){
  for(const rx of [483,553,893,963]){ctx.moveTo(rx,100);ctx.lineTo(rx,2250)}
  for(let row=0;row<6;row++){const cy=446+row*340;ctx.moveTo(95,411+row*340);ctx.lineTo(1360,411+row*340);ctx.moveTo(95,481+row*340);ctx.lineTo(1360,481+row*340)}
  ctx.stroke();
- ctx.strokeStyle='#f6e9bd';ctx.lineWidth=3;ctx.setLineDash([24,18]);ctx.beginPath();
+ // Garisan tengah putih yang lebih jelas dan konsisten untuk semua jalan.
+ ctx.strokeStyle='#fbfbf3';ctx.lineWidth=4;ctx.lineCap='round';ctx.setLineDash([30,22]);ctx.beginPath();
  for(const rx of [518,928]){ctx.moveTo(rx,100);ctx.lineTo(rx,2250)}
  for(let row=0;row<6;row++){const cy=446+row*340;ctx.moveTo(95,cy);ctx.lineTo(1360,cy)}
  ctx.stroke();ctx.setLineDash([]);
+ // Garisan tepi putih berterusan dengan sedikit ketelusan, memastikan asfalt nampak kemas.
+ ctx.strokeStyle='rgba(255,255,248,.9)';ctx.lineWidth=3;ctx.beginPath();
+ for(const rx of [486,550,896,960]){ctx.moveTo(rx,110);ctx.lineTo(rx,2240)}
+ for(let row=0;row<6;row++){const y=414+row*340;ctx.moveTo(105,y);ctx.lineTo(1350,y);ctx.moveTo(105,y+64);ctx.lineTo(1350,y+64)}
+ ctx.stroke();
  // Lintasan zebra pada setiap simpang jalan tengah, jarak dan saiz konsisten.
  function roadCrosswalk(x,y,vertical=false){
    ctx.fillStyle='#f4eedc';
@@ -525,7 +560,13 @@ function drawMap(){
    // headlights, tail lamps and bumpers
    ctx.fillStyle='#fff1bd';ctx.beginPath();ctx.roundRect(38,-7,3,5,1);ctx.roundRect(38,2,3,5,1);ctx.fill();
    ctx.fillStyle='#a93e3b';ctx.beginPath();ctx.roundRect(2,-7,3,5,1);ctx.roundRect(2,2,3,5,1);ctx.fill();
-   ctx.fillStyle='rgba(255,255,255,.35)';ctx.fillRect(7,-11,27,1);
+   // Side mirrors, door seams, handles, number plate and subtle body reflections.
+   ctx.fillStyle='#26353a';ctx.beginPath();ctx.roundRect(7,-13,7,4,2);ctx.roundRect(7,9,7,4,2);ctx.fill();
+   ctx.fillStyle=carColors[(i+lane)%carColors.length];ctx.beginPath();ctx.roundRect(8,-12,5,3,1);ctx.roundRect(8,9,5,3,1);ctx.fill();
+   ctx.strokeStyle='rgba(24,39,43,.48)';ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(20,-8);ctx.lineTo(20,8);ctx.moveTo(6,0);ctx.lineTo(36,0);ctx.stroke();
+   ctx.fillStyle='rgba(255,255,255,.42)';ctx.fillRect(7,-11,27,1.5);ctx.fillRect(7,10,27,1);
+   ctx.fillStyle='#f4e8c9';ctx.beginPath();ctx.roundRect(3,-2.2,4,4.4,1);ctx.fill();
+   ctx.fillStyle='#26363a';ctx.fillRect(35,-2,4,4);
    ctx.restore();
  }
  // Pejalan kaki ikut laluan kaki lima yang bersambung; mereka membelok di simpang,
@@ -580,7 +621,13 @@ function drawMap(){
    ctx.fillStyle=skinTones[i%skinTones.length];ctx.beginPath();ctx.arc(0,-7.7+bob,2.9,0,Math.PI*2);ctx.fill();
    // Telinga kecil dan beg silang mini untuk memberi bentuk watak dari atas.
    ctx.fillStyle=skinTones[i%skinTones.length];ctx.beginPath();ctx.arc(-3,-7+bob,1,0,Math.PI*2);ctx.arc(3,-7+bob,1,0,Math.PI*2);ctx.fill();
-   ctx.fillStyle='#8b6848';ctx.beginPath();ctx.roundRect(3.1,-1+bob,2.1,3.4,1);ctx.fill();
+   // Butiran pakaian, kasut dan aksesori supaya watak lebih menyerupai orang sebenar.
+   ctx.strokeStyle='rgba(255,255,255,.42)';ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(-2.3,-2+bob);ctx.lineTo(-2.3,2+bob);ctx.moveTo(2.3,-2+bob);ctx.lineTo(2.3,2+bob);ctx.stroke();
+   ctx.fillStyle='#30383a';ctx.beginPath();ctx.ellipse(-2.8,8,1.7,2.2,-.2,0,Math.PI*2);ctx.ellipse(2.8,8,1.7,2.2,.2,0,Math.PI*2);ctx.fill();
+   ctx.fillStyle=hair[i%hair.length];ctx.beginPath();ctx.arc(0,-9.1+bob,3.7,Math.PI,Math.PI*2);ctx.fill();
+   ctx.fillStyle='rgba(255,255,255,.3)';ctx.beginPath();ctx.arc(-1.1,-8.6+bob,.7,0,Math.PI*2);ctx.fill();
+   ctx.strokeStyle='#8b6848';ctx.lineWidth=1.1;ctx.beginPath();ctx.moveTo(3.1,-1+bob);ctx.lineTo(5.3,3+bob);ctx.stroke();
+   ctx.fillStyle='#8b6848';ctx.beginPath();ctx.roundRect(3.1,1+bob,2.6,3.6,1);ctx.fill();
    ctx.restore();
  }
  // Festival menghias premis yang aktif secara fizikal.
