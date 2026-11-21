@@ -634,23 +634,82 @@ function bootPhaserMapBridge(){
        const lot=Number(shop.lot);if(!Number.isInteger(lot)||lot<0)continue;
        const block=Math.floor(lot/4),j=lot%4,plot=lotPos(block),bx=plot.x,by=plot.y;
        const x=bx+8+(j%2)*156,y=by+8+(j>=2?128:0),col=palettes[shop.type]||palettes.warung,g=commercialLayer;
-       g.fillStyle(0x263326,.28);g.fillRoundedRect(x+2,y+14,140,91,5);
-       g.fillStyle(0xdbc99c,1);g.fillRoundedRect(x,y,150,108,7);
-       g.fillStyle(0x553f32,1);g.fillRoundedRect(x+5,y+4,140,91,5);
-       g.fillStyle(col[0],1);g.fillRect(x+9,y+8,132,82);
-       g.fillStyle(col[1],1);g.fillRect(x+14,y+13,122,70);
-       g.fillStyle(0x273d35,1);g.fillRoundedRect(x+24,y+17,102,20,4);
-       g.fillStyle(0xf7e4b2,1);g.fillRoundedRect(x+28,y+20,94,14,3);
-       g.lineStyle(2,0x8a6547,.8);for(let yy=y+42;yy<y+75;yy+=10)g.lineBetween(x+17,yy,x+133,yy);
-       g.fillStyle(0xead8ac,1);g.fillRect(x+40,y+84,70,12);
-       g.fillStyle(col[0],1);for(let xx=x+43;xx<x+108;xx+=11)g.fillRect(xx,y+85,6,10);
-       g.fillStyle(0x5b4838,1);g.fillRoundedRect(x+64,y+92,24,16,3);
-       g.fillStyle(0x9cc4bd,1);g.fillRect(x+68,y+95,7,7);g.fillRect(x+78,y+95,7,7);
-       g.fillStyle(0xffe7a0,1);g.fillCircle(x+18,y+18,3);g.fillCircle(x+132,y+18,3);
-       g.fillStyle(0xffffff,.20);g.fillRect(x+13,y+39,124,2);
+       // Tapak kedai penuh dengan fasad, bumbung dan papan tanda tersendiri mengikut kategori.
+       const g=commercialLayer,baseY=y;
+       g.fillStyle(0x263326,.30);g.fillEllipse(x+75,baseY+105,140,13);
+       g.fillStyle(0xdbc99c,1);g.fillRoundedRect(x,baseY,150,108,8);
+       g.fillStyle(0x4b3b32,1);g.fillRoundedRect(x+5,baseY+5,140,98,6);
+       g.fillStyle(col[0],1);g.fillRoundedRect(x+9,baseY+9,132,90,4);
+       g.fillStyle(col[1],1);g.fillRoundedRect(x+14,baseY+14,122,78,3);
+       // Ruang dalaman, tingkap dan pintu utama.
+       g.fillStyle(0x243b3a,1);g.fillRoundedRect(x+22,baseY+35,106,48,3);
+       g.fillStyle(0x9fcac5,1);g.fillRect(x+27,baseY+40,96,36);
+       g.fillStyle(0xf4e4c0,1);g.fillRect(x+29,baseY+42,92,3);
+       g.fillStyle(0x624431,1);g.fillRoundedRect(x+63,baseY+65,24,28,3);
+       g.fillStyle(0x9fcac5,1);g.fillRect(x+67,baseY+69,8,11);g.fillRect(x+78,baseY+69,6,11);
+       // Papan tanda utama besar.
+       g.fillStyle(0x263d35,1);g.fillRoundedRect(x+19,baseY+15,112,19,5);
+       g.fillStyle(0xffe9b5,1);g.fillRoundedRect(x+23,baseY+18,104,13,3);
+       // Identiti seni bina berbeza bagi setiap jenis perniagaan.
+       if(shop.type==='warung'){
+        g.fillStyle(0x7d3e2d,1);g.fillTriangle(x+7,baseY+20,x+75,baseY-7,x+143,baseY+20);
+        g.fillStyle(0x9c4c34,1);g.fillTriangle(x+14,baseY+20,x+75,baseY-2,x+136,baseY+20);
+        for(let n=0;n<8;n++){g.fillStyle(n%2?0xfff0d0:0x4b9b70,1);g.fillRect(x+17+n*15,baseY+34,8,7)}
+        g.fillStyle(0xffd47b,1);g.fillCircle(x+75,baseY+25,5);
+       }else if(shop.type==='mamak'){
+        g.fillStyle(0x244f83,1);g.fillRect(x+9,baseY+8,132,13);
+        g.fillStyle(0xf0c34f,1);g.fillTriangle(x+28,baseY+15,x+75,baseY-10,x+122,baseY+15);
+        g.fillStyle(0xffdf75,1);g.fillCircle(x+75,baseY-3,8);
+        for(let n=0;n<7;n++){g.fillStyle(n%2?0xf5d16d:0x315f9a,1);g.fillRect(x+16+n*17,baseY+34,11,7)}
+       }else if(shop.type==='satay'||shop.type==='bbq'){
+        g.fillStyle(0x4b3027,1);g.fillTriangle(x+7,baseY+23,x+75,baseY-9,x+143,baseY+23);
+        g.fillStyle(0xb66b36,1);g.fillTriangle(x+17,baseY+21,x+75,baseY-3,x+133,baseY+21);
+        for(let n=0;n<5;n++){g.lineStyle(3,0xf3bd65,1);g.lineBetween(x+42+n*9,baseY+52,x+48+n*9,baseY+40);g.fillStyle(0xffa34a,.75);g.fillCircle(x+46+n*9,baseY+57,3)}
+        if(shop.type==='bbq'){g.fillStyle(0xf05b35,1);g.fillTriangle(x+64,baseY+63,x+75,baseY+42,x+86,baseY+63);g.fillStyle(0xffd45c,1);g.fillTriangle(x+69,baseY+62,x+75,baseY+49,x+81,baseY+62)}
+       }else if(shop.type==='drink'){
+        g.fillStyle(0x2d7771,1);g.fillRoundedRect(x+10,baseY+8,130,17,4);
+        g.fillStyle(0xc6e7d6,1);g.fillRect(x+18,baseY+39,114,4);
+        for(let n=0;n<4;n++){g.fillStyle([0xf3d16d,0xe68a78,0x86c5b4,0xb9a2d7][n],1);g.fillRoundedRect(x+28+n*25,baseY+49,13,18,4);g.fillRect(x+34+n*25,baseY+44,2,7)}
+       }else if(shop.type==='cafe'){
+        g.fillStyle(0x3c3936,1);g.fillRoundedRect(x+9,baseY+8,132,23,4);
+        g.lineStyle(3,0x6e5140,1);for(let n=0;n<4;n++)g.lineBetween(x+27+n*31,baseY+39,x+27+n*31,baseY+80);
+        g.fillStyle(0xf3e3c3,1);g.fillCircle(x+75,baseY+24,6);g.fillStyle(0x81543d,1);g.fillCircle(x+75,baseY+24,3);
+        g.fillStyle(0x4b8b55,1);g.fillCircle(x+17,baseY+86,7);g.fillCircle(x+133,baseY+86,7);
+       }else if(shop.type==='foodcourt'||shop.type==='restaurant'){
+        g.fillStyle(0x784437,1);g.fillTriangle(x+8,baseY+22,x+75,baseY-8,x+142,baseY+22);
+        g.fillStyle(0xf1d29a,1);g.fillRect(x+14,baseY+25,122,9);
+        for(let n=0;n<6;n++){g.fillStyle(n%2?0xffe8b6:col[0],1);g.fillRect(x+17+n*20,baseY+35,10,6)}
+        g.fillStyle(0xf7d77f,1);g.fillCircle(x+75,baseY+55,7);
+       }else if(shop.type==='bakery'){
+        g.fillStyle(0xf1c3a4,1);g.fillRoundedRect(x+9,baseY+7,132,26,6);
+        for(let n=0;n<7;n++){g.fillStyle(n%2?0xfff1df:0xe98e9b,1);g.fillRect(x+13+n*18,baseY+27,9,8)}
+        g.fillStyle(0xffe3ad,1);g.fillRoundedRect(x+22,baseY+50,106,25,5);
+        for(let n=0;n<4;n++){g.fillStyle(0xc98243,1);g.fillEllipse(x+36+n*25,baseY+62,14,9)}
+       }else if(shop.type==='ramen'){
+        g.fillStyle(0x282d32,1);g.fillTriangle(x+7,baseY+22,x+75,baseY-8,x+143,baseY+22);
+        g.fillStyle(0xc53e35,1);g.fillRect(x+12,baseY+24,126,9);
+        for(const lx of [25,125]){g.fillStyle(0xf4b75b,1);g.fillCircle(x+lx,baseY+43,5);g.fillRect(x+lx-2,baseY+48,4,9)}
+        g.fillStyle(0xf5e2b9,1);g.fillEllipse(x+75,baseY+57,25,12);
+       }else if(shop.type==='dessert'){
+        g.fillStyle(0xd67fb3,1);g.fillRoundedRect(x+9,baseY+7,132,25,7);
+        for(let n=0;n<6;n++){g.fillStyle(n%2?0xf9d6ec:0xffffff,1);g.fillCircle(x+20+n*22,baseY+30,6)}
+        g.fillStyle(0xfff2df,1);g.fillTriangle(x+66,baseY+58,x+84,baseY+58,x+75,baseY+78);
+        g.fillStyle(0xf5a4d0,1);g.fillCircle(x+75,baseY+55,10);
+       }else if(shop.type==='nightmarket'){
+        g.fillStyle(0x59418a,1);g.fillTriangle(x+8,baseY+30,x+75,baseY-5,x+142,baseY+30);
+        for(let n=0;n<8;n++){g.fillStyle(n%2?0xf4d35e:0xc35c9d,1);g.fillRect(x+14+n*17,baseY+28,10,9)}
+        for(let n=0;n<5;n++){g.fillStyle(0xffe49a,1);g.fillCircle(x+27+n*24,baseY+42,2.5)}
+       }else{
+        g.fillStyle(col[0],1);g.fillTriangle(x+9,baseY+22,x+75,baseY-6,x+141,baseY+22);
+        g.fillStyle(col[1],1);g.fillRect(x+14,baseY+24,122,8);
+       }
+       // Lampu fasad, kaki lima dan butiran hiasan.
+       g.fillStyle(0xffe29a,1);g.fillCircle(x+13,baseY+38,3);g.fillCircle(x+137,baseY+38,3);
+       g.fillStyle(0xe8d4a9,1);g.fillRect(x+12,baseY+94,126,5);
+       g.fillStyle(0x6b503b,1);g.fillRect(x+17,baseY+99,116,3);
        const type=bizType(shop);
        commercialTextLayer.add(this.add.text(x+75,y+3,type.emoji,{fontFamily:'system-ui',fontSize:'19px'}).setOrigin(.5,0));
-       commercialTextLayer.add(this.add.text(x+75,y+109,type.name.toUpperCase(),{fontFamily:'system-ui',fontSize:'11px',fontStyle:'bold',color:'#fff8df',stroke:'#263d30',strokeThickness:3,backgroundColor:'#34583e',padding:{x:5,y:3},align:'center',wordWrap:{width:142},maxLines:1}).setOrigin(.5,0));
+       commercialTextLayer.add(this.add.text(x+75,y+109,type.name.toUpperCase(),{fontFamily:'system-ui',fontSize:'12px',fontStyle:'bold',color:'#fff8df',stroke:'#263d30',strokeThickness:3,backgroundColor:'#34583e',padding:{x:5,y:3},align:'center',wordWrap:{width:142},maxLines:1}).setOrigin(.5,0));
        commercialTextLayer.add(this.add.text(x+132,y+4,'L'+(Number(shop.level)||1),{fontFamily:'monospace',fontSize:'11px',fontStyle:'bold',color:'#fff7d8',backgroundColor:'#34583e',padding:{x:4,y:3}}).setOrigin(.5,0));
       }
      };
@@ -704,54 +763,69 @@ function bootPhaserMapBridge(){
       const trafficLayer=this.add.graphics();
       const drawTrafficAndPeople=()=>{
        const g=trafficLayer;g.clear();
-       const carColors=[0xc94f48,0x477fa8,0xe3ad43,0xe8e3d4,0x568b68,0x8c6ca5];
-       for(let i=0;i<8;i++){
-        const lane=i%4,group=Math.floor(i/4),dir=(lane===1||lane===3)?-1:1;
-        // Kereta bergerak hanya di atas jalur mendatar yang benar-benar dilukis.
-        // Jalan dalaman: x=95..1385; lorong dipusatkan pada y=446, 786, 1126.
-        const speed=[.72,1.05,.83,1.22][lane],span=1248,raw=(tick*speed*dir+group*640+lane*310)%span;
-        const x=95+(dir<0?42:0)+((raw+span)%span),y=[428,464,768,804,1108,1144,1448,1484][i],flip=dir<0?-1:1;
-        // Clamp the complete vehicle body to the paved road segment, never the lot area.
-        const safeX=Phaser.Math.Clamp(x,dir<0?137:95,dir<0?1385:1343);
-        const px=(v)=>safeX+v*flip;
-        g.fillStyle(0x192427,.3);g.fillEllipse(safeX+20*flip,y+5,52,24);
-        g.fillStyle(0x222a2d,1);for(const wx of [5,31])for(const wy of [-10,10])g.fillRoundedRect(px(wx)-4,y+wy-3,9,6,2);
-        g.fillStyle(0x344047,1);g.fillRoundedRect(px(0),y-11,42,22,7);
-        g.fillStyle(carColors[(i+lane)%carColors.length],1);g.fillRoundedRect(px(1),y-10,40,20,7);
-        g.fillStyle(0x29434b,1);g.fillRoundedRect(px(9),y-8,22,16,5);
-        g.fillStyle(0x9fc5ce,1);g.fillTriangle(px(12),y-7,px(28),y-7,px(30),y-1);g.fillTriangle(px(10),y+1,px(30),y+1,px(28),y+7);
-        g.fillStyle(0xfff1bd,1);g.fillRoundedRect(px(38),y-7,3,5,1);g.fillRoundedRect(px(38),y+2,3,5,1);
+       // 50 kenderaan diagihkan sekata pada lapan lorong jalan mendatar.
+       const carColors=[0xc94f48,0x477fa8,0xe3ad43,0xe8e3d4,0x568b68,0x8c6ca5,0xd47b43,0x303d48,0x5c9c9a,0xb8a36c];
+       const laneY=[428,464,768,804,1108,1144,1448,1484],carCount=50,perLane=Math.ceil(carCount/8),span=1248;
+       for(let i=0;i<carCount;i++){
+        const lane=i%8,group=Math.floor(i/8),dir=(lane%2===1)?-1:1;
+        const speed=.42+(i%7)*.075,bodyW=[42,46,54,50,42][i%5],y=laneY[lane];
+        const travel=tick*speed*dir+group*(span/perLane)+lane*137;
+        const raw=((travel%span)+span)%span;
+        const x=95+(dir<0?bodyW:0)+raw;
+        const safeX=Phaser.Math.Clamp(x,dir<0?95+bodyW:95,dir<0?1385:1385-bodyW);
+        const px=v=>safeX+v*dir;
+        const color=carColors[i%carColors.length],kind=i%10;
+        g.fillStyle(0x192427,.28);g.fillEllipse(safeX+bodyW*.5*dir,y+5,bodyW+10,24);
+        g.fillStyle(0x202a2e,1);
+        for(const wx of [7,bodyW-9])for(const wy of [-10,10])g.fillRoundedRect(px(wx)-4,y+wy-3,9,7,2);
+        g.fillStyle(0x344047,1);g.fillRoundedRect(px(0),y-12,bodyW,24,kind===2?5:7);
+        g.fillStyle(color,1);g.fillRoundedRect(px(2),y-10,bodyW-4,20,kind===2?4:6);
+        if(kind===2||kind===7){
+         g.fillStyle(0x29434b,1);g.fillRoundedRect(px(10),y-9,bodyW-19,18,4);
+         g.fillStyle(0x9fc5ce,1);g.fillRect(px(13),y-7,bodyW-25,6);g.fillRect(px(13),y+1,bodyW-25,6);
+        }else{
+         g.fillStyle(0x29434b,1);g.fillRoundedRect(px(9),y-8,bodyW-18,16,4);
+         g.fillStyle(0x9fc5ce,1);g.fillTriangle(px(12),y-7,px(bodyW-13),y-7,px(bodyW-15),y-1);g.fillTriangle(px(10),y+1,px(bodyW-15),y+1,px(bodyW-13),y+7);
+        }
+        if(kind===3||kind===8){g.fillStyle(0xf4e6c5,1);g.fillRect(px(4),y-2,bodyW-8,4)}
+        g.fillStyle(0xfff1bd,1);g.fillRoundedRect(px(bodyW-4),y-7,3,5,1);g.fillRoundedRect(px(bodyW-4),y+2,3,5,1);
         g.fillStyle(0xa93e3b,1);g.fillRoundedRect(px(2),y-7,3,5,1);g.fillRoundedRect(px(2),y+2,3,5,1);
-        g.fillStyle(0x26353a,1);g.fillRoundedRect(px(7),y-13,7,4,2);g.fillRoundedRect(px(7),y+9,7,4,2);
        }
-       // Laluan pejalan kaki mengikuti bahu jalan dan koridor antara blok lot.
+       // 100 pejalan kaki menggunakan laluan kaki lima sedia ada, bukan atas petak bangunan.
        const routes=[
         [[112,395],[1380,395],[1380,490],[112,490]],
         [[112,735],[1380,735],[1380,830],[112,830]],
         [[470,110],[565,110],[565,2200],[470,2200]]
        ];
-       const speeds=[.43,.36,.49,.32,.40,.46,.34,.51,.38,.44,.35,.47],offsets=[0,91,177,263,351,442,529,618,704,793,882,971],routeIds=[0,1,2,0,1,2,1,0,2,1,0,2],dirs=[1,-1,1,-1,1,-1,1,-1,1,-1,1,-1];
-       const shirts=[0x477fa8,0xd46c55,0x5d966c,0xd3a94e,0x8b6ca6,0xe7e0ce],skins=[0xe9b991,0xc98f69,0xf0c9a4,0xa96f50],hairs=[0x3d3029,0x272b2d,0x594332,0x332c28];
+       const shirts=[0x477fa8,0xd46c55,0x5d966c,0xd3a94e,0x8b6ca6,0xe7e0ce,0x2f7774,0xc45c83,0x9a7048,0x477b9e];
+       const skins=[0xe9b991,0xc98f69,0xf0c9a4,0xa96f50,0xd9a17d],hairs=[0x3d3029,0x272b2d,0x594332,0x332c28,0x78563b];
+       const routeCounts=[34,33,33],routeSeen=[0,0,0],routeSpeeds=[.22,.27,.19,.31,.24,.29,.17,.26];
        const pointAt=(route,distance)=>{
         const pts=routes[route],lengths=pts.map((p,k)=>Math.hypot(pts[(k+1)%pts.length][0]-p[0],pts[(k+1)%pts.length][1]-p[1]));
         const total=lengths.reduce((v,n)=>v+n,0);let d=((distance%total)+total)%total;
-        for(let k=0;k<pts.length;k++){if(d<=lengths[k]){const p=pts[k],q=pts[(k+1)%pts.length],t=d/lengths[k];return{x:p[0]+(q[0]-p[0])*t,y:p[1]+(q[1]-p[1])*t,angle:Math.atan2(q[1]-p[1],q[0]-p[0])}}d-=lengths[k]}
-        return{x:pts[0][0],y:pts[0][1],angle:0};
+        for(let k=0;k<pts.length;k++){if(d<=lengths[k]){const p=pts[k],q=pts[(k+1)%pts.length],t=d/lengths[k];return{x:p[0]+(q[0]-p[0])*t,y:p[1]+(q[1]-p[1])*t,angle:Math.atan2(q[1]-p[1],q[0]-p[0]),total}}d-=lengths[k]}
+        return{x:pts[0][0],y:pts[0][1],angle:0,total};
        };
        const local=(x,y,angle,lx,ly)=>({x:x+lx*Math.cos(angle)-ly*Math.sin(angle),y:y+lx*Math.sin(angle)+ly*Math.cos(angle)});
-       for(let i=0;i<12;i++){
-        const route=routeIds[i],dir=dirs[i],speed=speeds[i],pts=routes[route],total=pts.reduce((sum,p,k)=>sum+Math.hypot(pts[(k+1)%pts.length][0]-p[0],pts[(k+1)%pts.length][1]-p[1]),0);
-        const effectiveTick=tick-Math.floor((tick+i*83)/720)*34,travel=(offsets[i]+effectiveTick*speed*dir)%total,pause=((tick+i*83)%720)<34,pos=pointAt(route,travel),bob=pause?0:Math.abs(Math.sin(tick*.16+i*2.4))*.65,angle=pos.angle+Math.PI/2+(dir<0?Math.PI:0);
+       for(let i=0;i<100;i++){
+        const route=i%3,index=routeSeen[route]++,dir=(i%2===0)?1:-1,speed=routeSpeeds[i%routeSpeeds.length],sample=pointAt(route,0);
+        const distance=index*(sample.total/routeCounts[route])+((tick*speed*dir+i*11)%sample.total);
+        const pos=pointAt(route,distance),bob=Math.abs(Math.sin(tick*.12+i*1.71))*1.1,angle=pos.angle+Math.PI/2+(dir<0?Math.PI:0);
         const xy=(lx,ly)=>local(pos.x,pos.y,angle,lx,ly);
-        g.fillStyle(0x2d3e2a,.27);g.fillEllipse(pos.x,pos.y+9,13,7);
-        let q=xy(-4,-4+bob);g.fillStyle(shirts[i%shirts.length],1);g.fillRoundedRect(q.x-4,q.y,8,8,3);
-        for(const side of [-1,1]){q=xy(side*2.8,7);g.fillStyle(0x30383a,1);g.fillEllipse(q.x,q.y,3.4,4.4);q=xy(side*4.2,-1+bob);g.fillStyle(shirts[i%shirts.length],1);g.fillCircle(q.x,q.y,1.8)}
-        q=xy(0,-7.1+bob);g.fillStyle(hairs[i%hairs.length],1);g.fillCircle(q.x,q.y,3.7);
-        q=xy(0,-7.7+bob);g.fillStyle(skins[i%skins.length],1);g.fillCircle(q.x,q.y,2.9);
-        q=xy(0,-9.1+bob);g.fillStyle(hairs[i%hairs.length],1);g.fillCircle(q.x,q.y,1.1);
-        q=xy(4.3,2+bob);g.fillStyle(0x8b6848,1);g.fillRoundedRect(q.x-1.3,q.y-1.8,2.6,3.6,1);
+        const shirt=shirts[i%shirts.length],skin=skins[i%skins.length],hair=hairs[i%hairs.length];
+        g.fillStyle(0x2d3e2a,.24);g.fillEllipse(pos.x,pos.y+8,15,7);
+        let q=xy(-3,3+bob);g.fillStyle(0x30383a,1);g.fillRoundedRect(q.x-2,q.y,4,5,1);
+        q=xy(3,3+bob);g.fillRoundedRect(q.x-2,q.y,4,5,1);
+        q=xy(0,-1+bob);g.fillStyle(shirt,1);g.fillRoundedRect(q.x-4.5,q.y-1,9,10,3);
+        for(const side of [-1,1]){q=xy(side*5,-1+bob);g.fillStyle(skin,1);g.fillCircle(q.x,q.y+1,2)}
+        q=xy(0,-8+bob);g.fillStyle(hair,1);g.fillCircle(q.x,q.y,4.2);
+        q=xy(0,-8.3+bob);g.fillStyle(skin,1);g.fillCircle(q.x,q.y+1,3.2);
+        if(i%9===3||i%9===6){q=xy(0,-10+bob);g.fillStyle(i%2?0x9b5d8b:0x385b78,1);g.fillEllipse(q.x,q.y,7,3.5)}
+        if(i%7===0){q=xy(5,1+bob);g.fillStyle(0x8b6848,1);g.fillRoundedRect(q.x-1.8,q.y-2,3.6,5,1)}
+        if(i%13===0){q=xy(-5,-2+bob);g.fillStyle(0xf0c45e,1);g.fillCircle(q.x,q.y,2.2)}
        }
       };
+      drawTrafficAndPeople();
       drawTrafficAndPeople();
             const landProjectLayer=this.add.graphics(),landProjectTextLayer=this.add.container(0,0);
       const drawLandProjects=()=>{
