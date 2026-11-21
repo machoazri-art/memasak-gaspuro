@@ -94,6 +94,9 @@
 .zoom button{min-width:40px;min-height:40px;touch-action:manipulation}
 .phaser-unavailable #map{display:block!important;width:100%;height:min(68vh,590px);min-height:390px;touch-action:pan-y}
 .phaser-unavailable #townPhaserMount{display:none!important}
+/* Stable town-map input fallback: use the proven interactive 2D canvas while Phaser town input is repaired. */
+.town-legacy-mode #map{display:block!important;pointer-events:auto!important;position:absolute;inset:0;z-index:1;width:100%;height:100%;touch-action:none}
+.town-legacy-mode #townPhaserMount{display:none!important}
 @media(max-width:600px){.app{padding:7px}.mapbox{height:min(66svh,560px);min-height:380px}.maphead{top:7px;left:7px;right:7px}.maphelp{max-width:55%;text-align:center;font-size:9px}.room.topRoom{width:100%;min-height:360px!important;max-height:62svh!important}.insideTop{gap:8px}.insideTop h2{font-size:17px}#phaserWorld canvas{touch-action:none}}
 @media(max-height:650px) and (orientation:landscape){.mapbox{height:72vh;min-height:280px}.room.topRoom{max-height:68vh!important;min-height:280px!important}}
 /* Fasa 6.1: dependable zoom and multi-touch controls */
@@ -326,8 +329,8 @@ canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);
 canvas.addEventListener('pointermove',e=>{if(!drag)return;let dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>6)drag.moved=true;if(drag.moved){camera.x=drag.cx+dx*canvas.width/canvas.clientWidth;camera.y=drag.cy+dy*canvas.height/canvas.clientHeight}});
 canvas.addEventListener('pointerup',e=>{if(!drag)return;if(!drag.moved){let p=screenToWorld(e),lot=plots.find(x=>p.x>=x.x&&p.x<=x.x+x.w&&p.y>=x.y&&p.y<=x.y+x.h);if(lot){s.selectedLot=lot.i;let b=selectedBuilding();if(b){openInterior(b);drag=null;return}$('selectionTitle').textContent=b?bizType(b).emoji+' '+bizType(b).name:'🏡 Lot '+(lot.i+1)+' kosong';$('selectionText').textContent=b?'Tahap '+b.level+' · Hasil terkumpul '+fmt(b.bank):lot.unlocked?'Pilih jenis perniagaan dan bina di sini.':'Lot terkunci. Naik level untuk buka.';$('buildBtn').disabled=!!b||!lot.unlocked;render();drawTools();}}drag=null});
 canvas.addEventListener('wheel',e=>{e.preventDefault();camera.scale=Math.max(.65,Math.min(1.6,camera.scale+(e.deltaY<0?.08:-.08)))},{passive:false});
-const changeTownZoom=delta=>{const api=window.GaspuroTownCamera;if(api){api.zoom(delta);return}const sc=phaserTownScene();if(sc&&sc.setTownZoom)sc.setTownZoom(sc.cameras.main.zoom+delta)};
-['zin','zout','home'].forEach(id=>{const el=$(id);if(!el)return;el.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation()},{passive:false});el.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(id==='zin')changeTownZoom(.2);else if(id==='zout')changeTownZoom(-.2);else if(window.GaspuroTownCamera)window.GaspuroTownCamera.reset()})});
+const changeTownZoom=delta=>{const api=window.GaspuroTownCamera;if(api){api.zoom(delta);return}const sc=phaserTownScene();if(sc&&sc.setTownZoom){sc.setTownZoom(sc.cameras.main.zoom+delta);return}camera.scale=Math.max(.65,Math.min(1.8,camera.scale+delta));drawMap()};
+['zin','zout','home'].forEach(id=>{const el=$(id);if(!el)return;el.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation()},{passive:false});el.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(id==='zin')changeTownZoom(.2);else if(id==='zout')changeTownZoom(-.2);else if(window.GaspuroTownCamera)window.GaspuroTownCamera.reset();else{camera={x:0,y:0,scale:1};drawMap()}})});
 let currentShop=null,cookTimer=null,cookRemaining=30,cookDone=[false,false,false];
 let liveCustomers=[],customerClock=null,customerSeq=0,activeOrder=null;
 const customerFaces=['🧔🏻','👩🏻','👨🏽','👩🏽','👨🏻','👩🏼','🧕🏻','👨🏾'],seatSpots=[{x:18,y:40},{x:55,y:40},{x:18,y:69},{x:55,y:69}];
@@ -495,7 +498,9 @@ function simulate(){let total=0;s.buildings.forEach(b=>{let rate=incomeRate(b);t
 $('buildBtn').onclick=build;$('collectBtn').onclick=collectAll;$('reset').onclick=()=>{if(confirm('Reset bandar? Progress bandar akan dipadam, tetapi simpanan versi lama tidak disentuh.')){localStorage.removeItem('gaspuro-town-v1');location.reload()}};
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab,.view').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.view).classList.add('active')});
 function applyOffline(){let elapsed=Math.min(3600,Math.max(0,(Date.now()-(s.lastTick||Date.now()))/1000));if(elapsed>5){let earned=s.buildings.reduce((a,b)=>a+incomeRate(b),0)*elapsed/60;s.buildings.forEach(b=>b.bank+=incomeRate(b)*elapsed/60);log('⏱️ Perniagaan jana '+fmt(earned)+' semasa kau offline.');}}
-if(window.Phaser){try{bootPhaserRestaurant();bootPhaserTown()}catch(e){console.error('Phaser boot failed:',e);document.documentElement.classList.add('phaser-unavailable')}}else window.addEventListener('load',()=>{try{bootPhaserRestaurant();bootPhaserTown()}catch(e){console.error('Phaser boot failed:',e);document.documentElement.classList.add('phaser-unavailable')}},{once:true});
+document.documentElement.classList.add('town-legacy-mode');
+if(window.Phaser){try{bootPhaserRestaurant()}catch(e){console.error('Phaser restaurant boot failed:',e)}}
+
 window.addEventListener('pagehide',()=>{s.lastTick=Date.now();try{localStorage.setItem('gaspuro-town-v1',JSON.stringify(s))}catch(e){}});
 applyOffline();drawTools();render();drawMap();setInterval(simulate,2000);setInterval(()=>{s.buildings.forEach(b=>b.bank+=incomeRate(b)/6);save()},10000);
 </script></body></html>
