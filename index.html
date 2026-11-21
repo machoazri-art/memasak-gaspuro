@@ -743,7 +743,15 @@ function drawMap(now=0){
 }
 /* Phaser WebGL map bridge: Canvas lama kekal sebagai sumber data dan input
    sehingga semua objek bandar dipindahkan ke Game Objects secara berperingkat. */
-let phaserMapBridge=null,phaserMapTexture=null,phaserMapImage=null;
+let phaserMapBridge=null,phaserMapTexture=null,phaserMapImage=null,phaserMapBootTimer=null;
+function fallbackPhaserMapBridge(err){
+ console.error('Phaser map bridge unavailable; using Canvas fallback:',err||'initialization timeout');
+ window.GaspuroMapBridge=null;phaserMapTexture=null;phaserMapImage=null;
+ document.documentElement.classList.remove('phaser-map-bridge-ready');
+ document.documentElement.classList.add('town-legacy-mode');
+ if(phaserMapBootTimer){clearTimeout(phaserMapBootTimer);phaserMapBootTimer=null}
+ if(phaserMapBridge){try{phaserMapBridge.destroy(true)}catch(e){}phaserMapBridge=null}
+}
 function bootPhaserMapBridge(){
  if(phaserMapBridge||!window.Phaser)return false;
  const mount=$('townPhaserMount');
@@ -752,13 +760,16 @@ function bootPhaserMapBridge(){
   class GaspuroMapBridgeScene extends Phaser.Scene{
    constructor(){super({key:'GaspuroMapBridgeScene'})}
    create(){
-    const texture=this.textures.addCanvas('gaspuroLiveMap',canvas);
-    phaserMapTexture=texture;
-    phaserMapImage=this.add.image(0,0,texture).setOrigin(0,0).setDisplaySize(this.scale.width,this.scale.height);
-    this.scale.on('resize',(size)=>phaserMapImage&&phaserMapImage.setDisplaySize(size.width,size.height));
-    window.GaspuroMapBridge={refresh:()=>{if(phaserMapTexture)phaserMapTexture.refresh()}};
-    document.documentElement.classList.remove('town-legacy-mode');
-    document.documentElement.classList.add('phaser-map-bridge-ready');
+    try{
+     const texture=this.textures.addCanvas('gaspuroLiveMap',canvas);
+     phaserMapTexture=texture;
+     phaserMapImage=this.add.image(0,0,texture).setOrigin(0,0).setDisplaySize(this.scale.width,this.scale.height);
+     this.scale.on('resize',(size)=>phaserMapImage&&phaserMapImage.setDisplaySize(size.width,size.height));
+     window.GaspuroMapBridge={refresh:()=>{if(phaserMapTexture)phaserMapTexture.refresh()}};
+     document.documentElement.classList.remove('town-legacy-mode');
+     document.documentElement.classList.add('phaser-map-bridge-ready');
+     if(phaserMapBootTimer){clearTimeout(phaserMapBootTimer);phaserMapBootTimer=null}
+    }catch(err){fallbackPhaserMapBridge(err)}
    }
   }
   phaserMapBridge=new Phaser.Game({
@@ -767,10 +778,11 @@ function bootPhaserMapBridge(){
    scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},
    scene:[GaspuroMapBridgeScene],banner:false
   });
+  // Phaser boot is asynchronous; restore the working Canvas map if WebGL never becomes ready.
+  phaserMapBootTimer=setTimeout(()=>{if(!window.GaspuroMapBridge)fallbackPhaserMapBridge('WebGL startup timeout')},5000);
   return true;
  }catch(err){
-  console.error('Phaser map bridge unavailable; using Canvas fallback:',err);
-  document.documentElement.classList.add('town-legacy-mode');
+  fallbackPhaserMapBridge(err);
   return false;
  }
 }
