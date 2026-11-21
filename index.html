@@ -148,12 +148,12 @@
 /* Fasa 6.1: dependable zoom and multi-touch controls */
 .mapbox,#townPhaserMount,#townPhaserMount canvas{touch-action:none!important;-webkit-user-select:none;user-select:none}
 .zoom{z-index:20!important;pointer-events:auto!important;touch-action:manipulation}
-.zoom button{pointer-events:auto;position:relative;z-index:21;min-width:44px;min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.zoom button{pointer-events:auto;position:relative;z-index:21;min-width:44px;min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}.mapbox.map-fullscreen{position:fixed!important;inset:0!important;z-index:9999!important;width:100vw!important;height:100dvh!important;max-height:none!important;min-height:0!important;border:0!important;border-radius:0!important}.mapbox.map-fullscreen canvas{height:100%!important;width:100%!important}.mapbox.map-fullscreen .zoom{bottom:max(14px,env(safe-area-inset-bottom))}body.map-is-fullscreen{overflow:hidden}
 </style></head><body><div class="app">
 <header class="top"><div class="logo">🍳</div><div class="brand"><b>Memasak Gaspuro</b><small>Food Tycoon · Bandar Makanan Malaysia 🇲🇾</small></div><div class="cash" id="cash">RM80</div></header>
 <div class="stats"><div class="stat"><small>⭐ LEVEL</small><b id="level">1</b></div><div class="stat"><small>👥 PELANGGAN</small><b id="customers">0</b></div><div class="stat"><small>🏪 PERNIAGAAN</small><b id="businesses">1</b></div></div>
 <div class="layout"><main>
-<section class="mapbox"><div class="maphead"><span class="maptag">🗺️ BANDAR GASPURO</span><span class="maphelp">Seret peta · Cubit/zoom</span></div><canvas id="map" width="900" height="760" aria-hidden="true"></canvas><div id="townPhaserMount"></div><div class="zoom"><button id="zin">+</button><button id="zout">−</button><button id="home">⌂</button></div></section>
+<section class="mapbox"><div class="maphead"><span class="maptag">🗺️ BANDAR GASPURO</span><span class="maphelp">Seret peta · Cubit/zoom</span></div><canvas id="map" width="900" height="1000" aria-hidden="true"></canvas><div id="townPhaserMount"></div><div class="zoom"><button id="zin">+</button><button id="zout">−</button><button id="home">⌂</button><button id="mapFull" aria-label="Paparan penuh peta" title="Paparan penuh">⛶</button></div></section>
 <section class="panel"><div class="row"><div><h2 id="selectionTitle">🏡 Pilih lot kosong</h2><p class="muted" id="selectionText">Pilih lot berwarna hijau untuk bina perniagaan.</p></div><span class="maptag" id="landCount">1/12 lot</span></div><div class="tools" id="buildTools"></div><div class="row"><button class="btn gold" id="buildBtn" disabled>Bina di lot dipilih</button><button class="btn soft" id="collectBtn">💰 Kutip semua</button></div></section>
 </main><aside class="side">
 <section class="panel"><h2>📊 Ringkasan bandar</h2><p class="muted">Perniagaan jana pendapatan secara automatik.</p><div class="row"><span>Hasil terkumpul</span><b id="income">RM0</b></div><div class="row"><span>Untung / minit (anggaran)</span><b id="rate">RM0</b></div><div class="row"><span>Pekerja</span><b id="workers">0</b></div><div class="row"><span>Rating bandar</span><b id="rating">⭐ 3.0</b></div><div class="progress" style="margin-top:9px"><i id="levelBar" style="width:0%"></i></div><small class="muted" id="xpText">0 / 100 XP ke level seterusnya</small></section>
@@ -340,7 +340,7 @@ const canvas=$('map'),ctx=canvas.getContext('2d');let camera={x:0,y:0,scale:1},p
 const townClock=()=>((tick%36000)/36000);
 const festivalNow=()=>Math.floor(tick/18000)%4===1 && tick%18000<2700;
 const festivalNames=['Pesta Makanan','Pasar Malam Gaspuro','Festival Nasi Lemak','Karnival Minuman'];
-function lotPos(i){let col=i%4,row=Math.floor(i/4);if(row===3)return{x:145+col*175,y:585};return{x:145+col*175,y:140+row*180}}
+function lotPos(i){let col=i%4,row=Math.floor(i/4);return{x:145+col*175,y:140+row*180}}
 function rounded(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=3;ctx.stroke()}}
 function drawMap(){
  let w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);ctx.save();ctx.translate(camera.x,camera.y);ctx.scale(camera.scale,camera.scale);
@@ -348,9 +348,9 @@ function drawMap(){
  // grass texture
  for(let y=-600;y<1500;y+=54)for(let x=-700;x<1800;x+=58){ctx.fillStyle=(Math.floor(x/58+y/54)%3===0)?'#acd08f':'#c0dda4';ctx.fillRect(x,y,52,48)}
  // perimeter roads
- ctx.fillStyle='#d8d2bc';ctx.fillRect(-700,0,2300,94);ctx.fillRect(-700,680,2300,94);ctx.fillRect(5,-700,90,1800);ctx.fillRect(865,-700,90,1800);
- ctx.fillStyle='#737e80';ctx.fillRect(-700,12,2300,70);ctx.fillRect(-700,692,2300,70);ctx.fillRect(15,-700,70,1800);ctx.fillRect(875,-700,70,1800);
- ctx.strokeStyle='#f6e9bd';ctx.lineWidth=3;ctx.setLineDash([24,18]);ctx.beginPath();ctx.moveTo(-700,47);ctx.lineTo(1600,47);ctx.moveTo(-700,727);ctx.lineTo(1600,727);ctx.moveTo(50,-700);ctx.lineTo(50,1100);ctx.moveTo(910,-700);ctx.lineTo(910,1100);ctx.stroke();ctx.setLineDash([]);
+ ctx.fillStyle='#d8d2bc';ctx.fillRect(-700,0,2300,94);ctx.fillRect(-700,900,2300,94);ctx.fillRect(5,-700,90,1800);ctx.fillRect(865,-700,90,1800);
+ ctx.fillStyle='#737e80';ctx.fillRect(-700,12,2300,70);ctx.fillRect(-700,912,2300,70);ctx.fillRect(15,-700,70,1800);ctx.fillRect(875,-700,70,1800);
+ ctx.strokeStyle='#f6e9bd';ctx.lineWidth=3;ctx.setLineDash([24,18]);ctx.beginPath();ctx.moveTo(-700,47);ctx.lineTo(1600,47);ctx.moveTo(-700,947);ctx.lineTo(1600,947);ctx.moveTo(50,-700);ctx.lineTo(50,1100);ctx.moveTo(910,-700);ctx.lineTo(910,1100);ctx.stroke();ctx.setLineDash([]);
  // Lampu jalan di sepanjang jalan perimeter dan laluan pejalan kaki.
  function drawStreetLamp(x,y){
   ctx.save();ctx.translate(x,y);
@@ -365,7 +365,7 @@ function drawMap(){
   ctx.fillStyle='rgba(255,239,184,.75)';ctx.beginPath();ctx.arc(11,-29,3+Math.sin(tick*.06)*.35,0,Math.PI*2);ctx.fill();
   ctx.restore();
  }
- for(let x=-570;x<1550;x+=190){drawStreetLamp(x,5);drawStreetLamp(x,89);drawStreetLamp(x,675);drawStreetLamp(x,765)}
+ for(let x=-570;x<1550;x+=190){drawStreetLamp(x,5);drawStreetLamp(x,89);drawStreetLamp(x,895);drawStreetLamp(x,985)}
  for(let y=-600;y<1100;y+=190){drawStreetLamp(-3,y);drawStreetLamp(93,y);drawStreetLamp(863,y);drawStreetLamp(957,y)}
  for(let x=205;x<710;x+=125){drawStreetLamp(x,275);drawStreetLamp(x,455);drawStreetLamp(x,635)}
  for(let y=245;y<650;y+=180){drawStreetLamp(130,y);drawStreetLamp(835,y)}
@@ -373,7 +373,7 @@ function drawMap(){
  for(let i=0;i<17;i++){let x=160+(i%6)*145,y=12+Math.floor(i/6)*62;if(y>70&&y<180)continue;ctx.fillStyle='#699b5d';ctx.beginPath();ctx.arc(x,y,17,0,7);ctx.fill();ctx.fillStyle='#4e854f';ctx.beginPath();ctx.arc(x-5,y-6,10,0,7);ctx.fill()}
  // Persekitaran bandar gaya pixel-art: kaki lima, lintasan dan landskap.
  // Corak jubin kaki lima di tepi jalan.
- ctx.fillStyle='#c9c5b5';ctx.fillRect(-700,94,2300,13);ctx.fillRect(-700,667,2300,13);
+ ctx.fillStyle='#c9c5b5';ctx.fillRect(-700,94,2300,13);ctx.fillRect(-700,887,2300,13);
  ctx.fillRect(95,-700,12,1800);ctx.fillRect(850,-700,12,1800);
  for(let y=78;y<550;y+=18)for(let x=-680;x<1550;x+=22){
    if((y>90&&y<160)||(y>450&&y<520))continue;
@@ -386,7 +386,7 @@ function drawMap(){
    for(let n=0;n<7;n++){if(vertical)ctx.fillRect(x+n*9,y,5,54);else ctx.fillRect(x,y+n*9,54,5)}
    ctx.restore();
  }
- crosswalk(15,20,true);crosswalk(875,700,true);crosswalk(330,12,false);crosswalk(1010,692,false);
+ crosswalk(15,20,true);crosswalk(875,920,true);crosswalk(330,12,false);crosswalk(1010,692,false);
  // Pokok berlapis, bayang, batang dan tompokan daun pixel-art.
  function townTree(x,y,scale=1){
    ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);
@@ -544,7 +544,7 @@ canvas.addEventListener('pointermove',e=>{if(!drag)return;let dx=e.clientX-drag.
 canvas.addEventListener('pointerup',e=>{if(!drag)return;if(!drag.moved){let p=screenToWorld(e),lot=plots.find(x=>p.x>=x.x&&p.x<=x.x+x.w&&p.y>=x.y&&p.y<=x.y+x.h);if(lot){s.selectedLot=lot.i;let b=selectedBuilding();if(b){openInterior(b);drag=null;return}$('selectionTitle').textContent=b?bizType(b).emoji+' '+bizType(b).name:'🏡 Lot '+(lot.i+1)+' kosong';$('selectionText').textContent=b?'Tahap '+b.level+' · Hasil terkumpul '+fmt(b.bank):lot.unlocked?'Pilih jenis perniagaan dan bina di sini.':'Lot terkunci. Naik level untuk buka.';$('buildBtn').disabled=!!b||!lot.unlocked;render();drawTools();}}drag=null});
 canvas.addEventListener('wheel',e=>{e.preventDefault();camera.scale=Math.max(.65,Math.min(1.6,camera.scale+(e.deltaY<0?.08:-.08)))},{passive:false});
 const changeTownZoom=delta=>{const api=window.GaspuroTownCamera;if(api){api.zoom(delta);return}const sc=phaserTownScene();if(sc&&sc.setTownZoom){sc.setTownZoom(sc.cameras.main.zoom+delta);return}camera.scale=Math.max(.65,Math.min(1.8,camera.scale+delta));drawMap()};
-['zin','zout','home'].forEach(id=>{const el=$(id);if(!el)return;el.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation()},{passive:false});el.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(id==='zin')changeTownZoom(.2);else if(id==='zout')changeTownZoom(-.2);else if(window.GaspuroTownCamera)window.GaspuroTownCamera.reset();else{camera={x:0,y:0,scale:1};drawMap()}})});
+['zin','zout','home','mapFull'].forEach(id=>{const el=$(id);if(!el)return;el.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation()},{passive:false});el.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(id==='mapFull'){const box=document.querySelector('.mapbox'),active=box.classList.toggle('map-fullscreen');document.body.classList.toggle('map-is-fullscreen',active);el.textContent=active?'⤢':'⛶';setTimeout(()=>window.dispatchEvent(new Event('resize')),80)}else if(id==='zin')changeTownZoom(.2);else if(id==='zout')changeTownZoom(-.2);else if(window.GaspuroTownCamera)window.GaspuroTownCamera.reset();else{camera={x:0,y:0,scale:1};drawMap()}})});document.addEventListener('keydown',e=>{if(e.key==='Escape'){const box=document.querySelector('.mapbox');if(box&&box.classList.contains('map-fullscreen'))$('mapFull').click()}});
 let currentShop=null,cookTimer=null,cookRemaining=30,cookDone=[false,false,false];
 let liveCustomers=[],customerClock=null,customerSeq=0,activeOrder=null;
 const customerFaces=['🧔🏻','👩🏻','👨🏽','👩🏽','👨🏻','👩🏼','🧕🏻','👨🏾'],seatSpots=[{x:18,y:40},{x:55,y:40},{x:18,y:69},{x:55,y:69}];
