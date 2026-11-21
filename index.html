@@ -904,14 +904,16 @@ function bootPhaserMapBridge(){
     }catch(err){fallbackPhaserMapBridge(err)}
    }
   }
+  // iOS Safari: gunakan Phaser Canvas Renderer untuk mengelakkan WebGL context
+  // gagal/ditolak pada sesetengah peranti; semua Graphics layers masih disokong.
   phaserMapBridge=new Phaser.Game({
-   type:Phaser.WEBGL,parent:mount,width:900,height:1000,transparent:true,
-   render:{antialias:true,roundPixels:false,transparent:true,powerPreference:'high-performance'},
+   type:Phaser.CANVAS,parent:mount,width:900,height:1000,transparent:true,
+   render:{antialias:true,roundPixels:false,transparent:true},
    scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},
    scene:[GaspuroMapBridgeScene],banner:false
   });
   // Phaser boot is asynchronous; restore the working Canvas map if WebGL never becomes ready.
-  phaserMapBootTimer=setTimeout(()=>{if(!window.GaspuroMapBridge)fallbackPhaserMapBridge('WebGL startup timeout')},5000);
+  phaserMapBootTimer=setTimeout(()=>{if(!window.GaspuroMapBridge)fallbackPhaserMapBridge('Phaser Canvas startup timeout')},12000);
   return true;
  }catch(err){
   fallbackPhaserMapBridge(err);
