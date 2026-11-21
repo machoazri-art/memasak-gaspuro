@@ -340,7 +340,7 @@ const canvas=$('map'),ctx=canvas.getContext('2d');let camera={x:0,y:0,scale:1},p
 const townClock=()=>((tick%36000)/36000);
 const festivalNow=()=>Math.floor(tick/18000)%4===1 && tick%18000<2700;
 const festivalNames=['Pesta Makanan','Pasar Malam Gaspuro','Festival Nasi Lemak','Karnival Minuman'];
-function lotPos(i){let col=i%4,row=Math.floor(i/4);return{x:145+col*175,y:140+row*180}}
+function lotPos(i){let blockCol=i%2,blockRow=Math.floor(i/2),innerCol=i%4<2?0:1;return{x:160+blockCol*390+innerCol*164,y:150+blockRow*300+(i%2)*0}}
 function rounded(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=3;ctx.stroke()}}
 function drawMap(){
  let w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);ctx.save();ctx.translate(camera.x,camera.y);ctx.scale(camera.scale,camera.scale);
@@ -413,36 +413,29 @@ function drawMap(){
  for(const p of [[112,275],[842,275],[112,462],[842,462]])bench(p[0],p[1]);
  for(const p of [[110,190],[840,190],[110,450],[840,450],[110,635],[840,635],[250,645],[700,645]])townTree(p[0],p[1],.75);
  // Ruang tengah dikekalkan sebagai rumput terbuka — petak plaza coklat dibuang.
- // lots
- plots=[];for(let i=0;i<14;i++){let p=lotPos(i);let b=s.buildings.find(x=>x.lot===i);let unlocked=i<unlockedLots();rounded(p.x,p.y,142,118,12,unlocked?'#d6e5b9':'#aab69e','#fff8df');ctx.fillStyle='#9fb48b';ctx.fillRect(p.x+8,p.y+8,126,100);
- if(b){let type=bizType(b);let si=({warung:0,mamak:1,satay:2,drink:3,cafe:3,foodcourt:2,restaurant:1})[b.type]||0;
- if(townSprite.complete&&townSprite.naturalWidth){ctx.drawImage(townSprite,si*256,0,256,240,p.x+1,p.y-9,140,132)}
- else{ctx.fillStyle='#8c7052';ctx.fillRect(p.x+20,p.y+75,102,13);ctx.fillStyle=type.color;ctx.beginPath();ctx.moveTo(p.x+13,p.y+47);ctx.lineTo(p.x+71,p.y+8);ctx.lineTo(p.x+129,p.y+47);ctx.closePath();ctx.fill();rounded(p.x+25,p.y+42,92,48,5,'#fff2d1','#8b7659');ctx.fillText(type.emoji,p.x+8,p.y+31)}
- // Perincian fasad: papan tanda, jalur awning dan lampu tingkap.
-  ctx.fillStyle='rgba(255,255,255,.35)';ctx.fillRect(p.x+24,p.y+47,94,5);ctx.fillStyle=type.color;ctx.fillRect(p.x+25,p.y+53,92,5);ctx.fillStyle='#fff1c4';ctx.beginPath();ctx.arc(p.x+31,p.y+77,3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(p.x+111,p.y+77,3,0,Math.PI*2);ctx.fill();
-  // Papan tanda kedai, tingkap berbingkai dan lampu fasad.
-  ctx.fillStyle='#493d32';ctx.fillRect(p.x+43,p.y+30,56,15);
-  ctx.fillStyle='#f5e5b6';ctx.fillRect(p.x+46,p.y+32,50,10);
-  ctx.fillStyle='#6d543d';ctx.fillRect(p.x+48,p.y+34,46,2);
-  ctx.fillStyle='#d8e9e5';ctx.fillRect(p.x+31,p.y+60,15,15);ctx.fillRect(p.x+96,p.y+60,15,15);
-  ctx.strokeStyle='#6f6652';ctx.lineWidth=2;ctx.strokeRect(p.x+31,p.y+60,15,15);ctx.strokeRect(p.x+96,p.y+60,15,15);
-  ctx.fillStyle='#f7d77f';ctx.fillRect(p.x+26,p.y+49,3,3);ctx.fillRect(p.x+113,p.y+49,3,3);
-  // Pintu masuk utama kedai menghadap laluan pejalan kaki di hadapan lot.
-  ctx.fillStyle='rgba(35,45,35,.25)';ctx.beginPath();ctx.ellipse(p.x+71,p.y+100,19,5,0,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#5c4635';ctx.fillRect(p.x+54,p.y+72,34,31);
-  ctx.fillStyle='#b98b5b';ctx.fillRect(p.x+57,p.y+75,28,28);
-  ctx.fillStyle='#493b30';ctx.fillRect(p.x+60,p.y+77,22,26);
-  ctx.fillStyle='#8fc0bd';ctx.fillRect(p.x+62,p.y+79,18,11);
-  ctx.fillStyle='#d9b56c';ctx.beginPath();ctx.arc(p.x+78,p.y+92,1.8,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#e8d2a2';ctx.fillRect(p.x+51,p.y+103,40,4);
-  ctx.fillStyle='#6f5940';ctx.fillRect(p.x+55,p.y+108,32,3);
-
-
-  ctx.fillStyle='#344636';ctx.font='bold 12px system-ui';ctx.fillText('Lv.'+b.level,p.x+82,p.y+108);ctx.fillStyle='#fff9e9';ctx.beginPath();ctx.arc(p.x+119,p.y+15,13,0,7);ctx.fill();ctx.fillStyle='#38764b';ctx.font='bold 11px system-ui';ctx.fillText('$',p.x+115,p.y+19)}
- else{ctx.fillStyle=unlocked?'#f8f3d9':'#9aa58f';ctx.font='bold 25px system-ui';ctx.fillText(unlocked?'+':'🔒',p.x+59,p.y+65);ctx.fillStyle='#52664e';ctx.font='11px system-ui';ctx.fillText(unlocked?'LOT KOSONG':'LEVEL '+(Math.ceil(i/2)+1),p.x+32,p.y+91)}
- if(s.selectedLot===i){ctx.strokeStyle='#ffb72f';ctx.lineWidth=5;ctx.strokeRect(p.x+2,p.y+2,138,114)}
- plots.push({i,x:p.x,y:p.y,w:142,h:118,unlocked})
+ // 14 kawasan komersial; setiap kawasan 2x2 kedai, dipisahkan jalan raya.
+ plots=[];for(let i=0;i<14;i++){let p=lotPos(i),b=s.buildings.find(x=>x.lot===i),unlocked=i<unlockedLots();
+ const bx=p.x,by=p.y;
+ // Kawasan tanah blok dengan lorong kecil di tengah; jalan pemisah dilukis di bawah blok.
+ rounded(bx,by,326,252,12,unlocked?'#d6e5b9':'#aab69e','#fff8df');
+ ctx.fillStyle='#9fb48b';ctx.fillRect(bx+7,by+7,312,238);
+ const slots=[{x:bx+8,y:by+8},{x:bx+164,y:by+8},{x:bx+8,y:by+128},{x:bx+164,y:by+128}];
+ for(let j=0;j<4;j++){const q=slots[j],shopIndex=i*4+j,shop=s.buildings.find(x=>x.lot===shopIndex),shopUnlocked=shopIndex<unlockedLots();
+ ctx.fillStyle=shop?'#88a879':shopUnlocked?'#b8d39a':'#9aa98e';ctx.fillRect(q.x,q.y,150,112);
+ if(shop){const type=bizType(shop),si=({warung:0,mamak:1,satay:2,drink:3,cafe:3,foodcourt:2,restaurant:1})[shop.type]||0;
+ if(townSprite.complete&&townSprite.naturalWidth)ctx.drawImage(townSprite,si*256,0,256,240,q.x+2,q.y-3,146,116);
+ else{ctx.fillStyle=type.color;ctx.fillRect(q.x+12,q.y+20,126,78);ctx.fillStyle='#fff2d1';ctx.fillRect(q.x+20,q.y+38,110,50);ctx.font='22px system-ui';ctx.fillText(type.emoji,q.x+60,q.y+67)}
+ ctx.fillStyle='#f7d77f';ctx.fillRect(q.x+15,q.y+8,5,5);ctx.fillRect(q.x+130,q.y+8,5,5);
+ }else{ctx.fillStyle=shopUnlocked?'#f8f3d9':'#9aa58f';ctx.font='bold 19px system-ui';ctx.fillText(shopUnlocked?'+':'🔒',q.x+69,q.y+58);ctx.fillStyle='#52664e';ctx.font='10px system-ui';ctx.fillText(shopUnlocked?'LOT '+(shopIndex+1):'LEVEL '+(Math.ceil(shopIndex/2)+1),q.x+49,q.y+86)}
+ if(s.selectedLot===shopIndex){ctx.strokeStyle='#ffb72f';ctx.lineWidth=4;ctx.strokeRect(q.x+2,q.y+2,146,108)}
+ plots.push({i:shopIndex,x:q.x,y:q.y,w:150,h:112,unlocked:shopUnlocked});
  }
+ }
+ // Jalan raya mendatar dan menegak memisahkan setiap blok kawasan.
+ ctx.fillStyle='#737e80';for(let row=0;row<7;row++)ctx.fillRect(105,420+row*300,700,18);
+ ctx.fillStyle='#d8d2bc';for(let row=0;row<7;row++)ctx.fillRect(105,414+row*300,700,30);
+ ctx.fillStyle='#f6e9bd';ctx.setLineDash([18,14]);ctx.lineWidth=2;for(let row=0;row<7;row++){ctx.beginPath();ctx.moveTo(105,429+row*300);ctx.lineTo(805,429+row*300);ctx.stroke()}ctx.setLineDash([]);
+
  // Trafik bandar: kereta top-down dengan bentuk badan, cermin, bumbung, lampu dan bayang.
  const carColors=['#c94f48','#477fa8','#e3ad43','#e8e3d4','#568b68','#8c6ca5'];
  for(let i=0;i<8;i++){
