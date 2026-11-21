@@ -754,8 +754,8 @@ function bootPhaserMapBridge(){
    create(){
     const texture=this.textures.addCanvas('gaspuroLiveMap',canvas);
     phaserMapTexture=texture;
-    phaserMapImage=this.add.image(0,0,texture).setOrigin(0,0).setDisplaySize(900,1000);
-    this.scale.on('resize',()=>phaserMapImage&&phaserMapImage.setDisplaySize(900,1000));
+    phaserMapImage=this.add.image(0,0,texture).setOrigin(0,0).setDisplaySize(this.scale.width,this.scale.height);
+    this.scale.on('resize',(size)=>phaserMapImage&&phaserMapImage.setDisplaySize(size.width,size.height));
     window.GaspuroMapBridge={refresh:()=>{if(phaserMapTexture)phaserMapTexture.refresh()}};
     document.documentElement.classList.remove('town-legacy-mode');
     document.documentElement.classList.add('phaser-map-bridge-ready');
