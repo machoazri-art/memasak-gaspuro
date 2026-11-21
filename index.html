@@ -308,7 +308,8 @@ function drawMap(){
  // Lampu jalan di sepanjang jalan perimeter dan laluan pejalan kaki.
  function drawStreetLamp(x,y){
   ctx.save();ctx.translate(x,y);
-  const glow=ctx.createRadialGradient(0,0,2,0,0,34);glow.addColorStop(0,'rgba(255,231,153,.30)');glow.addColorStop(1,'rgba(255,231,153,0)');
+  const phase=townClock(),night=Math.max(0,Math.min(1,(Math.cos((phase-.5)*Math.PI*2)+.08)/1.08));
+  const glow=ctx.createRadialGradient(0,0,2,0,0,34);glow.addColorStop(0,'rgba(255,231,153,'+(night*.34)+')');glow.addColorStop(1,'rgba(255,231,153,0)');
   ctx.fillStyle=glow;ctx.beginPath();ctx.arc(0,0,34,0,Math.PI*2);ctx.fill();
   ctx.fillStyle='rgba(42,53,43,.22)';ctx.beginPath();ctx.ellipse(2,5,8,4,0,0,Math.PI*2);ctx.fill();
   ctx.fillStyle='#4b5550';ctx.beginPath();ctx.roundRect(-2,-2,4,9,2);ctx.fill();
@@ -421,23 +422,24 @@ function drawMap(){
  }
  const skinTones=['#e9b991','#c98f69','#f0c9a4','#a96f50'];
  const shirts=['#477fa8','#d46c55','#5d966c','#d3a94e','#8b6ca6','#e7e0ce'];
- // Penduduk berjalan perlahan dengan laluan dan rentak individu, bukan bergerak sebaris.
- const walkSpeed=[.032,.047,.025,.055,.038,.029,.061,.034,.044];
- const walkOffset=[0,83,171,246,319,407,478,552,621];
- const walkLane=[0,1,2,0,1,2,0,1,2];
- const walkDirection=[1,-1,1,-1,1,-1,1,-1,1];
- for(let i=0;i<9;i++){
+ // Penduduk bandar: laluan, jarak, kelajuan dan lencongan kecil berbeza bagi setiap NPC.
+ const walkSpeed=[.022,.031,.018,.036,.026,.021,.039,.024,.029,.019,.034,.027];
+ const walkOffset=[0,67,153,229,318,401,487,566,649,731,814,893];
+ const walkLane=[0,1,2,0,2,1,0,2,1,0,1,2];
+ const walkDirection=[1,-1,1,-1,1,-1,1,-1,1,-1,1,-1];
+ const walkDrift=[-31,24,47,-12,18,-43,35,-22,8,52,-34,15];
+ for(let i=0;i<12;i++){
    const lane=walkLane[i],speed=walkSpeed[i]*walkDirection[i],phase0=walkOffset[i];
    let x,y;
    if(lane===0){
-     x=175+((phase0+tick*speed+900)%900);
-     y=280+((i%3)*12)+Math.sin(tick*.012+i*2.1)*17;
+     x=150+((phase0+tick*speed+960)%960);
+     y=282+walkDrift[i]+Math.sin(tick*.009+i*2.1)*13;
    }else if(lane===1){
-     y=260+((phase0+tick*speed+510)%510);
-     x=300+(i%3)*170+Math.sin(tick*.009+i*1.8)*22;
+     y=245+((phase0+tick*speed+540)%540);
+     x=260+((i*97)%440)+Math.sin(tick*.007+i*1.8)*29;
    }else{
-     y=650-((phase0+tick*speed+510)%510);
-     x=330+(i%3)*155+Math.sin(tick*.011+i*2.7)*19;
+     y=665-((phase0+tick*speed+540)%540);
+     x=270+((i*131)%450)+Math.sin(tick*.008+i*2.7)*27;
    }
    const phase=tick*(.045+i*.003)+i*1.9,step=Math.sin(phase)*1.05;
    ctx.save();ctx.translate(x,y);
@@ -453,10 +455,10 @@ function drawMap(){
    ctx.beginPath();ctx.ellipse(-4.5,-6,1.2,2,0,0,Math.PI*2);ctx.ellipse(4.5,-6,1.2,2,0,0,Math.PI*2);ctx.fill();
    ctx.restore();
  }
- // Kitaran siang-malam beransur dari siang ke malam dan subuh.
-  const phase=townClock(),night=Math.max(0,Math.min(1,(Math.cos(phase*Math.PI*2)+.18)/1.18));
-  if(night>.02){ctx.fillStyle='rgba(22,35,62,'+(night*.48)+')';ctx.fillRect(-1000,-1000,3000,3000);
-    ctx.save();ctx.globalAlpha=night*.8;for(let i=0;i<12;i++){const p=lotPos(i);if(s.buildings.some(b=>b.lot===i)){ctx.fillStyle='#ffe6a0';ctx.fillRect(p.x+34,p.y+63,12,12);ctx.fillRect(p.x+96,p.y+63,12,12)}}ctx.restore();
+ // Kitaran siang-malam: bermula siang, senja, malam dan kembali subuh.
+  const phase=townClock(),night=Math.max(0,Math.min(1,(Math.cos((phase-.5)*Math.PI*2)+.08)/1.08));
+  if(night>.015){ctx.fillStyle='rgba(22,35,62,'+(night*.50)+')';ctx.fillRect(-1000,-1000,3000,3000);
+    ctx.save();ctx.globalAlpha=night*.95;for(let i=0;i<12;i++){const p=lotPos(i);if(s.buildings.some(b=>b.lot===i)){ctx.fillStyle='#ffe6a0';ctx.fillRect(p.x+34,p.y+63,12,12);ctx.fillRect(p.x+96,p.y+63,12,12)}}ctx.restore();
   }
   if(festivalNow()){const eventIndex=Math.floor(tick/72000)%festivalNames.length;ctx.save();ctx.fillStyle='rgba(66,48,35,.88)';ctx.beginPath();ctx.roundRect(300,637,280,34,12);ctx.fill();ctx.fillStyle='#ffe7a3';ctx.font='bold 15px system-ui';ctx.textAlign='center';ctx.fillText('🎉 '+festivalNames[eventIndex],440,660);ctx.textAlign='start';ctx.restore();}
   ctx.restore();requestAnimationFrame(drawMap);tick++
