@@ -340,7 +340,7 @@ const canvas=$('map'),ctx=canvas.getContext('2d');let camera={x:0,y:0,scale:1},p
 const townClock=()=>((tick%36000)/36000);
 const festivalNow=()=>Math.floor(tick/18000)%4===1 && tick%18000<2700;
 const festivalNames=['Pesta Makanan','Pasar Malam Gaspuro','Festival Nasi Lemak','Karnival Minuman'];
-function lotPos(i){const col=i%2,row=Math.floor(i/2);return{x:160+col*390,y:150+row*300}}
+function lotPos(i){const col=i%2,row=Math.floor(i/2);return{x:150+col*410,y:150+row*340}}
 function rounded(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=3;ctx.stroke()}}
 function drawMap(){
  let w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);ctx.save();ctx.translate(camera.x,camera.y);ctx.scale(camera.scale,camera.scale);
@@ -432,9 +432,10 @@ function drawMap(){
  }
  }
  // Jalan raya mendatar dan menegak memisahkan setiap blok kawasan.
- ctx.fillStyle='#737e80';ctx.fillRect(500,110,36,2100);for(let row=0;row<6;row++)ctx.fillRect(105,420+row*300,700,18);
- ctx.fillStyle='#d8d2bc';for(let row=0;row<6;row++)ctx.fillRect(105,414+row*300,700,30);
- ctx.fillStyle='#f6e9bd';ctx.setLineDash([18,14]);ctx.lineWidth=2;for(let row=0;row<6;row++){ctx.beginPath();ctx.moveTo(105,429+row*300);ctx.lineTo(805,429+row*300);ctx.stroke()}ctx.setLineDash([]);
+ // Jalan dalaman menggunakan keratan rentas sama seperti jalan perimeter: bahu, turapan asfalt dan garisan tengah.
+ ctx.fillStyle='#d8d2bc';ctx.fillRect(476,100,84,2350);for(let row=0;row<6;row++)ctx.fillRect(95,402+row*340,710,88);
+ ctx.fillStyle='#737e80';ctx.fillRect(483,100,70,2350);for(let row=0;row<6;row++)ctx.fillRect(95,411+row*340,710,70);
+ ctx.strokeStyle='#f6e9bd';ctx.lineWidth=3;ctx.setLineDash([24,18]);ctx.beginPath();ctx.moveTo(518,100);ctx.lineTo(518,2450);for(let row=0;row<6;row++){ctx.moveTo(95,446+row*340);ctx.lineTo(805,446+row*340)}ctx.stroke();ctx.setLineDash([]);
 
  // Trafik bandar: kereta top-down dengan bentuk badan, cermin, bumbung, lampu dan bayang.
  const carColors=['#c94f48','#477fa8','#e3ad43','#e8e3d4','#568b68','#8c6ca5'];
@@ -443,7 +444,7 @@ function drawMap(){
    const speed=[.72,1.05,.83,1.22][lane],span=2200;
    const raw=(tick*speed*dir+group*970+lane*430)%span;
    const x=dir>0?((raw+span)%span)-650:((span-raw+span)%span)-650;
-   const y=[27,65,707,745][lane];
+   const y=[27,65,427,465][lane];
    ctx.save();ctx.translate(x,y);if(dir<0)ctx.scale(-1,1);
    // soft shadow and wheels
    ctx.fillStyle='rgba(25,36,39,.30)';ctx.beginPath();ctx.ellipse(20,5,26,12,0,0,Math.PI*2);ctx.fill();
