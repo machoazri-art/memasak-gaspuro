@@ -763,19 +763,25 @@ function bootPhaserMapBridge(){
       const trafficLayer=this.add.graphics();
       const drawTrafficAndPeople=()=>{
        const g=trafficLayer;g.clear();
-       // 166 kenderaan: trafik diagih pada semua jalan termasuk dua jalan perimeter kiri dan kanan.
-       // Trafik menggunakan gelung jalan bersambung dengan selekoh lembut di persimpangan.
+       // Trafik diagih mengikut setiap jalan: 4 jalan menegak dan 9 jalan melintang.
+       // Setiap gelung hanya menggunakan dua lorong jalan tersebut; bahagian lurus melebihi 95%.
        const carColors=[0xc94f48,0x477fa8,0xe3ad43,0xe8e3d4,0x568b68,0x8c6ca5,0xd47b43,0x303d48,0x5c9c9a,0xb8a36c];
        const roadLoops=[
-        [[496,428],[906,428],[906,768],[496,768]],
-        [[496,768],[906,768],[906,1108],[496,1108]],
-        [[496,1108],[906,1108],[906,1448],[496,1448]],
-        [[496,1448],[906,1448],[906,1788],[496,1788]],
-        [[496,1788],[906,1788],[906,2128],[496,2128]],
-        [[496,2128],[906,2128],[906,2468],[496,2468]],
-        [[50,47],[1430,47],[1430,2987],[50,2987]],
-        [[35,428],[35,2828],[65,2828],[65,428]],
-        [[1415,428],[1415,2828],[1445,2828],[1445,428]]
+        // Jalan menegak kiri, dua jalan tengah dan kanan
+        [[35,120],[35,2820],[65,2820],[65,120]],
+        [[503,120],[503,2850],[533,2850],[533,120]],
+        [[913,120],[913,2850],[943,2850],[943,120]],
+        [[1415,120],[1415,2820],[1445,2820],[1445,120]],
+        // Jalan melintang atas, tujuh jalan dalaman dan jalan bawah
+        [[-650,32],[1550,32],[1550,62],[-650,62]],
+        [[120,431],[1360,431],[1360,461],[120,461]],
+        [[120,771],[1360,771],[1360,801],[120,801]],
+        [[120,1111],[1360,1111],[1360,1141],[120,1141]],
+        [[120,1451],[1360,1451],[1360,1481],[120,1481]],
+        [[120,1791],[1360,1791],[1360,1821],[120,1821]],
+        [[120,2131],[1360,2131],[1360,2161],[120,2161]],
+        [[120,2471],[1360,2471],[1360,2501],[120,2501]],
+        [[-650,2972],[1550,2972],[1550,3002],[-650,3002]]
        ];
        const buildSmoothLoop=(points,radius=58)=>{
         const sampled=[];
@@ -794,14 +800,14 @@ function bootPhaserMapBridge(){
         const cumulative=[0];for(const len of lengths)cumulative.push(cumulative[cumulative.length-1]+len);
         return{points:sampled,lengths,cumulative,total:cumulative[cumulative.length-1]};
        };
-       const trafficRoutes=roadLoops.map(loop=>buildSmoothLoop(loop));
+       const trafficRoutes=roadLoops.map(loop=>buildSmoothLoop(loop,22));
        const pointOnTrafficRoute=(route,distance)=>{
         const d=((distance%route.total)+route.total)%route.total;let lo=0,hi=route.lengths.length;
         while(lo<hi){const mid=(lo+hi)>>1;if(route.cumulative[mid+1]<d)lo=mid+1;else hi=mid}
         const k=Math.min(lo,route.lengths.length-1),t=(d-route.cumulative[k])/Math.max(.001,route.lengths[k]),a=route.points[k],b=route.points[(k+1)%route.points.length];
         return{x:a[0]+(b[0]-a[0])*t,y:a[1]+(b[1]-a[1])*t,angle:Math.atan2(b[1]-a[1],b[0]-a[0])};
        };
-       const carCount=166,vehiclesPerRoute=roadLoops.map((_,k)=>k===6?20:18);
+       const carCount=182,vehiclesPerRoute=roadLoops.map(()=>14);
        const drawCar=(cx,cy,length,width,angle,color,kind)=>{
         const co=Math.cos(angle),si=Math.sin(angle),tr=(x,y)=>({x:cx+x*co-y*si,y:cy+x*si+y*co});
         const poly=(pts,fill)=>{g.fillStyle(fill,1);g.fillPoints(pts.map(([x,y])=>tr(x,y)),true)};
@@ -818,16 +824,12 @@ function bootPhaserMapBridge(){
        let carIndex=0;
        for(let routeIndex=0;routeIndex<trafficRoutes.length;routeIndex++){
         const route=trafficRoutes[routeIndex],count=vehiclesPerRoute[routeIndex];
-        const laneCount=routeIndex===6?10:(routeIndex===5?10:9);
-        const laneGroups=[{direction:1,count:laneCount,lane:15},{direction:-1,count:laneCount,lane:15}];
-        for(const group of laneGroups){
-         for(let n=0;n<group.count;n++){
-          const i=carIndex++,length=[43,48,54,50,44][i%5],width=[22,23,25,22,21][i%5],speed=.82+(i%7)*.065;
-          const spacing=route.total/group.count,phase=(n+.5)*spacing+routeIndex*19;
-          const distance=phase+tick*speed*group.direction,pos=pointOnTrafficRoute(route,distance);
-          const laneOffset=group.lane*group.direction,carX=pos.x-Math.sin(pos.angle)*laneOffset,carY=pos.y+Math.cos(pos.angle)*laneOffset;
-          drawCar(carX,carY,length,width,pos.angle+(group.direction<0?Math.PI:0),carColors[i%carColors.length],i%10);
-         }
+        // Setiap jalan mendapat jumlah kenderaan sendiri; jarak sama rata sepanjang gelung.
+        for(let n=0;n<count;n++){
+         const i=carIndex++,length=[43,48,54,50,44][i%5],width=[22,23,25,22,21][i%5],speed=.82+(i%7)*.065;
+         const spacing=route.total/count,phase=(n+.5)*spacing+routeIndex*13;
+         const distance=phase+tick*speed,pos=pointOnTrafficRoute(route,distance);
+         drawCar(pos.x,pos.y,length,width,pos.angle,carColors[i%carColors.length],i%10);
         }
        }
        // 180 pejalan kaki (100 asal + 80 tambahan), diagih sekata pada kaki lima setiap blok hingga hujung selatan bandar.
