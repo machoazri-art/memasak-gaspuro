@@ -832,21 +832,25 @@ function bootPhaserMapBridge(){
          drawCar(pos.x,pos.y,length,width,pos.angle,carColors[i%carColors.length],i%10);
         }
        }
-       // 180 pejalan kaki (100 asal + 80 tambahan), diagih sekata pada kaki lima setiap blok hingga hujung selatan bandar.
-       const routes=[
-        [[112,395],[1380,395],[1380,490],[112,490]],
-        [[112,735],[1380,735],[1380,830],[112,830]],
-        [[112,1075],[1380,1075],[1380,1170],[112,1170]],
-        [[112,1415],[1380,1415],[1380,1510],[112,1510]],
-        [[112,1755],[1380,1755],[1380,1850],[112,1850]],
-        [[470,110],[565,110],[565,2200],[470,2200]],
-        [[880,110],[975,110],[975,2200],[880,2200]]
-       ];
+       // 280 pejalan kaki: 100 tambahan. Setiap satu daripada 88 lot menerima 3-4 pejalan kaki.
+       // Laluan kecil mengelilingi setiap lot; tiada walker diletakkan statik atau spawn/despawn.
+       const pedestrianSlots=[[8,8],[164,8],[8,128],[164,128]];
+       const routes=[];
+       for(let lot=0;lot<88;lot++){
+        const block=Math.floor(lot/4),slot=pedestrianSlots[lot%4],col=block%3,row=Math.floor(block/3);
+        const x=150+col*410+slot[0],y=150+row*340+slot[1];
+        routes.push([[x-5,y-5],[x+155,y-5],[x+155,y+117],[x-5,y+117]]);
+       }
        const shirts=[0x477fa8,0xd46c55,0x5d966c,0xd3a94e,0x8b6ca6,0xe7e0ce,0x2f7774,0xc45c83,0x9a7048,0x477b9e];
        const skins=[0xe9b991,0xc98f69,0xf0c9a4,0xa96f50,0xd9a17d],hairs=[0x3d3029,0x272b2d,0x594332,0x332c28,0x78563b];
        const routeLengths=routes.map(pts=>pts.reduce((sum,p,k)=>sum+Math.hypot(pts[(k+1)%pts.length][0]-p[0],pts[(k+1)%pts.length][1]-p[1]),0));
-       const totalRouteLength=routeLengths.reduce((a,b)=>a+b,0),routeCounts=routeLengths.map(length=>Math.round(180*length/totalRouteLength));
-       routeCounts[0]+=180-routeCounts.reduce((a,b)=>a+b,0);
+       // Agihan rawak tetapi seimbang: setiap lot mendapat sekurang-kurangnya 3 orang.
+       const pedestrianCount=280,routeCounts=routes.map(()=>3);
+       let remainingPeople=pedestrianCount-routeCounts.reduce((a,b)=>a+b,0);
+       let seed=20261122;
+       const random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
+       const shuffledRoutes=routes.map((_,i)=>i).sort(()=>random()-.5);
+       for(let n=0;n<remainingPeople;n++)routeCounts[shuffledRoutes[n%shuffledRoutes.length]]++;
        const routeSeen=routes.map(()=>0),routeSpeeds=[.22,.27,.19,.31,.24,.29,.17,.26];
        const pointAt=(route,distance)=>{
         const pts=routes[route],lengths=pts.map((p,k)=>Math.hypot(pts[(k+1)%pts.length][0]-p[0],pts[(k+1)%pts.length][1]-p[1]));
@@ -855,7 +859,7 @@ function bootPhaserMapBridge(){
         return{x:pts[0][0],y:pts[0][1],angle:0,total};
        };
        const local=(x,y,angle,lx,ly)=>({x:x+lx*Math.cos(angle)-ly*Math.sin(angle),y:y+lx*Math.sin(angle)+ly*Math.cos(angle)});
-       for(let i=0;i<180;i++){
+       for(let i=0;i<pedestrianCount;i++){
         const route=routes.findIndex((_,r)=>routeSeen[r]<routeCounts[r]);
         const index=routeSeen[route]++,dir=(i%2===0)?1:-1,speed=routeSpeeds[i%routeSpeeds.length],sample=pointAt(route,0);
         // Setiap pejalan kaki kekal pada gelung laluan tertutup; fasa bergerak berterusan tanpa spawn/despawn.
@@ -882,7 +886,6 @@ function bootPhaserMapBridge(){
         if(i%13===0){q=xy(-7,-2+bob);g.fillStyle(0xf0c45e,1);g.fillCircle(q.x,q.y,2.8)}
        }
       };
-      drawTrafficAndPeople();
       drawTrafficAndPeople();
             const landProjectLayer=this.add.graphics(),landProjectTextLayer=this.add.container(0,0);
       const drawLandProjects=()=>{
