@@ -454,17 +454,7 @@ function drawMap(now=0){
  // Jalan dalaman, garisan lorong, lintasan dan kaki lima dipaparkan oleh Phaser sahaja.
  // Kemudahan bandar dinamik kini dipaparkan melalui Phaser Graphics.
  // Trafik kereta dan pejalan kaki kini dipaparkan melalui Phaser Graphics.
- // Festival menghias premis yang aktif secara fizikal.
- if(festivalNow()){for(const p of plots){if(!s.buildings.some(b=>b.lot===p.i)&&!landProjectAt(p.i))continue;const colors=['#d94f48','#f3d36c','#3f936d'];for(let n=0;n<3;n++){ctx.fillStyle=colors[n];ctx.fillRect(p.x+8+n*29,p.y+7,29,7)}ctx.strokeStyle='#fff0b0';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(p.x+8,p.y+4);ctx.lineTo(p.x+95,p.y+4);ctx.stroke();for(let n=0;n<5;n++){ctx.fillStyle=colors[n%3];ctx.beginPath();ctx.arc(p.x+14+n*18,p.y+3,3,0,Math.PI*2);ctx.fill()}}}
- // Orang ramai di bandar bertambah mengikut pelanggan dan festival.
- const crowdCount=Math.min(38,12+Math.floor(Math.log10((s.customers||0)+1)*5)+(s.landProjects||[]).length*2+(festivalNow()?12:0));
- for(let n=0;n<crowdCount-12;n++){const x=120+(n*71)%710,y=285+(n*47)%350;ctx.fillStyle='rgba(45,62,42,.25)';ctx.beginPath();ctx.ellipse(x,y+5,5,2.5,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=['#477fa8','#d46c55','#5d966c','#d3a94e','#8b6ca6'][n%5];ctx.beginPath();ctx.arc(x,y,4.5,0,Math.PI*2);ctx.fill();ctx.fillStyle=['#e9b991','#c98f69','#f0c9a4','#a96f50'][n%4];ctx.beginPath();ctx.arc(x,y-5,3,0,Math.PI*2);ctx.fill()}
- // Kitaran siang-malam: bermula siang, senja, malam dan kembali subuh.
-  const phase=townClock(),night=Math.max(0,Math.min(1,(Math.cos((phase-.5)*Math.PI*2)+.08)/1.08));
-  if(night>.015){ctx.fillStyle='rgba(22,35,62,'+(night*.50)+')';ctx.fillRect(-1000,-1000,3000,3000);
-    ctx.save();ctx.globalAlpha=night*.95;for(let i=0;i<14;i++){const p=lotPos(i);if(s.buildings.some(b=>b.lot===i)){ctx.fillStyle='#ffe6a0';ctx.fillRect(p.x+34,p.y+63,12,12);ctx.fillRect(p.x+96,p.y+63,12,12)}}ctx.restore();
-  }
-  if(festivalNow()){const eventIndex=Math.floor(tick/72000)%festivalNames.length;ctx.save();ctx.fillStyle='rgba(66,48,35,.88)';ctx.beginPath();ctx.roundRect(300,637,280,34,12);ctx.fill();ctx.fillStyle='#ffe7a3';ctx.font='bold 15px system-ui';ctx.textAlign='center';ctx.fillText('🎉 '+festivalNames[eventIndex],440,660);ctx.textAlign='start';ctx.restore();}
+ // Festival, orang ramai dan kitaran siang-malam kini dipaparkan melalui Phaser Graphics.
   ctx.restore();if(window.GaspuroMapBridge)window.GaspuroMapBridge.refresh();requestAnimationFrame(drawMap);tick++
 }
 /* Phaser WebGL map bridge: Canvas lama kekal sebagai sumber data dan input
@@ -844,10 +834,49 @@ function bootPhaserMapBridge(){
       g.lineStyle(2,0xc5e2c9,.75);g.beginPath();for(let y=500;y<1840;y+=32){g.moveTo(112,y);g.lineTo(112,y+12);g.moveTo(1360,y);g.lineTo(1360,y+12)}g.strokePath();
      };
      drawStreetFurniture();
-     const syncRoadCamera=()=>{roadLayer.setPosition(camera.x,camera.y);roadLayer.setScale(camera.scale);roadLayer.setVisible(true);streetTextLayer.setPosition(camera.x,camera.y);streetTextLayer.setScale(camera.scale);civicTextLayer.setPosition(camera.x,camera.y);civicTextLayer.setScale(camera.scale);residentialTextLayer.setPosition(camera.x,camera.y);residentialTextLayer.setScale(camera.scale);commercialTextLayer.setPosition(camera.x,camera.y);commercialTextLayer.setScale(camera.scale);trafficLayer.setPosition(camera.x,camera.y);trafficLayer.setScale(camera.scale);cityStructureTextLayer.setPosition(camera.x,camera.y);cityStructureTextLayer.setScale(camera.scale);landProjectTextLayer.setPosition(camera.x,camera.y);landProjectTextLayer.setScale(camera.scale)};
+     // Kesan malam, orang ramai dan festival dipaparkan dalam lapisan Phaser.
+     const nightLayer=this.add.graphics();
+     const crowdLayer=this.add.graphics();
+     const festivalLayer=this.add.graphics();
+     const festivalTextLayer=this.add.container(0,0);
+     const drawTownAtmosphere=()=>{
+      nightLayer.clear();crowdLayer.clear();festivalLayer.clear();festivalTextLayer.removeAll(true);
+      const phase=townClock(),night=Math.max(0,Math.min(1,(Math.cos((phase-.5)*Math.PI*2)+.08)/1.08));
+      if(night>.015){
+       nightLayer.fillStyle(0x16233e,night*.50);nightLayer.fillRect(-1000,-1000,3000,3000);
+       for(let i=0;i<14;i++){
+        const p=lotPos(i);
+        if(s.buildings.some(b=>b.lot===i)){
+         nightLayer.fillStyle(0xffe6a0,night*.95);nightLayer.fillRect(p.x+34,p.y+63,12,12);nightLayer.fillRect(p.x+96,p.y+63,12,12);
+        }
+       }
+      }
+      const crowdCount=Math.min(38,12+Math.floor(Math.log10((s.customers||0)+1)*5)+(s.landProjects||[]).length*2+(festivalNow()?12:0));
+      const clothes=[0x477fa8,0xd46c55,0x5d966c,0xd3a94e,0x8b6ca6],skin=[0xe9b991,0xc98f69,0xf0c9a4,0xa96f50];
+      for(let n=0;n<crowdCount-12;n++){
+       const x=120+(n*71)%710,y=285+(n*47)%350;
+       crowdLayer.fillStyle(0x2d3e2a,.25);crowdLayer.fillEllipse(x,y+5,10,5);
+       crowdLayer.fillStyle(clothes[n%clothes.length],1);crowdLayer.fillCircle(x,y,4.5);
+       crowdLayer.fillStyle(skin[n%skin.length],1);crowdLayer.fillCircle(x,y-5,3);
+      }
+      if(festivalNow()){
+       const colors=[0xd94f48,0xf3d36c,0x3f936d];
+       for(const p of plots){
+        if(!s.buildings.some(b=>b.lot===p.i)&&!landProjectAt(p.i))continue;
+        for(let n=0;n<3;n++)festivalLayer.fillStyle(colors[n],1),festivalLayer.fillRect(p.x+8+n*29,p.y+7,29,7);
+        festivalLayer.lineStyle(2,0xfff0b0,1);festivalLayer.lineBetween(p.x+8,p.y+4,p.x+95,p.y+4);
+        for(let n=0;n<5;n++){festivalLayer.fillStyle(colors[n%3],1);festivalLayer.fillCircle(p.x+14+n*18,p.y+3,3)}
+       }
+       const eventIndex=Math.floor(tick/72000)%festivalNames.length;
+       festivalLayer.fillStyle(0x423023,.88);festivalLayer.fillRoundedRect(300,637,280,34,12);
+       festivalTextLayer.add(this.add.text(440,644,'🎉 '+festivalNames[eventIndex],{fontFamily:'system-ui',fontSize:'15px',fontStyle:'bold',color:'#ffe7a3'}).setOrigin(.5,0));
+      }
+     };
+     drawTownAtmosphere();
+     const syncRoadCamera=()=>{roadLayer.setPosition(camera.x,camera.y);roadLayer.setScale(camera.scale);roadLayer.setVisible(true);streetTextLayer.setPosition(camera.x,camera.y);streetTextLayer.setScale(camera.scale);civicTextLayer.setPosition(camera.x,camera.y);civicTextLayer.setScale(camera.scale);residentialTextLayer.setPosition(camera.x,camera.y);residentialTextLayer.setScale(camera.scale);commercialTextLayer.setPosition(camera.x,camera.y);commercialTextLayer.setScale(camera.scale);trafficLayer.setPosition(camera.x,camera.y);trafficLayer.setScale(camera.scale);cityStructureTextLayer.setPosition(camera.x,camera.y);cityStructureTextLayer.setScale(camera.scale);landProjectTextLayer.setPosition(camera.x,camera.y);landProjectTextLayer.setScale(camera.scale);nightLayer.setPosition(camera.x,camera.y);nightLayer.setScale(camera.scale);crowdLayer.setPosition(camera.x,camera.y);crowdLayer.setScale(camera.scale);festivalLayer.setPosition(camera.x,camera.y);festivalLayer.setScale(camera.scale);festivalTextLayer.setPosition(camera.x,camera.y);festivalTextLayer.setScale(camera.scale)};
      syncRoadCamera();
      this.scale.on('resize',(size)=>{if(phaserMapImage)phaserMapImage.setDisplaySize(size.width,size.height);syncRoadCamera()});
-     window.GaspuroMapBridge={refresh:()=>{if(phaserMapTexture)phaserMapTexture.refresh();syncRoadCamera();drawStreetLamps();drawStreetFurniture();drawCivicFacilities();drawResidentialBuildings();drawCommercialBuildings();drawCityStructures();drawTrafficAndPeople();drawLandProjects()}};
+     window.GaspuroMapBridge={refresh:()=>{if(phaserMapTexture)phaserMapTexture.refresh();syncRoadCamera();drawStreetLamps();drawStreetFurniture();drawCivicFacilities();drawResidentialBuildings();drawCommercialBuildings();drawCityStructures();drawTrafficAndPeople();drawLandProjects();drawTownAtmosphere()}};
      document.documentElement.classList.remove('town-legacy-mode');
      document.documentElement.classList.add('phaser-map-bridge-ready');
      if(phaserMapBootTimer){clearTimeout(phaserMapBootTimer);phaserMapBootTimer=null}
