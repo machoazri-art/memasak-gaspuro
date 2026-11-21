@@ -708,8 +708,10 @@ function bootPhaserMapBridge(){
         // Jalan dalaman: x=95..1385; lorong dipusatkan pada y=446, 786, 1126.
         const speed=[.72,1.05,.83,1.22][lane],span=1248,raw=(tick*speed*dir+group*640+lane*310)%span;
         const x=95+(dir<0?42:0)+((raw+span)%span),y=[428,464,768,804,1108,1144,1448,1484][i],flip=dir<0?-1:1;
-        const px=(v)=>x+v*flip;
-        g.fillStyle(0x192427,.3);g.fillEllipse(x+20*flip,y+5,52,24);
+        // Clamp the complete vehicle body to the paved road segment, never the lot area.
+        const safeX=Phaser.Math.Clamp(x,dir<0?137:95,dir<0?1385:1343);
+        const px=(v)=>safeX+v*flip;
+        g.fillStyle(0x192427,.3);g.fillEllipse(safeX+20*flip,y+5,52,24);
         g.fillStyle(0x222a2d,1);for(const wx of [5,31])for(const wy of [-10,10])g.fillRoundedRect(px(wx)-4,y+wy-3,9,6,2);
         g.fillStyle(0x344047,1);g.fillRoundedRect(px(0),y-11,42,22,7);
         g.fillStyle(carColors[(i+lane)%carColors.length],1);g.fillRoundedRect(px(1),y-10,40,20,7);
@@ -810,7 +812,7 @@ function bootPhaserMapBridge(){
        g.fillStyle(0xe2c66e,1);g.fillRect(x+54,y+13,12,17);
        g.fillStyle(0xd9e5e4,1);g.fillRect(x+10,y+15,8,4);g.fillRect(x+33,y+15,8,4);g.fillRect(x+56,y+15,8,4);
       };
-      for(const p of [[486,468],[896,808],[486,1148],[896,1488]])parking(p[0],p[1]);
+      for(const p of [[108,468],[1300,808],[108,1148],[1300,1488]])parking(p[0],p[1]);
       const sign=(x,y)=>{
        g.fillStyle(0x46554b,1);g.fillRect(x+13,y+9,3,27);
        g.fillStyle(0x477c68,1);g.fillRoundedRect(x,y,54,15,3);
