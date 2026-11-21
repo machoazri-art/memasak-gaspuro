@@ -369,7 +369,7 @@ function bootPhaserTown(){
 function phaserTownScene(){return phaserTownGame&&phaserTownGame.scene.getScene('GaspuroTownScene')}
 function refreshPhaserTown(){const scene=phaserTownScene();if(scene&&scene.syncState)scene.syncState(GaspuroStateBridge.snapshot());else if(scene&&scene.refreshTown)scene.refreshTown();const restaurant=phaserScene();if(restaurant&&restaurant.syncState)restaurant.syncState(GaspuroStateBridge.snapshot())}
 
-const canvas=$('map'),ctx=canvas.getContext('2d');let camera={x:0,y:0,scale:.62},plots=[],cars=[],people=[],drag=null,selectedTool='warung',tick=0;
+const canvas=$('map'),ctx=canvas.getContext('2d');let camera={x:0,y:0,scale:.65},plots=[],cars=[],people=[],drag=null,selectedTool='warung',tick=0;
 const townClock=()=>((tick%36000)/36000);
 const festivalNow=()=>Math.floor(tick/18000)%4===1 && tick%18000<2700;
 const festivalNames=['Pesta Makanan','Pasar Malam Gaspuro','Festival Nasi Lemak','Karnival Minuman'];
