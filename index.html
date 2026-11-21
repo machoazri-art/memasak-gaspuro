@@ -302,6 +302,23 @@ function drawMap(){
  ctx.fillStyle='#d8d2bc';ctx.fillRect(-700,80,2300,94);ctx.fillRect(-700,440,2300,94);ctx.fillRect(45,-700,90,1800);ctx.fillRect(755,-700,90,1800);
  ctx.fillStyle='#737e80';ctx.fillRect(-700,91,2300,70);ctx.fillRect(-700,451,2300,70);ctx.fillRect(55,-700,70,1800);ctx.fillRect(765,-700,70,1800);
  ctx.strokeStyle='#f6e9bd';ctx.lineWidth=3;ctx.setLineDash([24,18]);ctx.beginPath();ctx.moveTo(-700,126);ctx.lineTo(1600,126);ctx.moveTo(-700,486);ctx.lineTo(1600,486);ctx.moveTo(90,-700);ctx.lineTo(90,1100);ctx.moveTo(800,-700);ctx.lineTo(800,1100);ctx.stroke();ctx.setLineDash([]);
+ // Lampu jalan di sepanjang jalan perimeter dan laluan pejalan kaki.
+ function drawStreetLamp(x,y){
+  ctx.save();ctx.translate(x,y);
+  const glow=ctx.createRadialGradient(0,0,2,0,0,34);glow.addColorStop(0,'rgba(255,231,153,.30)');glow.addColorStop(1,'rgba(255,231,153,0)');
+  ctx.fillStyle=glow;ctx.beginPath();ctx.arc(0,0,34,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(42,53,43,.22)';ctx.beginPath();ctx.ellipse(2,5,8,4,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#4b5550';ctx.beginPath();ctx.roundRect(-2,-2,4,9,2);ctx.fill();
+  ctx.strokeStyle='#46514c';ctx.lineWidth=3;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-24);ctx.lineTo(9,-29);ctx.stroke();
+  ctx.fillStyle='#303b38';ctx.beginPath();ctx.roundRect(5,-33,12,7,3);ctx.fill();
+  ctx.fillStyle='#ffe9a6';ctx.beginPath();ctx.roundRect(8,-32,7,4,2);ctx.fill();
+  ctx.fillStyle='rgba(255,239,184,.75)';ctx.beginPath();ctx.arc(11,-29,3+Math.sin(tick*.06)*.35,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+ }
+ for(let x=-570;x<1550;x+=190){drawStreetLamp(x,82);drawStreetLamp(x,169);drawStreetLamp(x,442);drawStreetLamp(x,529)}
+ for(let y=-600;y<1100;y+=190){drawStreetLamp(47,y);drawStreetLamp(132,y);drawStreetLamp(757,y);drawStreetLamp(844,y)}
+ for(let x=205;x<710;x+=125){drawStreetLamp(x,205);drawStreetLamp(x,395)}
+ for(let y=245;y<390;y+=95){drawStreetLamp(180,y);drawStreetLamp(700,y)}
  // houses and trees around
  for(let i=0;i<17;i++){let x=160+(i%6)*145,y=12+Math.floor(i/6)*62;if(y>70&&y<180)continue;ctx.fillStyle='#699b5d';ctx.beginPath();ctx.arc(x,y,17,0,7);ctx.fill();ctx.fillStyle='#4e854f';ctx.beginPath();ctx.arc(x-5,y-6,10,0,7);ctx.fill()}
  // market plaza
