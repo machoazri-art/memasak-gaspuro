@@ -401,8 +401,8 @@ function drawMap(){
  if(s.selectedLot===i){ctx.strokeStyle='#ffb72f';ctx.lineWidth=5;ctx.strokeRect(p.x+2,p.y+2,138,114)}
  plots.push({i,x:p.x,y:p.y,w:142,h:118,unlocked})
  }
- // Kenderaan dan penduduk: gaya vector top-down yang lebih organik.
- const carColors=['#d9574f','#477fa8','#e8b94f','#eee5d2','#65966b'];
+ // Trafik bandar: kereta top-down dengan bentuk badan, cermin, bumbung, lampu dan bayang.
+ const carColors=['#c94f48','#477fa8','#e3ad43','#e8e3d4','#568b68','#8c6ca5'];
  for(let i=0;i<8;i++){
    const lane=i%4,group=Math.floor(i/4),dir=(lane===1||lane===3)?-1:1;
    const speed=[.72,1.05,.83,1.22][lane],span=2200;
@@ -410,49 +410,65 @@ function drawMap(){
    const x=dir>0?((raw+span)%span)-650:((span-raw+span)%span)-650;
    const y=[27,65,707,745][lane];
    ctx.save();ctx.translate(x,y);if(dir<0)ctx.scale(-1,1);
-   ctx.fillStyle='rgba(37,52,39,.24)';ctx.beginPath();ctx.ellipse(20,5,25,11,0,0,Math.PI*2);ctx.fill();
-   ctx.fillStyle='#293337';rounded(-2,-8,7,10,3,'#293337');rounded(35,-8,7,10,3,'#293337');rounded(-2,8,7,10,3,'#293337');rounded(35,8,7,10,3,'#293337');
-   rounded(0,-10,40,20,8,carColors[(i+lane)%carColors.length],'#39484a');
-   ctx.fillStyle='rgba(255,255,255,.2)';ctx.beginPath();ctx.roundRect(5,-8,29,16,6);ctx.fill();
-   ctx.fillStyle='#9fc4cc';ctx.beginPath();ctx.roundRect(13,-7,15,14,4);ctx.fill();
-   ctx.fillStyle='rgba(40,65,73,.55)';ctx.fillRect(20,-6,1,12);
-   ctx.fillStyle='#fff2c5';ctx.fillRect(37,-6,2,4);ctx.fillRect(37,2,2,4);
-   ctx.fillStyle='#a83e37';ctx.fillRect(1,-6,2,4);ctx.fillRect(1,2,2,4);
+   // soft shadow and wheels
+   ctx.fillStyle='rgba(25,36,39,.30)';ctx.beginPath();ctx.ellipse(20,5,26,12,0,0,Math.PI*2);ctx.fill();
+   ctx.fillStyle='#222a2d';
+   for(const wx of [5,31])for(const wy of [-10,10]){ctx.beginPath();ctx.roundRect(wx-4,wy-3,9,6,2);ctx.fill()}
+   // sculpted body
+   ctx.fillStyle='#344047';ctx.beginPath();ctx.roundRect(0,-11,42,22,7);ctx.fill();
+   ctx.fillStyle=carColors[(i+lane)%carColors.length];ctx.beginPath();ctx.roundRect(1,-10,40,20,7);ctx.fill();
+   ctx.fillStyle='rgba(255,255,255,.28)';ctx.beginPath();ctx.roundRect(5,-9,28,3,2);ctx.fill();
+   // front and rear glass, roof and center divider
+   ctx.fillStyle='#29434b';ctx.beginPath();ctx.roundRect(9,-8,22,16,5);ctx.fill();
+   ctx.fillStyle='#9fc5ce';ctx.beginPath();ctx.moveTo(12,-7);ctx.lineTo(28,-7);ctx.lineTo(30,-1);ctx.lineTo(10,-1);ctx.closePath();ctx.fill();
+   ctx.fillStyle='#82aeb9';ctx.beginPath();ctx.moveTo(10,1);ctx.lineTo(30,1);ctx.lineTo(28,7);ctx.lineTo(12,7);ctx.closePath();ctx.fill();
+   ctx.strokeStyle='rgba(35,55,62,.7)';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(20,-7);ctx.lineTo(20,7);ctx.stroke();
+   // headlights, tail lamps and bumpers
+   ctx.fillStyle='#fff1bd';ctx.beginPath();ctx.roundRect(38,-7,3,5,1);ctx.roundRect(38,2,3,5,1);ctx.fill();
+   ctx.fillStyle='#a93e3b';ctx.beginPath();ctx.roundRect(2,-7,3,5,1);ctx.roundRect(2,2,3,5,1);ctx.fill();
+   ctx.fillStyle='rgba(255,255,255,.35)';ctx.fillRect(7,-11,27,1);
    ctx.restore();
  }
+ // Pejalan kaki ikut laluan kaki lima yang bersambung; mereka membelok di simpang,
+ // berhenti seketika dan menyambung perjalanan dengan arah badan yang betul.
  const skinTones=['#e9b991','#c98f69','#f0c9a4','#a96f50'];
  const shirts=['#477fa8','#d46c55','#5d966c','#d3a94e','#8b6ca6','#e7e0ce'];
- // Penduduk bandar: laluan, jarak, kelajuan dan lencongan kecil berbeza bagi setiap NPC.
- const walkSpeed=[.022,.031,.018,.036,.026,.021,.039,.024,.029,.019,.034,.027];
- const walkOffset=[0,67,153,229,318,401,487,566,649,731,814,893];
- const walkLane=[0,1,2,0,2,1,0,2,1,0,1,2];
- const walkDirection=[1,-1,1,-1,1,-1,1,-1,1,-1,1,-1];
- const walkDrift=[-31,24,47,-12,18,-43,35,-22,8,52,-34,15];
+ const hair=['#3d3029','#272b2d','#594332','#332c28'];
+ const walkRoutes=[
+   [[115,270],[850,270],[850,450],[115,450]],
+   [[115,450],[850,450],[850,630],[115,630]],
+   [[115,630],[850,630],[850,270],[115,270]]
+ ];
+ const walkSpeed=[.43,.36,.49,.32,.40,.46,.34,.51,.38,.44,.35,.47];
+ const walkOffset=[0,91,177,263,351,442,529,618,704,793,882,971];
+ const walkRoute=[0,1,2,0,1,2,1,0,2,1,0,2];
+ const walkDir=[1,-1,1,-1,1,-1,1,-1,1,-1,1,-1];
+ function routePoint(route,distance){
+   const pts=walkRoutes[route];let total=0,lens=[];
+   for(let k=0;k<pts.length;k++){const a=pts[k],b=pts[(k+1)%pts.length],len=Math.hypot(b[0]-a[0],b[1]-a[1]);lens.push(len);total+=len}
+   let d=((distance%total)+total)%total;
+   for(let k=0;k<pts.length;k++){if(d<=lens[k]){const a=pts[k],b=pts[(k+1)%pts.length],t=d/lens[k];return{x:a[0]+(b[0]-a[0])*t,y:a[1]+(b[1]-a[1])*t,angle:Math.atan2(b[1]-a[1],b[0]-a[0])}}d-=lens[k]}
+   return{x:pts[0][0],y:pts[0][1],angle:0};
+ }
  for(let i=0;i<12;i++){
-   const lane=walkLane[i],speed=walkSpeed[i]*walkDirection[i],phase0=walkOffset[i];
-   let x,y;
-   if(lane===0){
-     x=150+((phase0+tick*speed+960)%960);
-     y=282+walkDrift[i]+Math.sin(tick*.009+i*2.1)*13;
-   }else if(lane===1){
-     y=245+((phase0+tick*speed+540)%540);
-     x=260+((i*97)%440)+Math.sin(tick*.007+i*1.8)*29;
-   }else{
-     y=665-((phase0+tick*speed+540)%540);
-     x=270+((i*131)%450)+Math.sin(tick*.008+i*2.7)*27;
-   }
-   const phase=tick*(.045+i*.003)+i*1.9,step=Math.sin(phase)*1.05;
-   ctx.save();ctx.translate(x,y);
-   ctx.fillStyle='rgba(45,62,42,.22)';ctx.beginPath();ctx.ellipse(0,15,7,3.5,0,0,Math.PI*2);ctx.fill();
-   ctx.strokeStyle='#4b4540';ctx.lineWidth=2.8;ctx.lineCap='round';
-   ctx.beginPath();ctx.moveTo(-2,7);ctx.lineTo(-3-step,13);ctx.moveTo(2,7);ctx.lineTo(3+step,13);ctx.stroke();
-   ctx.fillStyle=shirts[i%shirts.length];ctx.beginPath();ctx.roundRect(-5,-2,10,12,4);ctx.fill();
-   ctx.strokeStyle=shirts[i%shirts.length];ctx.lineWidth=2.8;
-   ctx.beginPath();ctx.moveTo(-4,1);ctx.lineTo(-7-step*.35,7);ctx.moveTo(4,1);ctx.lineTo(7+step*.35,7);ctx.stroke();
-   ctx.fillStyle=skinTones[i%skinTones.length];ctx.beginPath();ctx.arc(0,-7,4.7,0,Math.PI*2);ctx.fill();
-   ctx.fillStyle=['#3d3029','#272b2d','#594332','#332c28'][i%4];
-   ctx.beginPath();ctx.arc(0,-9,4.8,Math.PI,Math.PI*2);ctx.fill();
-   ctx.beginPath();ctx.ellipse(-4.5,-6,1.2,2,0,0,Math.PI*2);ctx.ellipse(4.5,-6,1.2,2,0,0,Math.PI*2);ctx.fill();
+   const route=walkRoute[i],dir=walkDir[i],speed=walkSpeed[i],loop=walkRoutes[route];
+   const total=loop.reduce((sum,p,k)=>sum+Math.hypot(loop[(k+1)%loop.length][0]-p[0],loop[(k+1)%loop.length][1]-p[1]),0);
+   const travel=(walkOffset[i]+tick*speed*dir)%total;
+   const pauseCycle=((tick+i*83)%720);
+   const paused=pauseCycle<34;
+   const pos=routePoint(route,travel-(paused?0:0));
+   const step=paused?0:Math.sin(tick*.16+i*2.4)*1.2;
+   ctx.save();ctx.translate(pos.x,pos.y);ctx.rotate(pos.angle);
+   // ground shadow
+   ctx.fillStyle='rgba(45,62,42,.24)';ctx.beginPath();ctx.ellipse(0,8,5.5,3,0,0,Math.PI*2);ctx.fill();
+   // legs with alternating stride, body and swinging arms
+   ctx.strokeStyle='#3f3934';ctx.lineWidth=1.8;ctx.lineCap='round';
+   ctx.beginPath();ctx.moveTo(-1.5,3);ctx.lineTo(-2-step,8);ctx.moveTo(1.5,3);ctx.lineTo(2+step,8);ctx.stroke();
+   ctx.strokeStyle=shirts[i%shirts.length];ctx.lineWidth=1.8;
+   ctx.beginPath();ctx.moveTo(-3,-2);ctx.lineTo(-5-step*.5,3);ctx.moveTo(3,-2);ctx.lineTo(5+step*.5,3);ctx.stroke();
+   ctx.fillStyle=shirts[i%shirts.length];ctx.beginPath();ctx.roundRect(-3.8,-4,7.6,8,2.2);ctx.fill();
+   ctx.fillStyle=skinTones[i%skinTones.length];ctx.beginPath();ctx.arc(0,-7,3.3,0,Math.PI*2);ctx.fill();
+   ctx.fillStyle=hair[i%hair.length];ctx.beginPath();ctx.arc(0,-8.3,3.4,Math.PI,Math.PI*2);ctx.fill();
    ctx.restore();
  }
  // Kitaran siang-malam: bermula siang, senja, malam dan kembali subuh.
