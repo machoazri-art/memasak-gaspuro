@@ -137,6 +137,10 @@
 .phaser-unavailable #map{display:block!important;width:100%;height:min(68vh,590px);min-height:390px;touch-action:pan-y}
 .phaser-unavailable #townPhaserMount{display:none!important}
 /* Stable town-map input fallback: use the proven interactive 2D canvas while Phaser town input is repaired. */
+/* Header melekat supaya baki wang sentiasa kelihatan ketika scroll. */
+.top{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,#fffdf5,#f4ead3);box-shadow:0 3px 12px rgba(45,58,37,.14);padding-top:max(9px,env(safe-area-inset-top));}
+.cash{position:sticky;top:calc(env(safe-area-inset-top) + 5px);z-index:101;white-space:nowrap;box-shadow:0 2px 8px rgba(42,57,35,.16)}
+@media(max-width:600px){.top{margin:-7px -7px 8px;padding: max(9px,env(safe-area-inset-top)) 10px 9px;}.cash{font-size:15px}}
 .town-legacy-mode #map{display:block!important;pointer-events:auto!important;position:absolute;inset:0;z-index:1;width:100%;height:100%;touch-action:none}
 .town-legacy-mode #townPhaserMount{display:none!important}
 @media(max-width:600px){.app{padding:7px}.mapbox{height:min(66svh,560px);min-height:380px}.maphead{top:7px;left:7px;right:7px}.maphelp{max-width:55%;text-align:center;font-size:9px}.room.topRoom{width:100%;min-height:360px!important;max-height:62svh!important}.insideTop{gap:8px}.insideTop h2{font-size:17px}#phaserWorld canvas{touch-action:none}}
@@ -202,7 +206,7 @@ function toast(t){$('notice').textContent=t;$('notice').classList.add('show');cl
 function log(t){let d=document.createElement('div');d.textContent=t;$('feed').prepend(d);while($('feed').children.length>12)$('feed').lastChild.remove()}
 function bizType(b){return types.find(t=>t.id===b.type)||types[0]}
 function incomeRate(b){return bizType(b).base*b.level*(1+s.upgrades.marketing*.12+s.upgrades.quality*.08+s.workers*.035)}
-function unlockedLots(){return 4+Math.min(8,Math.floor((s.level-1)/2)*2)}
+function unlockedLots(){return 4+Math.min(10,Math.floor((s.level-1)/2)*2)}
 function selectedBuilding(){return s.buildings.find(b=>b.lot===s.selectedLot)}
 function build(){let lot=s.selectedLot,t=s.selectedBuild;if(selectedBuilding())return toast('Lot ini sudah ada perniagaan!');let type=types.find(x=>x.id===t);if(!type)return;if(s.buildings.length>=unlockedLots())return toast('Naik level untuk buka lebih banyak lot!');if(s.money<type.cost)return toast('Duit tak cukup untuk bina!');s.money-=type.cost;s.buildings.push({id:Date.now(),type:t,lot,level:1,bank:0,served:0});s.xp+=25;log(type.emoji+' '+type.name+' berjaya dibuka!');toast('Perniagaan baharu dibuka!');s.selectedLot=lot;save();draw()}
 function upgradeBiz(id){let b=s.buildings.find(x=>x.id===id);if(!b)return;let cost=90*b.level;if(s.money<cost)return toast('Duit tak cukup!');s.money-=cost;b.level++;s.xp+=18;log('⬆️ '+bizType(b).name+' dinaik taraf ke tahap '+b.level);save();draw()}
@@ -336,7 +340,7 @@ const canvas=$('map'),ctx=canvas.getContext('2d');let camera={x:0,y:0,scale:1},p
 const townClock=()=>((tick%36000)/36000);
 const festivalNow=()=>Math.floor(tick/18000)%4===1 && tick%18000<2700;
 const festivalNames=['Pesta Makanan','Pasar Malam Gaspuro','Festival Nasi Lemak','Karnival Minuman'];
-function lotPos(i){let col=i%4,row=Math.floor(i/4);return{x:145+col*175,y:140+row*180}}
+function lotPos(i){let col=i%4,row=Math.floor(i/4);if(row===3)return{x:145+col*175,y:585};return{x:145+col*175,y:140+row*180}}
 function rounded(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=3;ctx.stroke()}}
 function drawMap(){
  let w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);ctx.save();ctx.translate(camera.x,camera.y);ctx.scale(camera.scale,camera.scale);
