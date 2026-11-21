@@ -453,8 +453,8 @@ function drawMap(now=0){
  else if(structure.id==='busstop'){ctx.fillStyle='#d9eee8';ctx.fillRect(q.x+23,q.y+35,104,52);ctx.fillStyle='#365b60';ctx.fillRect(q.x+19,q.y+27,112,9);ctx.fillRect(q.x+24,q.y+36,5,49);ctx.fillRect(q.x+121,q.y+36,5,49);ctx.fillStyle='#f2d274';ctx.fillRect(q.x+65,q.y+17,18,15);ctx.fillStyle='#fff4d5';ctx.font='bold 10px system-ui';ctx.textAlign='center';ctx.fillText('BAS',q.x+74,q.y+27);ctx.fillStyle='#4b594c';ctx.fillRect(q.x+47,q.y+69,55,6);ctx.fillStyle='#fff4d5';ctx.font='bold 9px system-ui';ctx.fillText('TERMINAL MINI',q.x+75,q.y+99)}
  else if(structure.id==='parkinglot'){ctx.fillStyle='#68757a';ctx.fillRect(q.x+19,q.y+20,112,70);ctx.strokeStyle='#f5e9c9';ctx.lineWidth=2;for(let n=0;n<4;n++)ctx.strokeRect(q.x+25+n*26,q.y+31,20,47);for(let n=0;n<4;n++){ctx.fillStyle=['#e5c66c','#7bb1c0','#d47b64','#d6d7cf'][n];ctx.fillRect(q.x+28+n*26,q.y+43,14,25)}ctx.fillStyle='#fff4d5';ctx.font='bold 9px system-ui';ctx.textAlign='center';ctx.fillText('PARKIR',q.x+75,q.y+99)}
  else{ctx.fillStyle='#f5e9c9';ctx.fillRect(q.x+23,q.y+20,104,17);ctx.fillStyle='#3c5142';ctx.font='bold 10px system-ui';ctx.textAlign='center';ctx.fillText(sd?sd.name.toUpperCase():'KEMUDAHAN',q.x+75,q.y+32);ctx.font='30px system-ui';ctx.fillText(sd?sd.emoji:'🏢',q.x+75,q.y+76);ctx.fillStyle='#fff4d5';ctx.font='bold 8px system-ui';ctx.fillText('KEMUDAHAN BANDAR',q.x+75,q.y+96)}ctx.textAlign='start';
- }else if(home){const hd=residentialDefs.find(x=>x.id===home.id),styles={terrace:['#d9a66f','#8d5542'],apartment:['#8ba9b7','#486c82'],condo:['#a5b9c8','#526b85'],luxury:['#e2c28c','#916d4c']},st=styles[home.id]||styles.terrace;ctx.fillStyle='#e7ddc8';ctx.fillRect(q.x+8,q.y+8,134,96);ctx.fillStyle=st[0];ctx.fillRect(q.x+17,q.y+20,116,75);ctx.fillStyle=st[1];ctx.beginPath();ctx.moveTo(q.x+12,q.y+24);ctx.lineTo(q.x+75,q.y+7);ctx.lineTo(q.x+138,q.y+24);ctx.closePath();ctx.fill();ctx.fillStyle='#eff4e8';for(let wx=0;wx<3;wx++)for(let wy=0;wy<2;wy++)ctx.fillRect(q.x+27+wx*34,q.y+34+wy*22,15,12);ctx.fillStyle='#704a35';ctx.fillRect(q.x+67,q.y+70,17,25);ctx.fillStyle='#fff6dc';ctx.font='bold 9px system-ui';ctx.textAlign='center';ctx.fillText(hd?hd.name.toUpperCase():'KEDIAMAN',q.x+75,q.y+103);ctx.textAlign='start';
- }else if(project){
+ }else if(home){/* Bangunan kediaman kini dilukis oleh Phaser Graphics. */
+  }else if(project){
  // Bangunan mercu tanda khas: siluet, bumbung, tingkap berkilat, pintu dan landskap berbeza.
  const px=q.x,py=q.y;
  ctx.fillStyle='rgba(39,53,38,.25)';ctx.beginPath();ctx.ellipse(px+76,py+104,68,9,0,0,Math.PI*2);ctx.fill();
@@ -753,6 +753,28 @@ function bootPhaserMapBridge(){
       }
      };
      drawCivicFacilities();
+     // Bangunan kediaman pemain: satu renderer Phaser, data kekal daripada save lama.
+     const residentialLayer=this.add.graphics();
+     const residentialTextLayer=this.add.container(0,0);
+     const drawResidentialBuildings=()=>{
+      residentialLayer.clear();residentialTextLayer.removeAll(true);
+      const styles={terrace:{wall:0xd9a66f,roof:0x8d5542,trim:0xe7ddc8},apartment:{wall:0x8ba9b7,roof:0x486c82,trim:0xdce8e8},condo:{wall:0xa5b9c8,roof:0x526b85,trim:0xe4edf0},luxury:{wall:0xe2c28c,roof:0x916d4c,trim:0xf0e3c8}};
+      for(const home of (s.residentialBuildings||[])){
+       const lot=Number(home.lot);if(!Number.isInteger(lot)||lot<0)continue;
+       const bx=150+(lot%3)*410,by=150+Math.floor(lot/3)*340,j=lot%4;
+       const x=bx+8+(j%2)*164,y=by+8+(j>=2?128:0),st=styles[home.id]||styles.terrace,g=residentialLayer;
+       g.fillStyle(0x263326,.22);g.fillEllipse(x+75,y+103,130,15);
+       g.fillStyle(st.trim,1);g.fillRect(x+8,y+8,134,96);
+       g.fillStyle(st.wall,1);g.fillRect(x+17,y+20,116,75);
+       g.fillStyle(st.roof,1);g.beginPath();g.moveTo(x+12,y+24);g.lineTo(x+75,y+7);g.lineTo(x+138,y+24);g.closePath();g.fillPath();
+       g.fillStyle(0xeff4e8,1);for(let wx=0;wx<3;wx++)for(let wy=0;wy<2;wy++)g.fillRect(x+27+wx*34,y+34+wy*22,15,12);
+       g.fillStyle(0x704a35,1);g.fillRect(x+67,y+70,17,25);
+       g.fillStyle(0xf2d88d,1);g.fillRect(x+20,y+27,5,3);g.fillRect(x+125,y+27,5,3);
+       const def=residentialDefs.find(d=>d.id===home.id);
+       residentialTextLayer.add(this.add.text(x+75,y+101,(def?def.name:'KEDIAMAN').toUpperCase(),{fontFamily:'system-ui',fontSize:'9px',fontStyle:'bold',color:'#fff6dc',stroke:'#574532',strokeThickness:2}).setOrigin(.5,0));
+      }
+     };
+     drawResidentialBuildings();
      // Perabot jalan: hentian bas, parkir, papan tanda, tong sampah dan lorong basikal.
      const streetFurnitureLayer=this.add.graphics();
      const streetTextLayer=this.add.container(0,0);
@@ -800,10 +822,10 @@ function bootPhaserMapBridge(){
       g.lineStyle(2,0xc5e2c9,.75);g.beginPath();for(let y=500;y<1840;y+=32){g.moveTo(112,y);g.lineTo(112,y+12);g.moveTo(1360,y);g.lineTo(1360,y+12)}g.strokePath();
      };
      drawStreetFurniture();
-     const syncRoadCamera=()=>{roadLayer.setPosition(camera.x,camera.y);roadLayer.setScale(camera.scale);roadLayer.setVisible(true);streetTextLayer.setPosition(camera.x,camera.y);streetTextLayer.setScale(camera.scale);civicTextLayer.setPosition(camera.x,camera.y);civicTextLayer.setScale(camera.scale)};
+     const syncRoadCamera=()=>{roadLayer.setPosition(camera.x,camera.y);roadLayer.setScale(camera.scale);roadLayer.setVisible(true);streetTextLayer.setPosition(camera.x,camera.y);streetTextLayer.setScale(camera.scale);civicTextLayer.setPosition(camera.x,camera.y);civicTextLayer.setScale(camera.scale);residentialTextLayer.setPosition(camera.x,camera.y);residentialTextLayer.setScale(camera.scale)};
      syncRoadCamera();
      this.scale.on('resize',(size)=>{if(phaserMapImage)phaserMapImage.setDisplaySize(size.width,size.height);syncRoadCamera()});
-     window.GaspuroMapBridge={refresh:()=>{if(phaserMapTexture)phaserMapTexture.refresh();syncRoadCamera();drawStreetLamps();drawStreetFurniture();drawCivicFacilities()}};
+     window.GaspuroMapBridge={refresh:()=>{if(phaserMapTexture)phaserMapTexture.refresh();syncRoadCamera();drawStreetLamps();drawStreetFurniture();drawCivicFacilities();drawResidentialBuildings()}};
      document.documentElement.classList.remove('town-legacy-mode');
      document.documentElement.classList.add('phaser-map-bridge-ready');
      if(phaserMapBootTimer){clearTimeout(phaserMapBootTimer);phaserMapBootTimer=null}
