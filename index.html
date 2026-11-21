@@ -214,7 +214,8 @@ function bootPhaserTown(){
    g.fillStyle(0x4f5957,1);g.fillRoundedRect(42,42,1116,916,24);
    g.fillStyle(0x68736e,1);g.fillRoundedRect(52,52,1096,896,20);
    g.lineStyle(4,0xe8d9ad,.95);g.strokeRoundedRect(52,52,1096,896,20);
-   g.lineStyle(3,0xe8d9ad,.85);g.setLineDash([26,20]);g.strokeRoundedRect(80,80,1040,840,12);g.setLineDash([]);
+   // dashed lane markings are drawn as short segments (Phaser Graphics has no setLineDash)
+   g.lineStyle(3,0xe8d9ad,.85);for(let x=115;x<1100;x+=54){g.lineBetween(x,82,x+25,82);g.lineBetween(x,918,x+25,918)}for(let y=125;y<900;y+=54){g.lineBetween(82,y,82,y+25);g.lineBetween(1118,y,1118,y+25)}
    // four access gates connect the road to the compound
    g.fillStyle(0xc5d29d,1);g.fillRect(570,42,60,92);g.fillRect(570,866,60,92);g.fillRect(42,470,96,60);g.fillRect(1062,470,96,60);
    // single shared business compound sits inside the surrounding road ring
