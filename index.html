@@ -708,8 +708,8 @@ function bootPhaserMapBridge(){
        g.fillStyle(0xe8d4a9,1);g.fillRect(x+12,baseY+94,126,5);
        g.fillStyle(0x6b503b,1);g.fillRect(x+17,baseY+99,116,3);
        const type=bizType(shop);
-       commercialTextLayer.add(this.add.text(x+75,y+3,type.emoji,{fontFamily:'system-ui',fontSize:'19px'}).setOrigin(.5,0));
-       commercialTextLayer.add(this.add.text(x+75,y+109,type.name.toUpperCase(),{fontFamily:'system-ui',fontSize:'12px',fontStyle:'bold',color:'#fff8df',stroke:'#263d30',strokeThickness:3,backgroundColor:'#34583e',padding:{x:5,y:3},align:'center',wordWrap:{width:142},maxLines:1}).setOrigin(.5,0));
+       commercialTextLayer.add(this.add.text(x+75,y+3,type.emoji,{fontFamily:'system-ui',fontSize:'24px'}).setOrigin(.5,0));
+       commercialTextLayer.add(this.add.text(x+75,y+109,type.name.toUpperCase(),{fontFamily:'system-ui',fontSize:'15px',fontStyle:'bold',color:'#fff8df',stroke:'#263d30',strokeThickness:4,backgroundColor:'#284f37',padding:{x:6,y:4},align:'center',wordWrap:{width:148},maxLines:1}).setOrigin(.5,0));
        commercialTextLayer.add(this.add.text(x+132,y+4,'L'+(Number(shop.level)||1),{fontFamily:'monospace',fontSize:'11px',fontStyle:'bold',color:'#fff7d8',backgroundColor:'#34583e',padding:{x:4,y:3}}).setOrigin(.5,0));
       }
      };
@@ -763,33 +763,31 @@ function bootPhaserMapBridge(){
       const trafficLayer=this.add.graphics();
       const drawTrafficAndPeople=()=>{
        const g=trafficLayer;g.clear();
-       // 50 kenderaan diagihkan sekata pada lapan lorong jalan mendatar.
+       // 50 kenderaan: diagihkan ke semua 14 lorong (10 mendatar + 4 menegak), minimum 3 setiap lorong.
        const carColors=[0xc94f48,0x477fa8,0xe3ad43,0xe8e3d4,0x568b68,0x8c6ca5,0xd47b43,0x303d48,0x5c9c9a,0xb8a36c];
-       const laneY=[428,464,768,804,1108,1144,1448,1484,1788,1824],carCount=50,perLane=Math.ceil(carCount/laneY.length),span=1248;
-       for(let i=0;i<carCount;i++){
-        const lane=i%8,group=Math.floor(i/8),dir=(lane%2===1)?-1:1;
-        const speed=.42+(i%7)*.075,bodyW=[42,46,54,50,42][i%5],y=laneY[lane];
-        const travel=tick*speed*dir+group*(span/perLane)+lane*137;
-        const raw=((travel%span)+span)%span;
-        const x=95+(dir<0?bodyW:0)+raw;
-        const safeX=Phaser.Math.Clamp(x,dir<0?95+bodyW:95,dir<0?1385:1385-bodyW);
-        const px=v=>safeX+v*dir;
-        const color=carColors[i%carColors.length],kind=i%10;
-        g.fillStyle(0x192427,.28);g.fillEllipse(safeX+bodyW*.5*dir,y+5,bodyW+10,24);
-        g.fillStyle(0x202a2e,1);
-        for(const wx of [7,bodyW-9])for(const wy of [-10,10])g.fillRoundedRect(px(wx)-4,y+wy-3,9,7,2);
-        g.fillStyle(0x344047,1);g.fillRoundedRect(px(0),y-12,bodyW,24,kind===2?5:7);
-        g.fillStyle(color,1);g.fillRoundedRect(px(2),y-10,bodyW-4,20,kind===2?4:6);
-        if(kind===2||kind===7){
-         g.fillStyle(0x29434b,1);g.fillRoundedRect(px(10),y-9,bodyW-19,18,4);
-         g.fillStyle(0x9fc5ce,1);g.fillRect(px(13),y-7,bodyW-25,6);g.fillRect(px(13),y+1,bodyW-25,6);
-        }else{
-         g.fillStyle(0x29434b,1);g.fillRoundedRect(px(9),y-8,bodyW-18,16,4);
-         g.fillStyle(0x9fc5ce,1);g.fillTriangle(px(12),y-7,px(bodyW-13),y-7,px(bodyW-15),y-1);g.fillTriangle(px(10),y+1,px(bodyW-15),y+1,px(bodyW-13),y+7);
+       const laneY=[428,464,768,804,1108,1144,1448,1484,1788,1824],verticalX=[496,530,906,940],lanes=[...laneY.map(y=>({axis:'h',pos:y,start:95,end:1385})),...verticalX.map(x=>({axis:'v',pos:x,start:110,end:2200}))],carCount=50,laneCounts=lanes.map((_,k)=>Math.floor(carCount/lanes.length)+(k<carCount%lanes.length?1:0));
+       const drawCar=(cx,cy,length,width,dir,vertical,color,kind)=>{
+        const rot=vertical?Math.PI/2:0,co=Math.cos(rot),si=Math.sin(rot),tr=(x,y)=>({x:cx+(x*co-y*si)*dir,y:cy+(x*si+y*co)*dir});
+        const poly=(pts,fill)=>{g.fillStyle(fill,1);g.fillPoints(pts.map(([x,y])=>tr(x,y)),true)};
+        g.fillStyle(0x192427,.25);g.fillEllipse(cx,cy+4,length*.9,width*.9);
+        poly([[-length/2+3,-width/2], [length/2-3,-width/2],[length/2,width/2-4],[length/2-5,width/2],[-length/2+5,width/2],[-length/2,width/2-4]],0x202a2e);
+        poly([[-length/2+5,-width/2+2],[length/2-5,-width/2+2],[length/2-3,width/2-5],[length/2-7,width/2-2],[-length/2+7,width/2-2],[-length/2+3,width/2-5]],color);
+        poly([[-length*.18,-width*.36],[length*.23,-width*.36],[length*.34,-width*.12],[-length*.28,-width*.12]],0x29434b);
+        poly([[-length*.22,width*.10],[length*.28,width*.10],[length*.18,width*.34],[-length*.18,width*.34]],0x29434b);
+        poly([[-length*.13,-width*.31],[length*.16,-width*.31],[length*.25,-width*.16],[-length*.22,-width*.16]],0x9fc5ce);
+        poly([[-length*.17,width*.14],[length*.22,width*.14],[length*.15,width*.29],[-length*.13,width*.29]],0x9fc5ce);
+        for(const side of [-1,1]){const a=tr(length*.40,side*width*.34),b=tr(-length*.40,side*width*.34);g.fillStyle(0xfff1bd,1);g.fillCircle(a.x,a.y,2.5);g.fillStyle(0xa93e3b,1);g.fillCircle(b.x,b.y,2.5)}
+        if(kind%7===0){const roof=tr(0,0);g.fillStyle(0xf5e5b8,1);g.fillEllipse(roof.x,roof.y,length*.23,width*.18)}
+       };
+       let carIndex=0;
+       for(let lane=0;lane<lanes.length;lane++){
+        const spec=lanes[lane],count=laneCounts[lane],vertical=spec.axis==='v',span=spec.end-spec.start,dir=lane%2===0?1:-1;
+        for(let n=0;n<count;n++){
+         const i=carIndex++,length=[43,48,54,50,44][i%5],width=[22,23,25,22,21][i%5],speed=.48+(i%7)*.065,phase=(n+.5)*span/count;
+         const travel=((phase+tick*speed*dir)%span+span)%span,along=spec.start+travel;
+         const x=vertical?spec.pos:along,y=vertical?along:spec.pos;
+         drawCar(x,y,length,width,dir,vertical,carColors[i%carColors.length],i%10);
         }
-        if(kind===3||kind===8){g.fillStyle(0xf4e6c5,1);g.fillRect(px(4),y-2,bodyW-8,4)}
-        g.fillStyle(0xfff1bd,1);g.fillRoundedRect(px(bodyW-4),y-7,3,5,1);g.fillRoundedRect(px(bodyW-4),y+2,3,5,1);
-        g.fillStyle(0xa93e3b,1);g.fillRoundedRect(px(2),y-7,3,5,1);g.fillRoundedRect(px(2),y+2,3,5,1);
        }
        // 180 pejalan kaki (100 asal + 80 tambahan), diagih sekata pada kaki lima setiap blok hingga hujung selatan bandar.
        const routes=[
@@ -821,16 +819,22 @@ function bootPhaserMapBridge(){
         const pos=pointAt(route,distance),bob=Math.abs(Math.sin(tick*.12+i*1.71))*1.1,angle=pos.angle+Math.PI/2+(dir<0?Math.PI:0);
         const xy=(lx,ly)=>local(pos.x,pos.y,angle,lx,ly);
         const shirt=shirts[i%shirts.length],skin=skins[i%skins.length],hair=hairs[i%hairs.length];
-        g.fillStyle(0x2d3e2a,.24);g.fillEllipse(pos.x,pos.y+8,15,7);
-        let q=xy(-3,3+bob);g.fillStyle(0x30383a,1);g.fillRoundedRect(q.x-2,q.y,4,5,1);
-        q=xy(3,3+bob);g.fillRoundedRect(q.x-2,q.y,4,5,1);
-        q=xy(0,-1+bob);g.fillStyle(shirt,1);g.fillRoundedRect(q.x-4.5,q.y-1,9,10,3);
-        for(const side of [-1,1]){q=xy(side*5,-1+bob);g.fillStyle(skin,1);g.fillCircle(q.x,q.y+1,2)}
-        q=xy(0,-8+bob);g.fillStyle(hair,1);g.fillCircle(q.x,q.y,4.2);
-        q=xy(0,-8.3+bob);g.fillStyle(skin,1);g.fillCircle(q.x,q.y+1,3.2);
-        if(i%9===3||i%9===6){q=xy(0,-10+bob);g.fillStyle(i%2?0x9b5d8b:0x385b78,1);g.fillEllipse(q.x,q.y,7,3.5)}
-        if(i%7===0){q=xy(5,1+bob);g.fillStyle(0x8b6848,1);g.fillRoundedRect(q.x-1.8,q.y-2,3.6,5,1)}
-        if(i%13===0){q=xy(-5,-2+bob);g.fillStyle(0xf0c45e,1);g.fillCircle(q.x,q.y,2.2)}
+        g.fillStyle(0x2d3e2a,.25);g.fillEllipse(pos.x,pos.y+10,19,8);
+        const stride=Math.sin(tick*.19+i*1.37)*3.1,armSwing=Math.sin(tick*.19+i*1.37+Math.PI)*2.4;
+        let q=xy(-3.2,4+bob);g.lineStyle(3.2,0x30383a,1);let q2=xy(-3.2+stride,9+bob);g.lineBetween(q.x,q.y,q2.x,q2.y);
+        q=xy(3.2,4+bob);q2=xy(3.2-stride,9+bob);g.lineBetween(q.x,q.y,q2.x,q2.y);
+        q=xy(-5.5,-1+bob);q2=xy(-5.5+armSwing,4+bob);g.lineStyle(2.8,skin,1);g.lineBetween(q.x,q.y,q2.x,q2.y);
+        q=xy(5.5,-1+bob);q2=xy(5.5-armSwing,4+bob);g.lineBetween(q.x,q.y,q2.x,q2.y);
+        q=xy(0,-1+bob);g.fillStyle(0x263d3b,1);g.fillRoundedRect(q.x-6.2,q.y-4,12.4,14,4);
+        g.fillStyle(shirt,1);g.fillRoundedRect(q.x-5.2,q.y-3,10.4,12,3);
+        g.fillStyle(skin,1);g.fillCircle(q.x,q.y+8,2.2);
+        q=xy(0,-9+bob);g.fillStyle(hair,1);g.fillCircle(q.x,q.y,5.4);
+        q=xy(0,-9.1+bob);g.fillStyle(skin,1);g.fillCircle(q.x,q.y+1.2,4.2);
+        q=xy(-1.5,-9.5+bob);g.fillStyle(0x292b2c,1);g.fillCircle(q.x,q.y,0.8);
+        q=xy(1.5,-9.5+bob);g.fillCircle(q.x,q.y,0.8);
+        if(i%9===3||i%9===6){q=xy(0,-12+bob);g.fillStyle(i%2?0x9b5d8b:0x385b78,1);g.fillEllipse(q.x,q.y,9,4.5)}
+        if(i%7===0){q=xy(7,1+bob);g.fillStyle(0x8b6848,1);g.fillRoundedRect(q.x-2.2,q.y-2.5,4.4,7,1)}
+        if(i%13===0){q=xy(-7,-2+bob);g.fillStyle(0xf0c45e,1);g.fillCircle(q.x,q.y,2.8)}
        }
       };
       drawTrafficAndPeople();
