@@ -635,7 +635,7 @@ function bootPhaserMapBridge(){
        const block=Math.floor(lot/4),j=lot%4,plot=lotPos(block),bx=plot.x,by=plot.y;
        const x=bx+8+(j%2)*156,y=by+8+(j>=2?128:0),col=palettes[shop.type]||palettes.warung,g=commercialLayer;
        // Tapak kedai penuh dengan fasad, bumbung dan papan tanda tersendiri mengikut kategori.
-       const g=commercialLayer,baseY=y;
+       const baseY=y;
        g.fillStyle(0x263326,.30);g.fillEllipse(x+75,baseY+105,140,13);
        g.fillStyle(0xdbc99c,1);g.fillRoundedRect(x,baseY,150,108,8);
        g.fillStyle(0x4b3b32,1);g.fillRoundedRect(x+5,baseY+5,140,98,6);
