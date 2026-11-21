@@ -620,7 +620,7 @@ function bootPhaserMapBridge(){
        g.fillStyle(0x704a35,1);g.fillRect(x+67,y+70,17,25);
        g.fillStyle(0xf2d88d,1);g.fillRect(x+20,y+27,5,3);g.fillRect(x+125,y+27,5,3);
        const def=residentialDefs.find(d=>d.id===home.id);
-       residentialTextLayer.add(this.add.text(x+75,y+101,(def?def.name:'KEDIAMAN').toUpperCase(),{fontFamily:'system-ui',fontSize:'9px',fontStyle:'bold',color:'#fff6dc',stroke:'#574532',strokeThickness:2}).setOrigin(.5,0));
+       residentialTextLayer.add(this.add.text(x+75,y+101,(def?def.name:'KEDIAMAN').toUpperCase(),{fontFamily:'system-ui',fontSize:'11px',fontStyle:'bold',color:'#fff9e8',stroke:'#344b3b',strokeThickness:3,backgroundColor:'#536d4b',padding:{x:4,y:2},align:'center',wordWrap:{width:142},maxLines:1}).setOrigin(.5,0));
       }
      };
      drawResidentialBuildings();
@@ -635,20 +635,23 @@ function bootPhaserMapBridge(){
        const block=Math.floor(lot/4),j=lot%4,plot=lotPos(block),bx=plot.x,by=plot.y;
        const x=bx+8+(j%2)*156,y=by+8+(j>=2?128:0),col=palettes[shop.type]||palettes.warung,g=commercialLayer;
        g.fillStyle(0x263326,.28);g.fillRoundedRect(x+2,y+14,140,91,5);
-       g.fillStyle(0xdbc99c,1);g.fillRect(x+2,y+2,146,102);
-       g.fillStyle(0x553f32,1);g.fillRect(x+8,y+6,134,84);
-       g.fillStyle(col[0],1);g.fillRect(x+13,y+11,124,74);
-       g.fillStyle(col[1],1);g.fillRect(x+19,y+17,112,62);
-       g.lineStyle(1,0x8a6547,.65);for(let yy=y+22;yy<y+72;yy+=11)g.lineBetween(x+21,yy,x+129,yy);
-       g.fillStyle(0xead8ac,1);g.fillRect(x+45,y+83,60,12);
-       g.fillStyle(col[0],1);for(let xx=x+48;xx<x+102;xx+=12)g.fillRect(xx,y+84,6,9);
-       g.fillStyle(0x5b4838,1);g.fillRect(x+64,y+95,22,10);
-       g.fillStyle(0x9cc4bd,1);g.fillRect(x+68,y+97,7,6);
-       g.fillStyle(0xf7d77f,1);g.fillRect(x+17,y+9,5,5);g.fillRect(x+128,y+9,5,5);
+       g.fillStyle(0xdbc99c,1);g.fillRoundedRect(x,y,150,108,7);
+       g.fillStyle(0x553f32,1);g.fillRoundedRect(x+5,y+4,140,91,5);
+       g.fillStyle(col[0],1);g.fillRect(x+9,y+8,132,82);
+       g.fillStyle(col[1],1);g.fillRect(x+14,y+13,122,70);
+       g.fillStyle(0x273d35,1);g.fillRoundedRect(x+24,y+17,102,20,4);
+       g.fillStyle(0xf7e4b2,1);g.fillRoundedRect(x+28,y+20,94,14,3);
+       g.lineStyle(2,0x8a6547,.8);for(let yy=y+42;yy<y+75;yy+=10)g.lineBetween(x+17,yy,x+133,yy);
+       g.fillStyle(0xead8ac,1);g.fillRect(x+40,y+84,70,12);
+       g.fillStyle(col[0],1);for(let xx=x+43;xx<x+108;xx+=11)g.fillRect(xx,y+85,6,10);
+       g.fillStyle(0x5b4838,1);g.fillRoundedRect(x+64,y+92,24,16,3);
+       g.fillStyle(0x9cc4bd,1);g.fillRect(x+68,y+95,7,7);g.fillRect(x+78,y+95,7,7);
+       g.fillStyle(0xffe7a0,1);g.fillCircle(x+18,y+18,3);g.fillCircle(x+132,y+18,3);
+       g.fillStyle(0xffffff,.20);g.fillRect(x+13,y+39,124,2);
        const type=bizType(shop);
-       commercialTextLayer.add(this.add.text(x+75,y+3,type.emoji,{fontFamily:'system-ui',fontSize:'15px'}).setOrigin(.5,0));
-       commercialTextLayer.add(this.add.text(x+75,y+100,type.name.toUpperCase(),{fontFamily:'system-ui',fontSize:'8px',fontStyle:'bold',color:'#fff4d7',stroke:'#34583e',strokeThickness:2}).setOrigin(.5,0));
-       commercialTextLayer.add(this.add.text(x+132,y+4,'L'+(Number(shop.level)||1),{fontFamily:'monospace',fontSize:'9px',fontStyle:'bold',color:'#fff7d8',backgroundColor:'#34583e',padding:{x:3,y:2}}).setOrigin(.5,0));
+       commercialTextLayer.add(this.add.text(x+75,y+3,type.emoji,{fontFamily:'system-ui',fontSize:'19px'}).setOrigin(.5,0));
+       commercialTextLayer.add(this.add.text(x+75,y+109,type.name.toUpperCase(),{fontFamily:'system-ui',fontSize:'11px',fontStyle:'bold',color:'#fff8df',stroke:'#263d30',strokeThickness:3,backgroundColor:'#34583e',padding:{x:5,y:3},align:'center',wordWrap:{width:142},maxLines:1}).setOrigin(.5,0));
+       commercialTextLayer.add(this.add.text(x+132,y+4,'L'+(Number(shop.level)||1),{fontFamily:'monospace',fontSize:'11px',fontStyle:'bold',color:'#fff7d8',backgroundColor:'#34583e',padding:{x:4,y:3}}).setOrigin(.5,0));
       }
      };
      drawCommercialBuildings();
@@ -924,6 +927,7 @@ function bootPhaserMapBridge(){
   phaserMapBridge=new Phaser.Game({
    type:Phaser.CANVAS,parent:mount,width:900,height:1000,transparent:true,
    render:{antialias:true,roundPixels:false,transparent:true},
+   resolution:Math.min(window.devicePixelRatio||1,2),
    scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},
    scene:[GaspuroMapBridgeScene],banner:false
   });
