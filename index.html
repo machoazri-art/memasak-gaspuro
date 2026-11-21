@@ -845,9 +845,9 @@ function bootPhaserMapBridge(){
       for(let n=0;n<68;n++){
        const p=plots[n];if(!p)continue;
        const x=p.x,y=p.y,c=zoneColors[p.zone]||zoneColors.komersial;
-       lotLayer.fillStyle(0xd6e5b9,1);lotLayer.fillRoundedRect(x-8,y-8,326,252,12);
-       lotLayer.lineStyle(2,0xfff8df,1);lotLayer.strokeRoundedRect(x-8,y-8,326,252,12);
-       lotLayer.fillStyle(0x9fb48b,1);lotLayer.fillRect(x-1,y-1,312,238);
+       lotLayer.fillStyle(0xd6e5b9,1);lotLayer.fillRoundedRect(x-4,y-4,158,120,8);
+       lotLayer.lineStyle(2,0xfff8df,1);lotLayer.strokeRoundedRect(x-4,y-4,158,120,8);
+       lotLayer.fillStyle(0x9fb48b,1);lotLayer.fillRect(x,y,150,112);
        lotLayer.fillStyle(p.occupied?0x88a879:p.unlocked?0xb8d39a:0x9aa98e,1);lotLayer.fillRect(x,y,150,112);
        lotLayer.fillStyle(c,.20);lotLayer.fillRect(x,y,150,112);
        lotLayer.lineStyle(3,c,1);lotLayer.strokeRect(x+1.5,y+1.5,147,109);
