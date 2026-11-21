@@ -765,21 +765,45 @@ function bootPhaserMapBridge(){
        const g=trafficLayer;g.clear();
        // 80 kenderaan: 50 asal + 30 tambahan. Semua 18 lorong termasuk perimeter mempunyai trafik.
        const carColors=[0xc94f48,0x477fa8,0xe3ad43,0xe8e3d4,0x568b68,0x8c6ca5,0xd47b43,0x303d48,0x5c9c9a,0xb8a36c];
-       const laneY=[428,464,768,804,1108,1144,1448,1484,1788,1824],verticalX=[496,530,906,940];
-       const lanes=[
-        ...laneY.map(y=>({axis:'h',pos:y,start:95,end:1385,perimeter:false})),
-        ...verticalX.map(x=>({axis:'v',pos:x,start:110,end:2200,perimeter:false})),
-        {axis:'h',pos:47,start:-680,end:1580,perimeter:true},
-        {axis:'h',pos:2267,start:-680,end:1580,perimeter:true},
-        {axis:'v',pos:50,start:-680,end:2380,perimeter:true},
-        {axis:'v',pos:1430,start:-680,end:2380,perimeter:true}
+       // Trafik menggunakan gelung jalan bersambung dengan selekoh lembut di persimpangan.
+       const carColors=[0xc94f48,0x477fa8,0xe3ad43,0xe8e3d4,0x568b68,0x8c6ca5,0xd47b43,0x303d48,0x5c9c9a,0xb8a36c];
+       const roadLoops=[
+        [[496,428],[906,428],[906,768],[496,768]],
+        [[496,768],[906,768],[906,1108],[496,1108]],
+        [[496,1108],[906,1108],[906,1448],[496,1448]],
+        [[496,1448],[906,1448],[906,1788],[496,1788]],
+        [[50,47],[1430,47],[1430,2267],[50,2267]]
        ];
-       const carCount=80,laneCounts=lanes.map((_,k)=>Math.floor(carCount/lanes.length)+(k<carCount%lanes.length?1:0));
-       const drawCar=(cx,cy,length,width,dir,vertical,color,kind)=>{
-        const rot=vertical?Math.PI/2:0,co=Math.cos(rot),si=Math.sin(rot),tr=(x,y)=>({x:cx+(x*co-y*si)*dir,y:cy+(x*si+y*co)*dir});
+       const buildSmoothLoop=(points,radius=34)=>{
+        const sampled=[];
+        for(let k=0;k<points.length;k++){
+         const prev=points[(k-1+points.length)%points.length],cur=points[k],next=points[(k+1)%points.length];
+         const d1=Math.hypot(cur[0]-prev[0],cur[1]-prev[1]),d2=Math.hypot(next[0]-cur[0],next[1]-cur[1]),r=Math.min(radius,d1*.22,d2*.22);
+         const a=[cur[0]+(prev[0]-cur[0])*r/d1,cur[1]+(prev[1]-cur[1])*r/d1];
+         const b=[cur[0]+(next[0]-cur[0])*r/d2,cur[1]+(next[1]-cur[1])*r/d2];
+         const steps=10;
+         for(let j=0;j<=steps;j++){const t=j/steps,u=1-t;sampled.push([u*u*a[0]+2*u*t*cur[0]+t*t*b[0],u*u*a[1]+2*u*t*cur[1]+t*t*b[1]])}
+         const following=points[(k+1)%points.length],nextPrev=[following[0]+(cur[0]-following[0])*Math.min(radius,Math.hypot(following[0]-cur[0],following[1]-cur[1])*.22)/Math.hypot(following[0]-cur[0],following[1]-cur[1]),following[1]+(cur[1]-following[1])*Math.min(radius,Math.hypot(following[0]-cur[0],following[1]-cur[1])*.22)/Math.hypot(following[0]-cur[0],following[1]-cur[1])];
+         const seg=Math.hypot(nextPrev[0]-b[0],nextPrev[1]-b[1]),n=Math.max(2,Math.ceil(seg/18));
+         for(let j=1;j<=n;j++){const t=j/n;sampled.push([b[0]+(nextPrev[0]-b[0])*t,b[1]+(nextPrev[1]-b[1])*t])}
+        }
+        const lengths=sampled.map((p,k)=>Math.hypot(sampled[(k+1)%sampled.length][0]-p[0],sampled[(k+1)%sampled.length][1]-p[1]));
+        const cumulative=[0];for(const len of lengths)cumulative.push(cumulative[cumulative.length-1]+len);
+        return{points:sampled,lengths,cumulative,total:cumulative[cumulative.length-1]};
+       };
+       const trafficRoutes=roadLoops.map(loop=>buildSmoothLoop(loop));
+       const pointOnTrafficRoute=(route,distance)=>{
+        const d=((distance%route.total)+route.total)%route.total;let lo=0,hi=route.lengths.length;
+        while(lo<hi){const mid=(lo+hi)>>1;if(route.cumulative[mid+1]<d)lo=mid+1;else hi=mid}
+        const k=Math.min(lo,route.lengths.length-1),t=(d-route.cumulative[k])/Math.max(.001,route.lengths[k]),a=route.points[k],b=route.points[(k+1)%route.points.length];
+        return{x:a[0]+(b[0]-a[0])*t,y:a[1]+(b[1]-a[1])*t,angle:Math.atan2(b[1]-a[1],b[0]-a[0])};
+       };
+       const carCount=80,vehiclesPerRoute=roadLoops.map((_,k)=>Math.floor(carCount/roadLoops.length)+(k<carCount%roadLoops.length?1:0));
+       const drawCar=(cx,cy,length,width,angle,color,kind)=>{
+        const co=Math.cos(angle),si=Math.sin(angle),tr=(x,y)=>({x:cx+x*co-y*si,y:cy+x*si+y*co});
         const poly=(pts,fill)=>{g.fillStyle(fill,1);g.fillPoints(pts.map(([x,y])=>tr(x,y)),true)};
         g.fillStyle(0x192427,.25);g.fillEllipse(cx,cy+4,length*.9,width*.9);
-        poly([[-length/2+3,-width/2], [length/2-3,-width/2],[length/2,width/2-4],[length/2-5,width/2],[-length/2+5,width/2],[-length/2,width/2-4]],0x202a2e);
+        poly([[-length/2+3,-width/2],[length/2-3,-width/2],[length/2,width/2-4],[length/2-5,width/2],[-length/2+5,width/2],[-length/2,width/2-4]],0x202a2e);
         poly([[-length/2+5,-width/2+2],[length/2-5,-width/2+2],[length/2-3,width/2-5],[length/2-7,width/2-2],[-length/2+7,width/2-2],[-length/2+3,width/2-5]],color);
         poly([[-length*.18,-width*.36],[length*.23,-width*.36],[length*.34,-width*.12],[-length*.28,-width*.12]],0x29434b);
         poly([[-length*.22,width*.10],[length*.28,width*.10],[length*.18,width*.34],[-length*.18,width*.34]],0x29434b);
@@ -789,14 +813,12 @@ function bootPhaserMapBridge(){
         if(kind%7===0){const roof=tr(0,0);g.fillStyle(0xf5e5b8,1);g.fillEllipse(roof.x,roof.y,length*.23,width*.18)}
        };
        let carIndex=0;
-       for(let lane=0;lane<lanes.length;lane++){
-        const spec=lanes[lane],count=laneCounts[lane],vertical=spec.axis==='v',span=spec.end-spec.start,dir=lane%2===0?1:-1;
+       for(let routeIndex=0;routeIndex<trafficRoutes.length;routeIndex++){
+        const route=trafficRoutes[routeIndex],count=vehiclesPerRoute[routeIndex],direction=routeIndex%2===0?1:-1;
         for(let n=0;n<count;n++){
-         const i=carIndex++,length=[43,48,54,50,44][i%5],width=[22,23,25,22,21][i%5],speed=.48+(i%7)*.065,phase=(n+.5)*span;
-         // Gelung ulang-alik (ping-pong): kenderaan berpatah balik di hujung lorong, bukan teleport.
-         const cycle=((phase+tick*speed)%(2*span)+2*span)%(2*span),forward=cycle<=span,travel=forward?cycle:2*span-cycle,along=spec.start+travel;
-         const x=vertical?spec.pos:along,y=vertical?along:spec.pos,heading=dir*(forward?1:-1);
-         drawCar(x,y,length,width,heading,vertical,carColors[i%carColors.length],i%10);
+         const i=carIndex++,length=[43,48,54,50,44][i%5],width=[22,23,25,22,21][i%5],speed=.62+(i%7)*.055,spacing=route.total/count,phase=(n+.5)*spacing;
+         const distance=phase+tick*speed*direction,pos=pointOnTrafficRoute(route,distance);
+         drawCar(pos.x,pos.y,length,width,pos.angle+(direction<0?Math.PI:0),carColors[i%carColors.length],i%10);
         }
        }
        // 180 pejalan kaki (100 asal + 80 tambahan), diagih sekata pada kaki lima setiap blok hingga hujung selatan bandar.
