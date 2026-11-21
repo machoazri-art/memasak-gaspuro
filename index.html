@@ -324,6 +324,47 @@ function drawMap(){
  for(let y=245;y<390;y+=95){drawStreetLamp(180,y);drawStreetLamp(700,y)}
  // houses and trees around
  for(let i=0;i<17;i++){let x=160+(i%6)*145,y=12+Math.floor(i/6)*62;if(y>70&&y<180)continue;ctx.fillStyle='#699b5d';ctx.beginPath();ctx.arc(x,y,17,0,7);ctx.fill();ctx.fillStyle='#4e854f';ctx.beginPath();ctx.arc(x-5,y-6,10,0,7);ctx.fill()}
+ // Persekitaran bandar gaya pixel-art: kaki lima, lintasan dan landskap.
+ // Corak jubin kaki lima di tepi jalan.
+ ctx.fillStyle='#c9c5b5';ctx.fillRect(-700,70,2300,13);ctx.fillRect(-700,171,2300,12);ctx.fillRect(-700,430,2300,13);ctx.fillRect(-700,532,2300,12);
+ ctx.fillRect(35,-700,12,1800);ctx.fillRect(135,-700,12,1800);ctx.fillRect(745,-700,12,1800);ctx.fillRect(845,-700,12,1800);
+ for(let y=78;y<550;y+=18)for(let x=-680;x<1550;x+=22){
+   if((y>90&&y<160)||(y>450&&y<520))continue;
+   ctx.fillStyle=((x/22+y/18|0)%2===0)?'rgba(255,255,255,.12)':'rgba(91,104,87,.08)';
+   ctx.fillRect(x,y,20,15);
+ }
+ // Lintasan pejalan kaki pada simpang jalan.
+ function crosswalk(x,y,vertical=false){
+   ctx.save();ctx.fillStyle='#eee8d5';
+   for(let n=0;n<7;n++){if(vertical)ctx.fillRect(x+n*9,y,5,54);else ctx.fillRect(x,y+n*9,54,5)}
+   ctx.restore();
+ }
+ crosswalk(55,91,true);crosswalk(765,451,true);crosswalk(330,91,false);crosswalk(1010,451,false);
+ // Pokok berlapis, bayang, batang dan tompokan daun pixel-art.
+ function townTree(x,y,scale=1){
+   ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);
+   ctx.fillStyle='rgba(42,57,38,.22)';ctx.beginPath();ctx.ellipse(5,13,23,10,0,0,Math.PI*2);ctx.fill();
+   ctx.fillStyle='#79583b';ctx.fillRect(-4,-1,9,22);ctx.fillStyle='#a47b4e';ctx.fillRect(-2,2,3,15);
+   const blobs=[[-12,-9,13,'#4c854b'],[1,-15,16,'#5f9b51'],[13,-7,13,'#397b49'],[-3,0,15,'#70a94f'],[10,4,10,'#4c8b45']];
+   for(const b of blobs){ctx.fillStyle=b[3];ctx.beginPath();ctx.arc(b[0],b[1],b[2],0,Math.PI*2);ctx.fill()}
+   ctx.fillStyle='rgba(211,235,143,.32)';ctx.fillRect(-9,-20,7,4);ctx.fillRect(5,-10,6,4);
+   ctx.restore();
+ }
+ function planter(x,y){
+   rounded(x-13,y-7,26,15,3,'#a66e4e','#76533e');
+   ctx.fillStyle='#5a934b';ctx.beginPath();ctx.arc(x-5,y-8,7,0,7);ctx.arc(x+4,y-10,8,0,7);ctx.arc(x+9,y-5,5,0,7);ctx.fill();
+   ctx.fillStyle='#e9b6bc';ctx.fillRect(x-5,y-14,3,3);ctx.fillStyle='#f4d77b';ctx.fillRect(x+5,y-16,3,3);
+ }
+ function bench(x,y){
+   ctx.fillStyle='rgba(45,53,42,.2)';ctx.fillRect(x-15,y+7,32,5);
+   ctx.fillStyle='#594638';ctx.fillRect(x-15,y-5,31,5);ctx.fillRect(x-15,y+2,31,5);
+   ctx.fillStyle='#bd9565';ctx.fillRect(x-13,y-4,27,3);ctx.fillRect(x-13,y+3,27,3);
+   ctx.fillStyle='#414b48';ctx.fillRect(x-11,y+7,3,5);ctx.fillRect(x+10,y+7,3,5);
+ }
+ // Hiasan plaza dan taman kecil di sepanjang kaki lima.
+ for(const p of [[205,183],[680,183],[205,417],[680,417],[20,250],[875,250],[20,610],[875,610]])planter(p[0],p[1]);
+ for(const p of [[270,178],[620,420],[15,330],[870,330]])bench(p[0],p[1]);
+ for(const p of [[20,40],[920,40],[20,570],[920,570],[260,80],[650,560],[15,390],[885,390]])townTree(p[0],p[1],.85);
  // market plaza
  rounded(155,190,570,220,18,'#e8d7ae','#fff5d7');
  ctx.fillStyle='#d0bb8d';ctx.fillRect(170,200,540,200);
@@ -336,6 +377,14 @@ function drawMap(){
  else{ctx.fillStyle='#8c7052';ctx.fillRect(p.x+20,p.y+75,102,13);ctx.fillStyle=type.color;ctx.beginPath();ctx.moveTo(p.x+13,p.y+47);ctx.lineTo(p.x+71,p.y+8);ctx.lineTo(p.x+129,p.y+47);ctx.closePath();ctx.fill();rounded(p.x+25,p.y+42,92,48,5,'#fff2d1','#8b7659');ctx.fillText(type.emoji,p.x+8,p.y+31)}
  // Perincian fasad: papan tanda, jalur awning dan lampu tingkap.
   ctx.fillStyle='rgba(255,255,255,.35)';ctx.fillRect(p.x+24,p.y+47,94,5);ctx.fillStyle=type.color;ctx.fillRect(p.x+25,p.y+53,92,5);ctx.fillStyle='#fff1c4';ctx.beginPath();ctx.arc(p.x+31,p.y+77,3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(p.x+111,p.y+77,3,0,Math.PI*2);ctx.fill();
+  // Papan tanda kedai, tingkap berbingkai dan lampu fasad.
+  ctx.fillStyle='#493d32';ctx.fillRect(p.x+43,p.y+30,56,15);
+  ctx.fillStyle='#f5e5b6';ctx.fillRect(p.x+46,p.y+32,50,10);
+  ctx.fillStyle='#6d543d';ctx.fillRect(p.x+48,p.y+34,46,2);
+  ctx.fillStyle='#d8e9e5';ctx.fillRect(p.x+31,p.y+60,15,15);ctx.fillRect(p.x+96,p.y+60,15,15);
+  ctx.strokeStyle='#6f6652';ctx.lineWidth=2;ctx.strokeRect(p.x+31,p.y+60,15,15);ctx.strokeRect(p.x+96,p.y+60,15,15);
+  ctx.fillStyle='#f7d77f';ctx.fillRect(p.x+26,p.y+49,3,3);ctx.fillRect(p.x+113,p.y+49,3,3);
+
   ctx.fillStyle='#344636';ctx.font='bold 12px system-ui';ctx.fillText('Lv.'+b.level,p.x+82,p.y+108);ctx.fillStyle='#fff9e9';ctx.beginPath();ctx.arc(p.x+119,p.y+15,13,0,7);ctx.fill();ctx.fillStyle='#38764b';ctx.font='bold 11px system-ui';ctx.fillText('$',p.x+115,p.y+19)}
  else{ctx.fillStyle=unlocked?'#f8f3d9':'#9aa58f';ctx.font='bold 25px system-ui';ctx.fillText(unlocked?'+':'🔒',p.x+59,p.y+65);ctx.fillStyle='#52664e';ctx.font='11px system-ui';ctx.fillText(unlocked?'LOT KOSONG':'LEVEL '+(Math.ceil(i/2)+1),p.x+32,p.y+91)}
  if(s.selectedLot===i){ctx.strokeStyle='#ffb72f';ctx.lineWidth=5;ctx.strokeRect(p.x+2,p.y+2,138,114)}
