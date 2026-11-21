@@ -488,48 +488,7 @@ function drawMap(now=0){
  plots.push({i:shopIndex,x:q.x,y:q.y,w:150,h:112,unlocked:shopUnlocked});
  }
  }
- // Rangkaian jalan dalaman: lebar, asfalt, bahu dan garisan sama seperti jalan perimeter.
- // Lukis bahu jalan dahulu supaya semua persimpangan bersambung kemas.
- ctx.fillStyle='#d8d2bc';
- for(const rx of [476,886])ctx.fillRect(rx,100,84,2150);
- for(let row=0;row<6;row++)ctx.fillRect(95,402+row*340,1265,88);
- // Asfalt dengan lebar seragam 70px.
- ctx.fillStyle='#737e80';
- for(const rx of [483,893])ctx.fillRect(rx,100,70,2150);
- for(let row=0;row<6;row++)ctx.fillRect(95,411+row*340,1265,70);
- // Garisan tepi jalan dan garisan tengah putus-putus.
- ctx.strokeStyle='rgba(246,233,189,.72)';ctx.lineWidth=2;ctx.setLineDash([]);
- ctx.beginPath();
- for(const rx of [483,553,893,963]){ctx.moveTo(rx,100);ctx.lineTo(rx,2250)}
- for(let row=0;row<6;row++){const cy=446+row*340;ctx.moveTo(95,411+row*340);ctx.lineTo(1360,411+row*340);ctx.moveTo(95,481+row*340);ctx.lineTo(1360,481+row*340)}
- ctx.stroke();
- // Garisan tengah putih yang lebih jelas dan konsisten untuk semua jalan.
- ctx.strokeStyle='#fbfbf3';ctx.lineWidth=4;ctx.lineCap='round';ctx.setLineDash([30,22]);ctx.beginPath();
- for(const rx of [518,928]){ctx.moveTo(rx,100);ctx.lineTo(rx,2250)}
- for(let row=0;row<6;row++){const cy=446+row*340;ctx.moveTo(95,cy);ctx.lineTo(1360,cy)}
- ctx.stroke();ctx.setLineDash([]);
- // Garisan tepi putih berterusan dengan sedikit ketelusan, memastikan asfalt nampak kemas.
- ctx.strokeStyle='rgba(255,255,248,.9)';ctx.lineWidth=3;ctx.beginPath();
- for(const rx of [486,550,896,960]){ctx.moveTo(rx,110);ctx.lineTo(rx,2240)}
- for(let row=0;row<6;row++){const y=414+row*340;ctx.moveTo(105,y);ctx.lineTo(1350,y);ctx.moveTo(105,y+64);ctx.lineTo(1350,y+64)}
- ctx.stroke();
- // Lintasan zebra pada setiap simpang jalan tengah, jarak dan saiz konsisten.
- function roadCrosswalk(x,y,vertical=false){
-   ctx.fillStyle='#f4eedc';
-   for(let n=0;n<7;n++){
-     if(vertical)ctx.fillRect(x+n*8,y,5,48);
-     else ctx.fillRect(x,y+n*8,48,5);
-   }
- }
- for(let row=0;row<6;row++){
-   const y=411+row*340;
-   for(const rx of [477,553,887,963])roadCrosswalk(rx,y+10,true);
-   roadCrosswalk(494,y-1,false);roadCrosswalk(904,y-1,false);
- }
- // Sambungan kaki lima di tepi setiap blok.
- ctx.fillStyle='#c9c5b5';
- for(let row=0;row<6;row++){const y=402+row*340;ctx.fillRect(165,y,311,8);ctx.fillRect(560,y,311,8);ctx.fillRect(970,y,326,8);}
-
+ // Jalan dalaman, garisan lorong, lintasan dan kaki lima dipaparkan oleh Phaser sahaja.
  // Kemudahan bandar dinamik kini dipaparkan melalui Phaser Graphics.
  // Trafik bandar: kereta top-down dengan bentuk badan, cermin, bumbung, lampu dan bayang.
  const carColors=['#c94f48','#477fa8','#e3ad43','#e8e3d4','#568b68','#8c6ca5'];
