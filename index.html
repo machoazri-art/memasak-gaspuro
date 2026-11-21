@@ -328,11 +328,15 @@ function bootPhaserTown(){
    g.fillStyle(0xd9c99e,1);g.fillRoundedRect(165,160,870,660,10);
    g.fillStyle(0xb8cb91,1);g.fillRoundedRect(180,175,840,630,8);
    g.fillStyle(0xd9c99e,1);g.fillRect(190,475,820,34);g.fillRect(570,180,34,610);
+   // Jalan penghubung sebenar antara blok lot: rangkaian grid bandar.
+   g.fillStyle(0x53605b,1);g.fillRect(380,180,18,650);g.fillRect(600,180,18,650);g.fillRect(820,180,18,650);g.fillRect(175,390,850,18);g.fillRect(175,610,850,18);
+   g.lineStyle(2,0xe8d9ad,.9);for(let y=190;y<820;y+=34){g.lineBetween(389,y,389,y+15);g.lineBetween(609,y,609,y+15);g.lineBetween(829,y,829,y+15)}for(let x=190;x<1020;x+=38){g.lineBetween(x,399,x+17,399);g.lineBetween(x,619,x+17,619)}
    // small garden beds
    for(let i=0;i<8;i++){const x=205+(i%4)*265,y=i<4?185:735;g.fillStyle(0x7eaa68,1);g.fillRoundedRect(x,y,48,30,8);g.fillStyle(0x4d854b,1);for(let j=0;j<3;j++)g.fillCircle(x+12+j*12,y+13,7)}
    this.world.add(g);
    for(let i=0;i<8;i++){const x=270+(i%4)*220,y=i<4?155:845;this.drawTree(x,y)}
    this.add.text(600,145,'KAWASAN PERNIAGAAN GASPURO',{fontFamily:'monospace',fontSize:'18px',fontStyle:'bold',color:'#fff1c9',stroke:'#36543a',strokeThickness:5}).setOrigin(.5);
+   this.add.text(600,168,'JALAN UTAMA  •  LALUAN PEJALAN KAKI  •  ZON PERNIAGAAN',{fontFamily:'monospace',fontSize:'9px',fontStyle:'bold',color:'#f5e8bd',stroke:'#36543a',strokeThickness:3}).setOrigin(.5);
   }
   createLots(){
    this.lotNodes=[];
@@ -358,14 +362,22 @@ function bootPhaserTown(){
   }
   selectLot(i){s.selectedLot=i;const b=selectedBuilding(),unlocked=i<unlockedLots();if(b){openInterior(b);return}$('selectionTitle').textContent='🏡 Lot '+(i+1)+' kosong';$('selectionText').textContent=unlocked?'Pilih jenis perniagaan dan bina di sini.':'Lot terkunci. Naik level untuk buka.';$('buildBtn').disabled=!unlocked;render();drawTools();this.refreshTown()}
   syncState(){this.refreshTown()}
+  drawCityServices(){
+   if(this.serviceLayer)this.serviceLayer.destroy(true);this.serviceLayer=this.add.container(0,0);
+   const levels=(s.city&&s.city.services)||{},defs=[['bus',600,105,'🚌','TERMINAL BAS'],['police',1040,245,'🚓','BALAI POLIS'],['parking',1040,760,'🅿️','PARKIR AWAM'],['parks',600,875,'🌳','TAMAN BANDAR']];
+   defs.forEach(([id,x,y,emoji,label])=>{const level=Number(levels[id])||0;if(!level)return;const g=this.add.graphics();g.fillStyle(0x344638,.25);g.fillEllipse(2,22,92,24);g.fillStyle(id==='parks'?0x5f9b59:0xd8c79c,1);g.fillRoundedRect(-48,-25,96,54,9);g.lineStyle(3,0xf8e8bd,1);g.strokeRoundedRect(-48,-25,96,54,9);if(id==='parks'){g.fillStyle(0x3f7d49,1);for(let n=0;n<3;n++){g.fillCircle(-25+n*25,-2,13);g.fillRect(-27+n*25,3,5,16)}}else{g.fillStyle(0x536c78,1);g.fillRoundedRect(-35,-15,70,29,5);g.fillStyle(0xb9d6d2,1);g.fillRect(-25,-10,50,9);g.fillStyle(0xe6d49e,1);g.fillRect(-8,2,16,12)}this.serviceLayer.add(g);this.serviceLayer.add(this.add.text(x,y-4,emoji,{fontSize:'27px'}).setOrigin(.5));this.serviceLayer.add(this.add.text(x,y+38,label+' · T'+level,{fontFamily:'monospace',fontSize:'10px',fontStyle:'bold',color:'#fff5d9',backgroundColor:'#34543b',padding:{x:5,y:3}}).setOrigin(.5));this.serviceLayer.list[this.serviceLayer.list.length-1].setPosition(x,y+39);this.serviceLayer.list[this.serviceLayer.list.length-3].setPosition(x,y+1);});
+   }
   refreshTown(){
    if(!this.lotNodes)return;
+   const zoneColors={komersial:0xe8b84e,perumahan:0x73a8d4,pelancongan:0x58b9a2,industri:0x9a9690,rekreasi:0x79b85e};
    this.lotNodes.forEach(({lot,pad,marker,i,dynamic})=>{
     dynamic.forEach(o=>o.destroy());dynamic.length=0;
-    const b=s.buildings.find(x=>x.lot===i),unlocked=i<unlockedLots();
+    const b=s.buildings.find(x=>x.lot===i),unlocked=i<unlockedLots(),zone=(s.lotZones||{})[i]||'komersial';
+    pad.clear();pad.fillStyle(zoneColors[zone]||zoneColors.komersial,b?.18:.10);pad.fillRoundedRect(-88,-82,176,164,10);pad.lineStyle(4,zoneColors[zone]||zoneColors.komersial,b?1:.5);pad.strokeRoundedRect(-88,-82,176,164,10);
     marker.setText(b?'':unlocked?'＋':'🔒');
     if(b){dynamic.push(this.drawBuilding(lot,b,i));marker.setText('')}
    });
+   this.drawCityServices();
   }
   createTrafficAndPeople(){
    this.cars=[];for(let i=0;i<5;i++){const car=this.add.container(-100-i*270,320);const g=this.add.graphics();g.fillStyle(0x283b35,1);g.fillRoundedRect(-22,-11,44,22,5);g.fillStyle([0xb64d3d,0xd5a345,0x477f9a,0x63965e,0xeee0b8][i],1);g.fillRoundedRect(-19,-9,38,16,4);g.fillStyle(0x9fc7c5,1);g.fillRect(-11,-7,18,7);g.fillStyle(0x252c29,1);g.fillCircle(-13,10,4);g.fillCircle(13,10,4);car.add(g);this.world.add(car);this.cars.push(car)}
