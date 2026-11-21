@@ -468,11 +468,11 @@ function drawMap(){
  // Lukis bahu jalan dahulu supaya semua persimpangan bersambung kemas.
  ctx.fillStyle='#d8d2bc';
  ctx.fillRect(476,100,84,2350);
- for(let row=0;row<9;row++ctx.fillRect(95,402+row*340,710,88);
+ for(let row=0;row<9;row++)ctx.fillRect(95,402+row*340,710,88);
  // Asfalt dengan lebar seragam 70px.
  ctx.fillStyle='#737e80';
  ctx.fillRect(483,100,70,2350);
- for(let row=0;row<6;row++)ctx.fillRect(95,411+row*340,710,70);
+ for(let row=0;row<9;row++)ctx.fillRect(95,411+row*340,710,70);
  // Garisan tepi jalan dan garisan tengah putus-putus.
  ctx.strokeStyle='rgba(246,233,189,.72)';ctx.lineWidth=2;ctx.setLineDash([]);
  ctx.beginPath();
