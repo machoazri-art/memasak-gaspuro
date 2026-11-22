@@ -478,39 +478,44 @@ function bootPhaserMapBridge(){
      const texture=this.textures.addCanvas('gaspuroLiveMap',canvas);
      phaserMapTexture=texture;
      phaserMapImage=this.add.image(0,0,texture).setOrigin(0,0).setDisplaySize(this.scale.width,this.scale.height);
-     // Input peta dikendalikan pada mount yang menerima sentuhan sebenar.
-     // Gunakan koordinat CSS -> Canvas intrinsik -> koordinat dunia selepas kamera.
-     let mapPointer=null;
-     const mapPoint=e=>{const r=mount.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*canvas.width,y:(e.clientY-r.top)/r.height*canvas.height}};
-     mount.addEventListener('pointerdown',e=>{
-      if(e.target.closest('.maphead,.zoom'))return;
-      const p=mapPoint(e);mapPointer={id:e.pointerId,x:e.clientX,y:e.clientY,cx:camera.x,cy:camera.y,moved:false};
-      try{mount.setPointerCapture(e.pointerId)}catch(_){}
-      e.preventDefault();
-     },{passive:false});
-     mount.addEventListener('pointermove',e=>{
+     // Input lot: guna canvas Phaser sebenar sebagai target dan click untuk tap iOS.
+     // Pointer hanya mengurus pan; click memilih lot supaya touchend/pointer capture tidak menelan tap.
+     let mapPointer=null,lastMapGestureWasDrag=false;
+     const mapPoint=e=>{const r=this.game.canvas.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*canvas.width,y:(e.clientY-r.top)/r.height*canvas.height}};
+     const onMapDown=e=>{
+      if(e.target.closest&&e.target.closest('.maphead,.zoom'))return;
+      mapPointer={id:e.pointerId,x:e.clientX,y:e.clientY,cx:camera.x,cy:camera.y,moved:false};
+      lastMapGestureWasDrag=false;
+     };
+     const onMapMove=e=>{
       if(!mapPointer||mapPointer.id!==e.pointerId)return;
       const dx=e.clientX-mapPointer.x,dy=e.clientY-mapPointer.y;
       if(Math.abs(dx)+Math.abs(dy)>8)mapPointer.moved=true;
       if(mapPointer.moved){
-       const r=mount.getBoundingClientRect();
+       const r=this.game.canvas.getBoundingClientRect();
        camera.x=mapPointer.cx+dx*canvas.width/r.width;
        camera.y=mapPointer.cy+dy*canvas.height/r.height;
        drawMap();
       }
-      e.preventDefault();
-     },{passive:false});
-     mount.addEventListener('pointerup',e=>{
+     };
+     const onMapUp=e=>{
       if(!mapPointer||mapPointer.id!==e.pointerId)return;
-      const state=mapPointer;mapPointer=null;
-      if(!state.moved){
-       const p=mapPoint(e),wx=(p.x-camera.x)/camera.scale,wy=(p.y-camera.y)/camera.scale;
-       const lot=plots.find(q=>wx>=q.x&&wx<=q.x+q.w&&wy>=q.y&&wy<=q.y+q.h);
-       if(lot)handleMapLotTap(lot);
-      }
-      e.preventDefault();
-     },{passive:false});
-     mount.addEventListener('pointercancel',()=>{mapPointer=null});
+      lastMapGestureWasDrag=mapPointer.moved;
+      mapPointer=null;
+     };
+     const onMapClick=e=>{
+      if(lastMapGestureWasDrag){lastMapGestureWasDrag=false;return}
+      if(e.target.closest&&e.target.closest('.maphead,.zoom'))return;
+      const p=mapPoint(e),wx=(p.x-camera.x)/camera.scale,wy=(p.y-camera.y)/camera.scale;
+      const lot=plots.find(q=>wx>=q.x&&wx<=q.x+q.w&&wy>=q.y&&wy<=q.y+q.h);
+      if(lot)handleMapLotTap(lot);
+      else toast('Sentuhan dikesan, tetapi bukan di dalam petak lot.');
+     };
+     this.game.canvas.addEventListener('pointerdown',onMapDown,{passive:true});
+     this.game.canvas.addEventListener('pointermove',onMapMove,{passive:true});
+     this.game.canvas.addEventListener('pointerup',onMapUp,{passive:true});
+     this.game.canvas.addEventListener('pointercancel',()=>{mapPointer=null},{passive:true});
+     this.game.canvas.addEventListener('click',onMapClick,true);
      // Jalan perimeter kini dilukis sebagai Phaser Graphics, bukan pada Canvas sumber.
      const roadLayer=this.add.graphics();
      roadLayer.fillStyle(0xd8d2bc,1);
