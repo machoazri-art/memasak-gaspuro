@@ -443,7 +443,8 @@ function drawMap(now=0){
  plots=[];
  for(let i=0;i<22;i++){
   const p=lotPos(i),bx=p.x,by=p.y;
-  const slots=[{x:bx+8,y:by+8},{x:bx+164,y:by+8},{x:bx+8,y:by+128},{x:bx+164,y:by+128}];
+  /* Empat lot kekal berasingan dengan lorong pemisah yang jelas. */
+  const slots=[{x:bx+8,y:by+8},{x:bx+180,y:by+8},{x:bx+8,y:by+140},{x:bx+180,y:by+140}];
   for(let j=0;j<4;j++){
    const q=slots[j],shopIndex=i*4+j,shop=s.buildings.find(x=>Number(x.lot)===shopIndex),project=landProjectAt(shopIndex),structure=cityStructureAt(shopIndex),home=residentialAt(shopIndex);
    plots.push({i:shopIndex,x:q.x,y:q.y,w:150,h:112,unlocked:shopIndex<unlockedLots(),occupied:!!(shop||project||structure||home),zone:(s.lotZones||{})[shopIndex]||'komersial',selected:s.selectedLot===shopIndex});
@@ -662,7 +663,7 @@ function bootPhaserMapBridge(){
       for(const home of (s.residentialBuildings||[])){
        const lot=Number(home.lot);if(!Number.isInteger(lot)||lot<0)continue;
        const block=Math.floor(lot/4),j=lot%4,plot=lotPos(block),bx=plot.x,by=plot.y;
-       const x=bx+8+(j%2)*164,y=by+8+(j>=2?128:0),st=styles[home.id]||styles.terrace,g=residentialLayer;
+       const x=bx+8+(j%2)*172,y=by+8+(j>=2?132:0),st=styles[home.id]||styles.terrace,g=residentialLayer;
        g.fillStyle(0x263326,.22);g.fillEllipse(x+75,y+103,130,15);
        g.fillStyle(st.trim,1);g.fillRect(x+8,y+8,134,96);
        g.fillStyle(st.wall,1);g.fillRect(x+17,y+20,116,75);
@@ -684,7 +685,7 @@ function bootPhaserMapBridge(){
       for(const shop of (s.buildings||[])){
        const lot=Number(shop.lot);if(!Number.isInteger(lot)||lot<0)continue;
        const block=Math.floor(lot/4),j=lot%4,plot=lotPos(block),bx=plot.x,by=plot.y;
-       const x=bx+8+(j%2)*164,y=by+8+(j>=2?128:0),col=palettes[shop.type]||palettes.warung,g=commercialLayer;
+       const x=bx+8+(j%2)*172,y=by+8+(j>=2?132:0),col=palettes[shop.type]||palettes.warung,g=commercialLayer;
        // Tapak kedai penuh dengan fasad, bumbung dan papan tanda tersendiri mengikut kategori.
        const baseY=y;
        g.fillStyle(0x263326,.30);g.fillEllipse(x+75,baseY+105,140,13);
