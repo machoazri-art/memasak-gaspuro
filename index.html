@@ -478,6 +478,16 @@ function bootPhaserMapBridge(){
      const texture=this.textures.addCanvas('gaspuroLiveMap',canvas);
      phaserMapTexture=texture;
      phaserMapImage=this.add.image(0,0,texture).setOrigin(0,0).setDisplaySize(this.scale.width,this.scale.height);
+     // Tangkap sentuhan pada lapisan Phaser yang benar-benar berada di atas peta.
+     // Koordinat Phaser ditukar kepada piksel Canvas asal sebelum kamera Canvas diterapkan.
+     this.input.on('pointerup',p=>{
+      const rect=mount.getBoundingClientRect();
+      if(!rect.width||!rect.height)return;
+      const sx=(p.x/rect.width)*canvas.width,sy=(p.y/rect.height)*canvas.height;
+      const wx=(sx-camera.x)/camera.scale,wy=(sy-camera.y)/camera.scale;
+      const lot=plots.find(q=>wx>=q.x&&wx<=q.x+q.w&&wy>=q.y&&wy<=q.y+q.h);
+      if(lot)handleMapLotTap(lot);
+     });
      // Jalan perimeter kini dilukis sebagai Phaser Graphics, bukan pada Canvas sumber.
      const roadLayer=this.add.graphics();
      roadLayer.fillStyle(0xd8d2bc,1);
