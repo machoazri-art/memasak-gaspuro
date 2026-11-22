@@ -444,10 +444,10 @@ function drawMap(now=0){
  for(let i=0;i<22;i++){
   const p=lotPos(i),bx=p.x,by=p.y;
   /* Empat lot kekal berasingan dengan lorong pemisah yang jelas. */
-  const slots=[{x:bx+8,y:by+8},{x:bx+180,y:by+8},{x:bx+8,y:by+140},{x:bx+180,y:by+140}];
+  const slots=[{x:bx+8,y:by+8},{x:bx+194,y:by+8},{x:bx+8,y:by+150},{x:bx+194,y:by+150}];
   for(let j=0;j<4;j++){
    const q=slots[j],shopIndex=i*4+j,shop=s.buildings.find(x=>Number(x.lot)===shopIndex),project=landProjectAt(shopIndex),structure=cityStructureAt(shopIndex),home=residentialAt(shopIndex);
-   plots.push({i:shopIndex,x:q.x,y:q.y,w:150,h:112,unlocked:shopIndex<unlockedLots(),occupied:!!(shop||project||structure||home),zone:(s.lotZones||{})[shopIndex]||'komersial',selected:s.selectedLot===shopIndex});
+   plots.push({i:shopIndex,x:q.x,y:q.y,w:170,h:130,unlocked:shopIndex<unlockedLots(),occupied:!!(shop||project||structure||home),zone:(s.lotZones||{})[shopIndex]||'komersial',selected:s.selectedLot===shopIndex});
   }
  }
  // Jalan dalaman, garisan lorong, lintasan dan kaki lima dipaparkan oleh Phaser sahaja.
@@ -663,7 +663,7 @@ function bootPhaserMapBridge(){
       for(const home of (s.residentialBuildings||[])){
        const lot=Number(home.lot);if(!Number.isInteger(lot)||lot<0)continue;
        const block=Math.floor(lot/4),j=lot%4,plot=lotPos(block),bx=plot.x,by=plot.y;
-       const x=bx+8+(j%2)*172,y=by+8+(j>=2?132:0),st=styles[home.id]||styles.terrace,g=residentialLayer;
+       const x=bx+8+(j%2)*186,y=by+8+(j>=2?142:0),st=styles[home.id]||styles.terrace,g=residentialLayer;
        g.fillStyle(0x263326,.22);g.fillEllipse(x+75,y+103,130,15);
        g.fillStyle(st.trim,1);g.fillRect(x+8,y+8,134,96);
        g.fillStyle(st.wall,1);g.fillRect(x+17,y+20,116,75);
@@ -685,7 +685,7 @@ function bootPhaserMapBridge(){
       for(const shop of (s.buildings||[])){
        const lot=Number(shop.lot);if(!Number.isInteger(lot)||lot<0)continue;
        const block=Math.floor(lot/4),j=lot%4,plot=lotPos(block),bx=plot.x,by=plot.y;
-       const x=bx+8+(j%2)*172,y=by+8+(j>=2?132:0),col=palettes[shop.type]||palettes.warung,g=commercialLayer;
+       const x=bx+8+(j%2)*186,y=by+8+(j>=2?142:0),col=palettes[shop.type]||palettes.warung,g=commercialLayer;
        // Tapak kedai penuh dengan fasad, bumbung dan papan tanda tersendiri mengikut kategori.
        const baseY=y;
        g.fillStyle(0x263326,.30);g.fillEllipse(x+75,baseY+105,140,13);
@@ -1034,19 +1034,19 @@ function bootPhaserMapBridge(){
       for(let n=0;n<88;n++){
        const p=plots[n];if(!p)continue;
        const x=p.x,y=p.y,c=zoneColors[p.zone]||zoneColors.komersial;
-       lotLayer.fillStyle(0xd6e5b9,1);lotLayer.fillRoundedRect(x-4,y-4,158,120,8);
-       lotLayer.lineStyle(2,0xfff8df,1);lotLayer.strokeRoundedRect(x-4,y-4,158,120,8);
-       lotLayer.fillStyle(0x9fb48b,1);lotLayer.fillRect(x,y,150,112);
-       lotLayer.fillStyle(p.occupied?0x88a879:p.unlocked?0xb8d39a:0x9aa98e,1);lotLayer.fillRect(x,y,150,112);
-       lotLayer.fillStyle(c,.20);lotLayer.fillRect(x,y,150,112);
-       lotLayer.lineStyle(3,c,1);lotLayer.strokeRect(x+1.5,y+1.5,147,109);
+       lotLayer.fillStyle(0xd6e5b9,1);lotLayer.fillRoundedRect(x-4,y-4,178,138,8);
+       lotLayer.lineStyle(2,0xfff8df,1);lotLayer.strokeRoundedRect(x-4,y-4,178,138,8);
+       lotLayer.fillStyle(0x9fb48b,1);lotLayer.fillRect(x,y,170,130);
+       lotLayer.fillStyle(p.occupied?0x88a879:p.unlocked?0xb8d39a:0x9aa98e,1);lotLayer.fillRect(x,y,170,130);
+       lotLayer.fillStyle(c,.20);lotLayer.fillRect(x,y,170,130);
+       lotLayer.lineStyle(3,c,1);lotLayer.strokeRect(x+1.5,y+1.5,167,127);
        lotLayer.fillStyle(c,1);lotLayer.fillRect(x+5,y+5,Math.min(88,p.zone.length*6+22),13);
        if(!p.occupied){
-        if(p.unlocked){lotEmptyLabels[n].setText('+');lotEmptyLabels[n].setPosition(x+75,y+58);lotEmptyLabels[n].setVisible(true)}
-        else{lotEmptyLabels[n].setText('🔒');lotEmptyLabels[n].setPosition(x+75,y+58);lotEmptyLabels[n].setVisible(true)}
+        if(p.unlocked){lotEmptyLabels[n].setText('+');lotEmptyLabels[n].setPosition(x+85,y+67);lotEmptyLabels[n].setVisible(true)}
+        else{lotEmptyLabels[n].setText('🔒');lotEmptyLabels[n].setPosition(x+85,y+67);lotEmptyLabels[n].setVisible(true)}
        }else lotEmptyLabels[n].setVisible(false);
        lotZoneLabels[n].setText(zoneNames[p.zone]||'KOMERSIAL');lotZoneLabels[n].setPosition(x+9,y+6);
-       if(p.selected){lotLayer.lineStyle(4,0xffb72f,1);lotLayer.strokeRect(x+2,y+2,146,108)}
+       if(p.selected){lotLayer.lineStyle(4,0xffb72f,1);lotLayer.strokeRect(x+2,y+2,166,126)}
       }
      };
      drawLots();
