@@ -138,9 +138,9 @@
 .phaser-unavailable #townPhaserMount{display:none!important}
 /* Stable town-map input fallback: use the proven interactive 2D canvas while Phaser town input is repaired. */
 /* Phaser WebGL presentation bridge; invisible source canvas remains interactive. */
-.phaser-map-bridge-ready #map{display:block!important;position:absolute;inset:0;z-index:2!important;width:100%;height:100%;opacity:0!important;pointer-events:auto!important;touch-action:none}
-.phaser-map-bridge-ready #townPhaserMount{display:block!important;position:absolute;inset:0;z-index:1!important;pointer-events:none!important;overflow:hidden}
-.phaser-map-bridge-ready #townPhaserMount canvas{display:block;width:100%!important;height:100%!important;pointer-events:none!important}
+.phaser-map-bridge-ready #map{display:block!important;position:absolute;inset:0;z-index:0!important;width:100%;height:100%;opacity:0!important;pointer-events:none!important;touch-action:none}
+.phaser-map-bridge-ready #townPhaserMount{display:block!important;position:absolute;inset:0;z-index:2!important;pointer-events:auto!important;overflow:hidden;touch-action:none}
+.phaser-map-bridge-ready #townPhaserMount canvas{display:block;width:100%!important;height:100%!important;pointer-events:auto!important;touch-action:none}
 /* Header melekat supaya baki wang sentiasa kelihatan ketika scroll. */
 .top{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,#fffdf5,#f4ead3);box-shadow:0 3px 12px rgba(45,58,37,.14);padding-top:max(9px,env(safe-area-inset-top));}
 .cash{position:sticky;top:calc(env(safe-area-inset-top) + 5px);z-index:101;white-space:nowrap;box-shadow:0 2px 8px rgba(42,57,35,.16)}
@@ -478,16 +478,39 @@ function bootPhaserMapBridge(){
      const texture=this.textures.addCanvas('gaspuroLiveMap',canvas);
      phaserMapTexture=texture;
      phaserMapImage=this.add.image(0,0,texture).setOrigin(0,0).setDisplaySize(this.scale.width,this.scale.height);
-     // Tangkap sentuhan pada lapisan Phaser yang benar-benar berada di atas peta.
-     // Koordinat Phaser ditukar kepada piksel Canvas asal sebelum kamera Canvas diterapkan.
-     this.input.on('pointerup',p=>{
-      const rect=mount.getBoundingClientRect();
-      if(!rect.width||!rect.height)return;
-      const sx=(p.x/rect.width)*canvas.width,sy=(p.y/rect.height)*canvas.height;
-      const wx=(sx-camera.x)/camera.scale,wy=(sy-camera.y)/camera.scale;
-      const lot=plots.find(q=>wx>=q.x&&wx<=q.x+q.w&&wy>=q.y&&wy<=q.y+q.h);
-      if(lot)handleMapLotTap(lot);
-     });
+     // Input peta dikendalikan pada mount yang menerima sentuhan sebenar.
+     // Gunakan koordinat CSS -> Canvas intrinsik -> koordinat dunia selepas kamera.
+     let mapPointer=null;
+     const mapPoint=e=>{const r=mount.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*canvas.width,y:(e.clientY-r.top)/r.height*canvas.height}};
+     mount.addEventListener('pointerdown',e=>{
+      if(e.target.closest('.maphead,.zoom'))return;
+      const p=mapPoint(e);mapPointer={id:e.pointerId,x:e.clientX,y:e.clientY,cx:camera.x,cy:camera.y,moved:false};
+      try{mount.setPointerCapture(e.pointerId)}catch(_){}
+      e.preventDefault();
+     },{passive:false});
+     mount.addEventListener('pointermove',e=>{
+      if(!mapPointer||mapPointer.id!==e.pointerId)return;
+      const dx=e.clientX-mapPointer.x,dy=e.clientY-mapPointer.y;
+      if(Math.abs(dx)+Math.abs(dy)>8)mapPointer.moved=true;
+      if(mapPointer.moved){
+       const r=mount.getBoundingClientRect();
+       camera.x=mapPointer.cx+dx*canvas.width/r.width;
+       camera.y=mapPointer.cy+dy*canvas.height/r.height;
+       drawMap();
+      }
+      e.preventDefault();
+     },{passive:false});
+     mount.addEventListener('pointerup',e=>{
+      if(!mapPointer||mapPointer.id!==e.pointerId)return;
+      const state=mapPointer;mapPointer=null;
+      if(!state.moved){
+       const p=mapPoint(e),wx=(p.x-camera.x)/camera.scale,wy=(p.y-camera.y)/camera.scale;
+       const lot=plots.find(q=>wx>=q.x&&wx<=q.x+q.w&&wy>=q.y&&wy<=q.y+q.h);
+       if(lot)handleMapLotTap(lot);
+      }
+      e.preventDefault();
+     },{passive:false});
+     mount.addEventListener('pointercancel',()=>{mapPointer=null});
      // Jalan perimeter kini dilukis sebagai Phaser Graphics, bukan pada Canvas sumber.
      const roadLayer=this.add.graphics();
      roadLayer.fillStyle(0xd8d2bc,1);
