@@ -1125,6 +1125,27 @@ canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);
 canvas.addEventListener('pointermove',e=>{if(!drag)return;let dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>6)drag.moved=true;if(drag.moved){camera.x=drag.cx+dx*canvas.width/canvas.clientWidth;camera.y=drag.cy+dy*canvas.height/canvas.clientHeight}});
 function handleMapLotTap(lot){if(!lot)return;const id=Number(lot.i);if(!Number.isInteger(id)||id<0||id>=TOTAL_BUILDABLE_LOTS)return;s.selectedLot=id;if(selectedCityStructure){buildCityStructure(selectedCityStructure,id);return}if(selectedResidential){buildResidential(selectedResidential,id);return}if(selectedLandProject){buildLandProject(selectedLandProject);return}const b=selectedBuilding();if(b){openInterior(b);return}if(buildingPlacementArmed){if(!lot.unlocked||lotHasAnyBuilding(id)){toast('Lot ini tidak kosong atau tidak tersedia. Pilih lot kosong yang lain.');return}build();return}$('selectionTitle').textContent='🏡 Lot '+(id+1)+' kosong';$('selectionText').textContent=lot.unlocked?'Pilih jenis perniagaan, kemudian sentuh lot ini untuk terus membina.':'Lot terkunci. Naik level untuk buka.';$('buildBtn').disabled=lotHasAnyBuilding(id)||!lot.unlocked;render();drawTools()}
 canvas.addEventListener('pointerup',e=>{if(!drag)return;if(!drag.moved){const p=screenToWorld(e),lot=plots.find(x=>p.x>=x.x&&p.x<=x.x+x.w&&p.y>=x.y&&p.y<=x.y+x.h);handleMapLotTap(lot)}drag=null});
+/* Global iOS-safe map hit testing: capture input before Phaser/canvas layers can swallow it. */
+(()=>{
+ const mapBox=document.querySelector('.mapbox');if(!mapBox)return;
+ let touchStart=null;
+ const point=e=>{const r=mapBox.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*canvas.width,y:(e.clientY-r.top)/r.height*canvas.height}};
+ document.addEventListener('pointerdown',e=>{
+  if(!mapBox.contains(e.target)||e.target.closest('.zoom,.maphead'))return;
+  touchStart={id:e.pointerId,x:e.clientX,y:e.clientY};
+ },true);
+ document.addEventListener('pointerup',e=>{
+  if(!touchStart||touchStart.id!==e.pointerId)return;
+  const start=touchStart;touchStart=null;
+  if(Math.abs(e.clientX-start.x)+Math.abs(e.clientY-start.y)>10)return;
+  const p=point(e),wx=(p.x-camera.x)/camera.scale,wy=(p.y-camera.y)/camera.scale;
+  const lot=plots.find(q=>wx>=q.x&&wx<=q.x+q.w&&wy>=q.y&&wy<=q.y+q.h);
+  if(lot){handleMapLotTap(lot);return}
+  $('selectionTitle').textContent='Sentuhan peta diterima';
+  $('selectionText').textContent='Koordinat: '+Math.round(wx)+', '+Math.round(wy)+' — tiada lot pada lokasi ini.';
+ },true);
+ document.addEventListener('pointercancel',()=>{touchStart=null},true);
+})();
 // Lot selection is handled by Phaser pointer events using camera-transformed world coordinates.
 
 canvas.addEventListener('wheel',e=>{e.preventDefault();changeTownZoom(e.deltaY<0?.08:-.08)},{passive:false});
