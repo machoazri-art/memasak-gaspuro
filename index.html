@@ -506,7 +506,9 @@ function bootPhaserMapBridge(){
      const onMapClick=e=>{
       if(lastMapGestureWasDrag){lastMapGestureWasDrag=false;return}
       if(e.target.closest&&e.target.closest('.maphead,.zoom'))return;
-      const p=mapPoint(e),wx=(p.x-camera.x)/camera.scale,wy=(p.y-camera.y)/camera.scale;
+      const p=mapPoint(e);
+      /* Phaser lot graphics berada pada koordinat skrin canvas (bukan transform Canvas lama). */
+      const wx=p.x,wy=p.y;
       const lot=plots.find(q=>wx>=q.x&&wx<=q.x+q.w&&wy>=q.y&&wy<=q.y+q.h);
       if(lot)handleMapLotTap(lot);
       else toast('Sentuhan dikesan, tetapi bukan di dalam petak lot.');
@@ -1124,7 +1126,7 @@ function screenToWorld(e){let r=canvas.getBoundingClientRect(),x=(e.clientX-r.le
 canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,cx:camera.x,cy:camera.y,moved:false}});
 canvas.addEventListener('pointermove',e=>{if(!drag)return;let dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>6)drag.moved=true;if(drag.moved){camera.x=drag.cx+dx*canvas.width/canvas.clientWidth;camera.y=drag.cy+dy*canvas.height/canvas.clientHeight}});
 function handleMapLotTap(lot){if(!lot)return;const id=Number(lot.i);if(!Number.isInteger(id)||id<0||id>=TOTAL_BUILDABLE_LOTS)return;s.selectedLot=id;if(selectedCityStructure){buildCityStructure(selectedCityStructure,id);return}if(selectedResidential){buildResidential(selectedResidential,id);return}if(selectedLandProject){buildLandProject(selectedLandProject);return}const b=selectedBuilding();if(b){openInterior(b);return}if(buildingPlacementArmed){if(!lot.unlocked||lotHasAnyBuilding(id)){toast('Lot ini tidak kosong atau tidak tersedia. Pilih lot kosong yang lain.');return}build();return}$('selectionTitle').textContent='🏡 Lot '+(id+1)+' kosong';$('selectionText').textContent=lot.unlocked?'Pilih jenis perniagaan, kemudian sentuh lot ini untuk terus membina.':'Lot terkunci. Naik level untuk buka.';$('buildBtn').disabled=lotHasAnyBuilding(id)||!lot.unlocked;render();drawTools()}
-canvas.addEventListener('pointerup',e=>{if(!drag)return;if(!drag.moved){const p=screenToWorld(e),lot=plots.find(x=>p.x>=x.x&&p.x<=x.x+x.w&&p.y>=x.y&&p.y<=x.y+x.h);handleMapLotTap(lot)}drag=null});
+canvas.addEventListener('pointerup',e=>{if(!drag)return;if(!drag.moved){const p=document.documentElement.classList.contains('phaser-map-bridge-ready')?(()=>{const r=document.querySelector('.mapbox').getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*canvas.width,y:(e.clientY-r.top)/r.height*canvas.height}})():screenToWorld(e),lot=plots.find(x=>p.x>=x.x&&p.x<=x.x+x.w&&p.y>=x.y&&p.y<=x.y+x.h);handleMapLotTap(lot)}drag=null});
 /* Global iOS-safe map hit testing: capture input before Phaser/canvas layers can swallow it. */
 (()=>{
  const mapBox=document.querySelector('.mapbox');if(!mapBox)return;
@@ -1138,7 +1140,11 @@ canvas.addEventListener('pointerup',e=>{if(!drag)return;if(!drag.moved){const p=
   if(!touchStart||touchStart.id!==e.pointerId)return;
   const start=touchStart;touchStart=null;
   if(Math.abs(e.clientX-start.x)+Math.abs(e.clientY-start.y)>10)return;
-  const p=point(e),wx=(p.x-camera.x)/camera.scale,wy=(p.y-camera.y)/camera.scale;
+  const p=point(e);
+  /* Jika Phaser aktif, lot overlay dipaparkan pada koordinat canvas terus. */
+  const phaserActive=document.documentElement.classList.contains('phaser-map-bridge-ready');
+  const wx=phaserActive?p.x:(p.x-camera.x)/camera.scale;
+  const wy=phaserActive?p.y:(p.y-camera.y)/camera.scale;
   const lot=plots.find(q=>wx>=q.x&&wx<=q.x+q.w&&wy>=q.y&&wy<=q.y+q.h);
   if(lot){handleMapLotTap(lot);return}
   $('selectionTitle').textContent='Sentuhan peta diterima';
