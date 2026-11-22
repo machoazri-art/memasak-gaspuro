@@ -772,7 +772,7 @@ function bootPhaserMapBridge(){
       const cityStructureLayer=this.add.graphics(),cityStructureTextLayer=this.add.container(0,0);
       const drawCityStructures=()=>{
        cityStructureLayer.clear();cityStructureTextLayer.removeAll(true);
-       const slots=[[8,8],[164,8],[8,128],[164,128]];
+       const slots=[[8,8],[194,8],[8,150],[194,150]];
        const palette={hospital:0xc75b5b,school:0xd6ad54,fire:0xbd5747,market:0xb77a48,petrol:0x4d8eaa,library:0x648d75,stadium:0x6686a4,recycle:0x5b9b69,park:0x72a96b,busstop:0x579b9a,parkinglot:0x858e9c};
        for(const item of (s.cityStructures||[])){
         const lot=Number(item.lot);if(!Number.isInteger(lot)||lot<0)continue;
@@ -942,7 +942,7 @@ function bootPhaserMapBridge(){
             const landProjectLayer=this.add.graphics(),landProjectTextLayer=this.add.container(0,0);
       const drawLandProjects=()=>{
        landProjectLayer.clear();landProjectTextLayer.removeAll(true);
-       const slots=[[8,8],[164,8],[8,128],[164,128]];
+       const slots=[[8,8],[194,8],[8,150],[194,150]];
        for(const project of (s.landProjects||[])){
         const lot=Number(project.lot);if(!Number.isInteger(lot)||lot<0)continue;
         const block=Math.floor(lot/4),slot=slots[lot%4],plot=lotPos(block),x=plot.x+slot[0],y=plot.y+slot[1],g=landProjectLayer;
@@ -1021,7 +1021,7 @@ function bootPhaserMapBridge(){
      // Petak lot, zon guna tanah, status kekosongan dan pilihan dipaparkan oleh Phaser.
      const lotLayer=this.add.graphics();
      const lotTextLayer=this.add.container(0,0);
-     const lotZoneLabels=[],lotEmptyLabels=[];
+     const lotZoneLabels=[],lotIdLabels=[],lotEmptyLabels=[];
      const zoneNames={komersial:'KOMERSIAL',perumahan:'PERUMAHAN',pelancongan:'PELANCONGAN',industri:'INDUSTRI',rekreasi:'REKREASI'};
      const zoneColors={komersial:0xe4b84f,perumahan:0x6da7d5,pelancongan:0x52b9a2,industri:0x99958e,rekreasi:0x78b85e};
      for(let n=0;n<88;n++){
@@ -1046,6 +1046,7 @@ function bootPhaserMapBridge(){
         else{lotEmptyLabels[n].setText('🔒');lotEmptyLabels[n].setPosition(x+85,y+67);lotEmptyLabels[n].setVisible(true)}
        }else lotEmptyLabels[n].setVisible(false);
        lotZoneLabels[n].setText(zoneNames[p.zone]||'KOMERSIAL');lotZoneLabels[n].setPosition(x+9,y+6);
+        lotIdLabels[n].setText('LOT '+(p.i+1));lotIdLabels[n].setPosition(x+161,y+5);
        if(p.selected){lotLayer.lineStyle(4,0xffb72f,1);lotLayer.strokeRect(x+2,y+2,166,126)}
       }
      };
