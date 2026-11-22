@@ -507,8 +507,10 @@ function bootPhaserMapBridge(){
       if(lastMapGestureWasDrag){lastMapGestureWasDrag=false;return}
       if(e.target.closest&&e.target.closest('.maphead,.zoom'))return;
       const p=mapPoint(e);
-      /* Phaser lot graphics berada pada koordinat skrin canvas (bukan transform Canvas lama). */
-      const wx=p.x,wy=p.y;
+      /* Semua lapisan Phaser dipindahkan dan dizum menggunakan camera.x/y/scale.
+         Tukar koordinat skrin kembali ke koordinat dunia sebelum cari lot. */
+      const wx=(p.x-camera.x)/camera.scale;
+      const wy=(p.y-camera.y)/camera.scale;
       const lot=findMapLotAtPoint(wx,wy);
       if(lot)handleMapLotTap(lot);
       else toast('Sentuhan dikesan, tetapi bukan di dalam petak lot.');
@@ -1147,14 +1149,13 @@ canvas.addEventListener('pointerup',e=>{if(!drag)return;if(!drag.moved){const p=
   const start=touchStart;touchStart=null;
   if(Math.abs(e.clientX-start.x)+Math.abs(e.clientY-start.y)>10)return;
   const p=point(e);
-  /* Jika Phaser aktif, lot overlay dipaparkan pada koordinat canvas terus. */
-  const phaserActive=document.documentElement.classList.contains('phaser-map-bridge-ready');
-  const wx=phaserActive?p.x:(p.x-camera.x)/camera.scale;
-  const wy=phaserActive?p.y:(p.y-camera.y)/camera.scale;
-  const lot=plots.find(q=>wx>=q.x&&wx<=q.x+q.w&&wy>=q.y&&wy<=q.y+q.h);
+  /* Koordinat tap pada skrin mesti dipulangkan ke world-space selepas pan/zoom. */
+  const wx=(p.x-camera.x)/camera.scale;
+  const wy=(p.y-camera.y)/camera.scale;
+  const lot=findMapLotAtPoint(wx,wy);
   if(lot){handleMapLotTap(lot);return}
   $('selectionTitle').textContent='Sentuhan peta diterima';
-  $('selectionText').textContent='Koordinat: '+Math.round(wx)+', '+Math.round(wy)+' — tiada lot pada lokasi ini.';
+  $('selectionText').textContent='Tap di luar lot. Cuba sentuh bahagian tengah petak.';
  },true);
  document.addEventListener('pointercancel',()=>{touchStart=null},true);
 })();
