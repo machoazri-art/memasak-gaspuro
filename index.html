@@ -509,7 +509,7 @@ function bootPhaserMapBridge(){
       const p=mapPoint(e);
       /* Phaser lot graphics berada pada koordinat skrin canvas (bukan transform Canvas lama). */
       const wx=p.x,wy=p.y;
-      const lot=plots.find(q=>wx>=q.x&&wx<=q.x+q.w&&wy>=q.y&&wy<=q.y+q.h);
+      const lot=findMapLotAtPoint(wx,wy);
       if(lot)handleMapLotTap(lot);
       else toast('Sentuhan dikesan, tetapi bukan di dalam petak lot.');
      };
@@ -1125,8 +1125,14 @@ function bootPhaserMapBridge(){
 function screenToWorld(e){let r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*canvas.width/r.width,y=(e.clientY-r.top)*canvas.height/r.height;return{x:(x-camera.x)/camera.scale,y:(y-camera.y)/camera.scale}}
 canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,cx:camera.x,cy:camera.y,moved:false}});
 canvas.addEventListener('pointermove',e=>{if(!drag)return;let dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>6)drag.moved=true;if(drag.moved){camera.x=drag.cx+dx*canvas.width/canvas.clientWidth;camera.y=drag.cy+dy*canvas.height/canvas.clientHeight}});
+function findMapLotAtPoint(x,y){
+ const exact=plots.find(q=>x>=q.x&&x<=q.x+q.w&&y>=q.y&&y<=q.y+q.h);if(exact)return exact;
+ let best=null,bestDistance=Infinity;
+ for(const q of plots){const dx=Math.max(q.x-x,0,x-(q.x+q.w)),dy=Math.max(q.y-y,0,y-(q.y+q.h)),d=Math.hypot(dx,dy);if(d<bestDistance){bestDistance=d;best=q}}
+ return bestDistance<=72?best:null;
+}
 function handleMapLotTap(lot){if(!lot)return;const id=Number(lot.i);if(!Number.isInteger(id)||id<0||id>=TOTAL_BUILDABLE_LOTS)return;s.selectedLot=id;if(selectedCityStructure){buildCityStructure(selectedCityStructure,id);return}if(selectedResidential){buildResidential(selectedResidential,id);return}if(selectedLandProject){buildLandProject(selectedLandProject);return}const b=selectedBuilding();if(b){openInterior(b);return}if(buildingPlacementArmed){if(!lot.unlocked||lotHasAnyBuilding(id)){toast('Lot ini tidak kosong atau tidak tersedia. Pilih lot kosong yang lain.');return}build();return}$('selectionTitle').textContent='🏡 Lot '+(id+1)+' kosong';$('selectionText').textContent=lot.unlocked?'Pilih jenis perniagaan, kemudian sentuh lot ini untuk terus membina.':'Lot terkunci. Naik level untuk buka.';$('buildBtn').disabled=lotHasAnyBuilding(id)||!lot.unlocked;render();drawTools()}
-canvas.addEventListener('pointerup',e=>{if(!drag)return;if(!drag.moved){const p=document.documentElement.classList.contains('phaser-map-bridge-ready')?(()=>{const r=document.querySelector('.mapbox').getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*canvas.width,y:(e.clientY-r.top)/r.height*canvas.height}})():screenToWorld(e),lot=plots.find(x=>p.x>=x.x&&p.x<=x.x+x.w&&p.y>=x.y&&p.y<=x.y+x.h);handleMapLotTap(lot)}drag=null});
+canvas.addEventListener('pointerup',e=>{if(!drag)return;if(!drag.moved){const p=document.documentElement.classList.contains('phaser-map-bridge-ready')?(()=>{const r=document.querySelector('.mapbox').getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*canvas.width,y:(e.clientY-r.top)/r.height*canvas.height}})():screenToWorld(e),lot=findMapLotAtPoint(p.x,p.y);handleMapLotTap(lot)}drag=null});
 /* Global iOS-safe map hit testing: capture input before Phaser/canvas layers can swallow it. */
 (()=>{
  const mapBox=document.querySelector('.mapbox');if(!mapBox)return;
