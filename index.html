@@ -919,8 +919,8 @@ function bootPhaserMapBridge(){
         if(i%13===0){q=xy(-7,-2+bob);g.fillStyle(0xf0c45e,1);g.fillCircle(q.x,q.y,2.8)}
        }
       };
-      // Animasi trafik dan pejalan kaki berjalan melalui timer scene Phaser.
-      this.time.addEvent({delay:33,loop:true,callback:drawTrafficAndPeople});
+      // Lukis trafik dan pejalan kaki pada setiap frame scene Phaser, tanpa bergantung pada gesture peta.
+      this.events.on('update',drawTrafficAndPeople);
             const landProjectLayer=this.add.graphics(),landProjectTextLayer=this.add.container(0,0);
       const drawLandProjects=()=>{
        landProjectLayer.clear();landProjectTextLayer.removeAll(true);
