@@ -479,21 +479,22 @@ function bootPhaserMapBridge(){
      const texture=this.textures.addCanvas('gaspuroLiveMap',canvas);
      phaserMapTexture=texture;
      phaserMapImage=this.add.image(0,0,texture).setOrigin(0,0).setDisplaySize(this.scale.width,this.scale.height);
-      // Input peta stabil untuk iOS: drag dan tap dikendalikan pada mount.
+      // Tangkap gesture pada document capture-phase supaya Phaser/iOS tidak menelan event canvas.
       let mapPointer=null;
       const mapSurface=document.getElementById('townPhaserMount');
       const mapPoint=e=>{const r=mapSurface.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*canvas.width,y:(e.clientY-r.top)/r.height*canvas.height}};
       const onMapDown=e=>{
-       if(e.target.closest&&e.target.closest('.maphead,.zoom'))return;
-       e.preventDefault();
-       mapPointer={id:e.pointerId,x:e.clientX,y:e.clientY,cx:camera.x,cy:camera.y,moved:false};
-       try{mapSurface.setPointerCapture(e.pointerId)}catch(_){}
+       if(!mapSurface.contains(e.target)||e.target.closest&&e.target.closest('.maphead,.zoom'))return;
+       if(e.pointerType==='touch'||e.pointerType==='pen'||e.pointerType==='mouse'){
+        e.preventDefault();
+        mapPointer={id:e.pointerId,x:e.clientX,y:e.clientY,cx:camera.x,cy:camera.y,moved:false};
+       }
       };
       const onMapMove=e=>{
        if(!mapPointer||mapPointer.id!==e.pointerId)return;
        e.preventDefault();
        const dx=e.clientX-mapPointer.x,dy=e.clientY-mapPointer.y;
-       if(Math.abs(dx)+Math.abs(dy)>5)mapPointer.moved=true;
+       if(Math.abs(dx)+Math.abs(dy)>4)mapPointer.moved=true;
        if(mapPointer.moved){
         const r=mapSurface.getBoundingClientRect();
         camera.x=mapPointer.cx+dx*canvas.width/r.width;
@@ -511,12 +512,11 @@ function bootPhaserMapBridge(){
         else toast('Sentuhan dikesan, tetapi bukan di dalam petak lot.');
        }
        mapPointer=null;
-       try{if(mapSurface.hasPointerCapture(e.pointerId))mapSurface.releasePointerCapture(e.pointerId)}catch(_){}
       };
-      mapSurface.addEventListener('pointerdown',onMapDown,{passive:false});
-      mapSurface.addEventListener('pointermove',onMapMove,{passive:false});
-      mapSurface.addEventListener('pointerup',onMapUp,{passive:false});
-      mapSurface.addEventListener('pointercancel',()=>{mapPointer=null},{passive:true});
+      document.addEventListener('pointerdown',onMapDown,{capture:true,passive:false});
+      document.addEventListener('pointermove',onMapMove,{capture:true,passive:false});
+      document.addEventListener('pointerup',onMapUp,{capture:true,passive:false});
+      document.addEventListener('pointercancel',()=>{mapPointer=null},{capture:true,passive:true});
      // Jalan perimeter kini dilukis sebagai Phaser Graphics, bukan pada Canvas sumber.
      const roadLayer=this.add.graphics();
      roadLayer.fillStyle(0xd8d2bc,1);
