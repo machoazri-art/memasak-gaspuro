@@ -498,7 +498,8 @@ function bootPhaserMapBridge(){
         const r=mapSurface.getBoundingClientRect();
         camera.x=mapPointer.cx+dx*canvas.width/r.width;
         camera.y=mapPointer.cy+dy*canvas.height/r.height;
-        syncRoadCamera();
+        drawMap();
+         syncRoadCamera();
        }
       };
       const onMapUp=e=>{
@@ -536,7 +537,8 @@ function bootPhaserMapBridge(){
          const r=mapSurface.getBoundingClientRect();
          camera.x=touchPan.cx+dx*canvas.width/r.width;
          camera.y=touchPan.cy+dy*canvas.height/r.height;
-         syncRoadCamera();
+         drawMap();
+          syncRoadCamera();
         }
        };
        const touchEnd=e=>{
