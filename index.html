@@ -479,6 +479,29 @@ function bootPhaserMapBridge(){
      const texture=this.textures.addCanvas('gaspuroLiveMap',canvas);
      phaserMapTexture=texture;
      phaserMapImage=this.add.image(0,0,texture).setOrigin(0,0).setDisplaySize(this.scale.width,this.scale.height);
+     // Pan peta utama: gesture diproses oleh scene Phaser bridge yang berada di atas map.
+     this.input.addPointer(1);
+     let pan=null;
+     this.input.on('pointerdown',p=>{
+      if(p.event&&p.event.target&&p.event.target.closest&&p.event.target.closest('.maphead,.zoom'))return;
+      pan={x:p.x,y:p.y,cx:camera.x,cy:camera.y,moved:false};
+     });
+     this.input.on('pointermove',p=>{
+      if(!pan||!p.isDown)return;
+      const dx=p.x-pan.x,dy=p.y-pan.y;
+      if(Math.abs(dx)+Math.abs(dy)>6)pan.moved=true;
+      if(pan.moved){
+       const r=this.game.canvas.getBoundingClientRect();
+       camera.x=pan.cx+dx*canvas.width/r.width;
+       camera.y=pan.cy+dy*canvas.height/r.height;
+       drawMap();
+       if(phaserMapTexture)phaserMapTexture.refresh();
+       syncRoadCamera();
+      }
+     });
+     this.input.on('pointerup',()=>{pan=null});
+     this.input.on('pointerupoutside',()=>{pan=null});
+
 // Jalan perimeter kini dilukis sebagai Phaser Graphics, bukan pada Canvas sumber.
      const roadLayer=this.add.graphics();
      roadLayer.fillStyle(0xd8d2bc,1);
