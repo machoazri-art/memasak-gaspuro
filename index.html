@@ -479,62 +479,7 @@ function bootPhaserMapBridge(){
      const texture=this.textures.addCanvas('gaspuroLiveMap',canvas);
      phaserMapTexture=texture;
      phaserMapImage=this.add.image(0,0,texture).setOrigin(0,0).setDisplaySize(this.scale.width,this.scale.height);
-      // Input drag dipasang terus pada canvas Phaser yang benar-benar dipaparkan.
-      // Tidak bergantung pada bubbling ke mount/document (Safari iOS).
-      const inputCanvas=this.game.canvas;
-      inputCanvas.style.touchAction='none';
-      inputCanvas.style.webkitUserSelect='none';
-      let activeTouch=null;
-      const startTouch=e=>{
-       if(!e.changedTouches||!e.changedTouches.length)return;
-       const t=e.changedTouches[0];
-       activeTouch={id:t.identifier,x:t.clientX,y:t.clientY,cx:camera.x,cy:camera.y,moved:false};
-       e.preventDefault();
-      };
-      const moveTouch=e=>{
-       if(!activeTouch)return;
-       const t=Array.from(e.touches||[]).find(v=>v.identifier===activeTouch.id);
-       if(!t)return;
-       e.preventDefault();
-       const dx=t.clientX-activeTouch.x,dy=t.clientY-activeTouch.y;
-       if(Math.abs(dx)+Math.abs(dy)>4)activeTouch.moved=true;
-       if(activeTouch.moved){
-        const r=inputCanvas.getBoundingClientRect();
-        camera.x=activeTouch.cx+dx*canvas.width/r.width;
-        camera.y=activeTouch.cy+dy*canvas.height/r.height;
-        drawMap();
-        syncRoadCamera();
-       }
-      };
-      const endTouch=e=>{
-       if(!activeTouch)return;
-       if(Array.from(e.changedTouches||[]).some(v=>v.identifier===activeTouch.id))activeTouch=null;
-      };
-      inputCanvas.addEventListener('touchstart',startTouch,{passive:false});
-      inputCanvas.addEventListener('touchmove',moveTouch,{passive:false});
-      inputCanvas.addEventListener('touchend',endTouch,{passive:false});
-      inputCanvas.addEventListener('touchcancel',()=>{activeTouch=null},{passive:false});
-      let activePointer=null;
-      inputCanvas.addEventListener('pointerdown',e=>{
-       if(e.pointerType==='touch')return;
-       activePointer={id:e.pointerId,x:e.clientX,y:e.clientY,cx:camera.x,cy:camera.y,moved:false};
-      });
-      inputCanvas.addEventListener('pointermove',e=>{
-       if(!activePointer||activePointer.id!==e.pointerId)return;
-       const dx=e.clientX-activePointer.x,dy=e.clientY-activePointer.y;
-       if(Math.abs(dx)+Math.abs(dy)>4)activePointer.moved=true;
-       if(activePointer.moved){
-        const r=inputCanvas.getBoundingClientRect();
-        camera.x=activePointer.cx+dx*canvas.width/r.width;
-        camera.y=activePointer.cy+dy*canvas.height/r.height;
-        drawMap();
-        syncRoadCamera();
-       }
-      });
-      const endPointer=e=>{if(activePointer&&activePointer.id===e.pointerId)activePointer=null};
-      inputCanvas.addEventListener('pointerup',endPointer);
-      inputCanvas.addEventListener('pointercancel',endPointer);
-     // Jalan perimeter kini dilukis sebagai Phaser Graphics, bukan pada Canvas sumber.
+// Jalan perimeter kini dilukis sebagai Phaser Graphics, bukan pada Canvas sumber.
      const roadLayer=this.add.graphics();
      roadLayer.fillStyle(0xd8d2bc,1);
      roadLayer.fillRect(-700,0,2300,94);roadLayer.fillRect(-700,2940,2300,94);roadLayer.fillRect(5,-700,90,3700);roadLayer.fillRect(1385,-700,90,3000);
@@ -951,7 +896,8 @@ function bootPhaserMapBridge(){
         if(i%13===0){q=xy(-7,-2+bob);g.fillStyle(0xf0c45e,1);g.fillCircle(q.x,q.y,2.8)}
        }
       };
-      drawTrafficAndPeople();
+      // Animasi trafik dan pejalan kaki berjalan berterusan pada timer Phaser.
+      this.time.addEvent({delay:33,loop:true,callback:drawTrafficAndPeople});
             const landProjectLayer=this.add.graphics(),landProjectTextLayer=this.add.container(0,0);
       const drawLandProjects=()=>{
        landProjectLayer.clear();landProjectTextLayer.removeAll(true);
@@ -1115,7 +1061,7 @@ function bootPhaserMapBridge(){
      trafficLayer.setDepth(30);nightLayer.setDepth(31);crowdLayer.setDepth(32);festivalLayer.setDepth(33);festivalTextLayer.setDepth(34);
      syncRoadCamera();
      this.scale.on('resize',(size)=>{if(phaserMapImage)phaserMapImage.setDisplaySize(size.width,size.height);syncRoadCamera()});
-     window.GaspuroMapBridge={refresh:()=>{if(phaserMapTexture)phaserMapTexture.refresh();syncRoadCamera();drawStreetLamps();drawStreetFurniture();drawCivicFacilities();drawResidentialBuildings();drawCommercialBuildings();drawCityStructures();drawTrafficAndPeople();drawLandProjects();drawLots();drawTownAtmosphere()}};
+     window.GaspuroMapBridge={refresh:()=>{if(phaserMapTexture)phaserMapTexture.refresh();syncRoadCamera();drawStreetLamps();drawStreetFurniture();drawCivicFacilities();drawResidentialBuildings();drawCommercialBuildings();drawCityStructures();drawLandProjects();drawLots();drawTownAtmosphere()}};
      document.documentElement.classList.remove('town-legacy-mode');
      document.documentElement.classList.add('phaser-map-bridge-ready');
      if(phaserMapBootTimer){clearTimeout(phaserMapBootTimer);phaserMapBootTimer=null}
