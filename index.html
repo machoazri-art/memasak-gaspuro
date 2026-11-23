@@ -479,79 +479,61 @@ function bootPhaserMapBridge(){
      const texture=this.textures.addCanvas('gaspuroLiveMap',canvas);
      phaserMapTexture=texture;
      phaserMapImage=this.add.image(0,0,texture).setOrigin(0,0).setDisplaySize(this.scale.width,this.scale.height);
-      // Input peta stabil untuk iOS: drag dan tap dikendalikan pada mount.
-      let mapPointer=null;
-      const mapSurface=document.getElementById('townPhaserMount');
-      const mapPoint=e=>{const r=mapSurface.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*canvas.width,y:(e.clientY-r.top)/r.height*canvas.height}};
-      const onMapDown=e=>{
-       if(e.target.closest&&e.target.closest('.maphead,.zoom'))return;
+      // Input drag dipasang terus pada canvas Phaser yang benar-benar dipaparkan.
+      // Tidak bergantung pada bubbling ke mount/document (Safari iOS).
+      const inputCanvas=this.game.canvas;
+      inputCanvas.style.touchAction='none';
+      inputCanvas.style.webkitUserSelect='none';
+      let activeTouch=null;
+      const startTouch=e=>{
+       if(!e.changedTouches||!e.changedTouches.length)return;
+       const t=e.changedTouches[0];
+       activeTouch={id:t.identifier,x:t.clientX,y:t.clientY,cx:camera.x,cy:camera.y,moved:false};
        e.preventDefault();
-       mapPointer={id:e.pointerId,x:e.clientX,y:e.clientY,cx:camera.x,cy:camera.y,moved:false};
-       try{mapSurface.setPointerCapture(e.pointerId)}catch(_){}
       };
-      const onMapMove=e=>{
-       if(!mapPointer||mapPointer.id!==e.pointerId)return;
+      const moveTouch=e=>{
+       if(!activeTouch)return;
+       const t=Array.from(e.touches||[]).find(v=>v.identifier===activeTouch.id);
+       if(!t)return;
        e.preventDefault();
-       const dx=e.clientX-mapPointer.x,dy=e.clientY-mapPointer.y;
-       if(Math.abs(dx)+Math.abs(dy)>5)mapPointer.moved=true;
-       if(mapPointer.moved){
-        const r=mapSurface.getBoundingClientRect();
-        camera.x=mapPointer.cx+dx*canvas.width/r.width;
-        camera.y=mapPointer.cy+dy*canvas.height/r.height;
+       const dx=t.clientX-activeTouch.x,dy=t.clientY-activeTouch.y;
+       if(Math.abs(dx)+Math.abs(dy)>4)activeTouch.moved=true;
+       if(activeTouch.moved){
+        const r=inputCanvas.getBoundingClientRect();
+        camera.x=activeTouch.cx+dx*canvas.width/r.width;
+        camera.y=activeTouch.cy+dy*canvas.height/r.height;
         drawMap();
-         syncRoadCamera();
+        syncRoadCamera();
        }
       };
-      const onMapUp=e=>{
-       if(!mapPointer||mapPointer.id!==e.pointerId)return;
-       e.preventDefault();
-       if(!mapPointer.moved){
-        const p=mapPoint(e),wx=(p.x-camera.x)/camera.scale,wy=(p.y-camera.y)/camera.scale;
-        const lot=findMapLotAtPoint(wx,wy);
-        if(lot)handleMapLotTap(lot);
-        else toast('Sentuhan dikesan, tetapi bukan di dalam petak lot.');
-       }
-       mapPointer=null;
-       try{if(mapSurface.hasPointerCapture(e.pointerId))mapSurface.releasePointerCapture(e.pointerId)}catch(_){}
+      const endTouch=e=>{
+       if(!activeTouch)return;
+       if(Array.from(e.changedTouches||[]).some(v=>v.identifier===activeTouch.id))activeTouch=null;
       };
-      mapSurface.addEventListener('pointerdown',onMapDown,{passive:false});
-      mapSurface.addEventListener('pointermove',onMapMove,{passive:false});
-      mapSurface.addEventListener('pointerup',onMapUp,{passive:false});
-      mapSurface.addEventListener('pointercancel',()=>{mapPointer=null},{passive:true});
-      // iOS Safari touch fallback: gerakkan kamera terus dari native touch events.
-      if(!window.__gaspuroTouchPanInstalled){
-       let touchPan=null;
-       const touchStart=e=>{
-        const t=e.changedTouches&&e.changedTouches[0];
-        if(!t||!mapSurface.contains(e.target)||(e.target.closest&&e.target.closest('.maphead,.zoom')))return;
-        touchPan={id:t.identifier,x:t.clientX,y:t.clientY,cx:camera.x,cy:camera.y,moved:false};
-       };
-       const touchMove=e=>{
-        if(!touchPan)return;
-        const t=Array.from(e.touches||[]).find(x=>x.identifier===touchPan.id);
-        if(!t)return;
-        e.preventDefault();
-        const dx=t.clientX-touchPan.x,dy=t.clientY-touchPan.y;
-        if(Math.abs(dx)+Math.abs(dy)>4)touchPan.moved=true;
-        if(touchPan.moved){
-         const r=mapSurface.getBoundingClientRect();
-         camera.x=touchPan.cx+dx*canvas.width/r.width;
-         camera.y=touchPan.cy+dy*canvas.height/r.height;
-         drawMap();
-          syncRoadCamera();
-        }
-       };
-       const touchEnd=e=>{
-        if(!touchPan)return;
-        if(Array.from(e.changedTouches||[]).some(x=>x.identifier===touchPan.id))touchPan=null;
-       };
-       document.addEventListener('touchstart',touchStart,{capture:true,passive:true});
-       document.addEventListener('touchmove',touchMove,{capture:true,passive:false});
-       document.addEventListener('touchend',touchEnd,{capture:true,passive:true});
-       document.addEventListener('touchcancel',()=>{touchPan=null},{capture:true,passive:true});
-       window.__gaspuroTouchPanInstalled=true;
-      }
-
+      inputCanvas.addEventListener('touchstart',startTouch,{passive:false});
+      inputCanvas.addEventListener('touchmove',moveTouch,{passive:false});
+      inputCanvas.addEventListener('touchend',endTouch,{passive:false});
+      inputCanvas.addEventListener('touchcancel',()=>{activeTouch=null},{passive:false});
+      let activePointer=null;
+      inputCanvas.addEventListener('pointerdown',e=>{
+       if(e.pointerType==='touch')return;
+       activePointer={id:e.pointerId,x:e.clientX,y:e.clientY,cx:camera.x,cy:camera.y,moved:false};
+      });
+      inputCanvas.addEventListener('pointermove',e=>{
+       if(!activePointer||activePointer.id!==e.pointerId)return;
+       const dx=e.clientX-activePointer.x,dy=e.clientY-activePointer.y;
+       if(Math.abs(dx)+Math.abs(dy)>4)activePointer.moved=true;
+       if(activePointer.moved){
+        const r=inputCanvas.getBoundingClientRect();
+        camera.x=activePointer.cx+dx*canvas.width/r.width;
+        camera.y=activePointer.cy+dy*canvas.height/r.height;
+        drawMap();
+        syncRoadCamera();
+       }
+      });
+      const endPointer=e=>{if(activePointer&&activePointer.id===e.pointerId)activePointer=null};
+      inputCanvas.addEventListener('pointerup',endPointer);
+      inputCanvas.addEventListener('pointercancel',endPointer);
      // Jalan perimeter kini dilukis sebagai Phaser Graphics, bukan pada Canvas sumber.
      const roadLayer=this.add.graphics();
      roadLayer.fillStyle(0xd8d2bc,1);
