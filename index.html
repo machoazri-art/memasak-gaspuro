@@ -454,7 +454,7 @@ function drawMap(now=0){
  // Kemudahan bandar dinamik kini dipaparkan melalui Phaser Graphics.
  // Trafik kereta dan pejalan kaki kini dipaparkan melalui Phaser Graphics.
  // Festival, orang ramai dan kitaran siang-malam kini dipaparkan melalui Phaser Graphics.
-  ctx.restore();if(window.GaspuroMapBridge)window.GaspuroMapBridge.refresh();requestAnimationFrame(drawMap);tick++
+  ctx.restore();tick++;if(window.GaspuroMapBridge){window.GaspuroMapBridge.refresh();if(window.GaspuroMapBridge.animateTraffic)window.GaspuroMapBridge.animateTraffic()}requestAnimationFrame(drawMap)
 }
 /* Phaser WebGL map bridge: Canvas lama kekal sebagai sumber data dan input
    sehingga semua objek bandar dipindahkan ke Game Objects secara berperingkat. */
@@ -919,8 +919,7 @@ function bootPhaserMapBridge(){
         if(i%13===0){q=xy(-7,-2+bob);g.fillStyle(0xf0c45e,1);g.fillCircle(q.x,q.y,2.8)}
        }
       };
-      // Animasi trafik dan pejalan kaki berjalan berterusan pada timer Phaser.
-      this.time.addEvent({delay:33,loop:true,callback:drawTrafficAndPeople});
+      // Lukisan animasi dipanggil oleh loop peta utama supaya sentiasa segerak dengan tick.
             const landProjectLayer=this.add.graphics(),landProjectTextLayer=this.add.container(0,0);
       const drawLandProjects=()=>{
        landProjectLayer.clear();landProjectTextLayer.removeAll(true);
@@ -1084,7 +1083,7 @@ function bootPhaserMapBridge(){
      trafficLayer.setDepth(30);nightLayer.setDepth(31);crowdLayer.setDepth(32);festivalLayer.setDepth(33);festivalTextLayer.setDepth(34);
      syncRoadCamera();
      this.scale.on('resize',(size)=>{if(phaserMapImage)phaserMapImage.setDisplaySize(size.width,size.height);syncRoadCamera()});
-     window.GaspuroMapBridge={refresh:()=>{if(phaserMapTexture)phaserMapTexture.refresh();syncRoadCamera();drawStreetLamps();drawStreetFurniture();drawCivicFacilities();drawResidentialBuildings();drawCommercialBuildings();drawCityStructures();drawLandProjects();drawLots();drawTownAtmosphere()}};
+     window.GaspuroMapBridge={refresh:()=>{if(phaserMapTexture)phaserMapTexture.refresh();syncRoadCamera();drawStreetLamps();drawStreetFurniture();drawCivicFacilities();drawResidentialBuildings();drawCommercialBuildings();drawCityStructures();drawLandProjects();drawLots();drawTownAtmosphere()},animateTraffic:drawTrafficAndPeople};
      document.documentElement.classList.remove('town-legacy-mode');
      document.documentElement.classList.add('phaser-map-bridge-ready');
      if(phaserMapBootTimer){clearTimeout(phaserMapBootTimer);phaserMapBootTimer=null}
