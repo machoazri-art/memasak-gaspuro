@@ -411,6 +411,11 @@ const townClock=()=>((tick%36000)/36000);
 const festivalNow=()=>Math.floor(tick/18000)%4===1 && tick%18000<2700;
 const festivalNames=['Pesta Makanan','Pasar Malam Gaspuro','Festival Nasi Lemak','Karnival Minuman'];
 function lotPos(i){const col=i%3,row=Math.floor(i/3);return{x:150+col*410,y:150+row*340}}
+/* Satu sumber koordinat untuk setiap lot: empat petak dalam satu blok. */
+function lotSlotPos(lot){
+ const block=Math.floor(Number(lot)/4),slot=Number(lot)%4,base=lotPos(block);
+ return{x:base.x+8+(slot%2)*186,y:base.y+8+(slot>=2?142:0),w:170,h:130};
+}
 function rounded(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=3;ctx.stroke()}}
 let mapLastFrame=0;
 function drawMap(now=0){
@@ -643,8 +648,7 @@ function bootPhaserMapBridge(){
       const styles={terrace:{wall:0xd9a66f,roof:0x8d5542,trim:0xe7ddc8},apartment:{wall:0x8ba9b7,roof:0x486c82,trim:0xdce8e8},condo:{wall:0xa5b9c8,roof:0x526b85,trim:0xe4edf0},luxury:{wall:0xe2c28c,roof:0x916d4c,trim:0xf0e3c8}};
       for(const home of (s.residentialBuildings||[])){
        const lot=Number(home.lot);if(!Number.isInteger(lot)||lot<0)continue;
-       const block=Math.floor(lot/4),j=lot%4,plot=lotPos(block),bx=plot.x,by=plot.y;
-       const x=bx+8+(j%2)*186,y=by+8+(j>=2?142:0),st=styles[home.id]||styles.terrace,g=residentialLayer;
+       const slot=lotSlotPos(lot),x=slot.x+18,y=slot.y+17,st=styles[home.id]||styles.terrace,g=residentialLayer;
        g.fillStyle(0x263326,.22);g.fillEllipse(x+75,y+103,130,15);
        g.fillStyle(st.trim,1);g.fillRect(x+8,y+8,134,96);
        g.fillStyle(st.wall,1);g.fillRect(x+17,y+20,116,75);
@@ -665,8 +669,7 @@ function bootPhaserMapBridge(){
       const palettes={warung:[0x9e4938,0xd9a45d],mamak:[0x3c7180,0xe1c78c],satay:[0x98602f,0xd9ad65],drink:[0x3e887f,0xb7d5b7],cafe:[0x665044,0xc9a77a],foodcourt:[0x9a6840,0xd6b56f],restaurant:[0x7d4339,0xd7a66d],bakery:[0xb47a45,0xf1d59a],ramen:[0x9b453d,0xe5b85c],dessert:[0xb76f9d,0xf4c8df],bbq:[0x653d32,0xd68c4f],nightmarket:[0x9b4e37,0xf2c45b]};
       for(const shop of (s.buildings||[])){
        const lot=Number(shop.lot);if(!Number.isInteger(lot)||lot<0)continue;
-       const block=Math.floor(lot/4),j=lot%4,plot=lotPos(block),bx=plot.x,by=plot.y;
-       const x=bx+8+(j%2)*186,y=by+8+(j>=2?142:0),col=palettes[shop.type]||palettes.warung,g=commercialLayer;
+       const slot=lotSlotPos(lot),x=slot.x+10,y=slot.y+10,col=palettes[shop.type]||palettes.warung,g=commercialLayer;
        // Tapak kedai penuh dengan fasad, bumbung dan papan tanda tersendiri mengikut kategori.
        const baseY=y;
        g.fillStyle(0x263326,.30);g.fillEllipse(x+75,baseY+105,140,13);
