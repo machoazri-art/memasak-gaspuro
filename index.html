@@ -1140,7 +1140,15 @@ canvas.addEventListener('pointerup',e=>{if(!drag)return;if(!drag.moved){const p=
 (()=>{
  const mapBox=document.querySelector('.mapbox');if(!mapBox)return;
  let touchStart=null;
- const point=e=>{const r=mapBox.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*canvas.width,y:(e.clientY-r.top)/r.height*canvas.height}};
+ const point=e=>{
+  /* Gunakan kawasan sebenar canvas Phaser yang dipaparkan, bukan kotak luar
+     .mapbox (yang turut mempunyai border/padding dan overlay kawalan). */
+  const surface=document.querySelector('#townPhaserMount canvas')||canvas;
+  const r=surface.getBoundingClientRect();
+  const sx=Math.max(0,Math.min(1,(e.clientX-r.left)/Math.max(1,r.width)));
+  const sy=Math.max(0,Math.min(1,(e.clientY-r.top)/Math.max(1,r.height)));
+  return{x:sx*canvas.width,y:sy*canvas.height};
+ };
  document.addEventListener('pointerdown',e=>{
   if(!mapBox.contains(e.target)||e.target.closest('.zoom,.maphead'))return;
   touchStart={id:e.pointerId,x:e.clientX,y:e.clientY};
@@ -1150,7 +1158,7 @@ canvas.addEventListener('pointerup',e=>{if(!drag)return;if(!drag.moved){const p=
   const start=touchStart;touchStart=null;
   if(Math.abs(e.clientX-start.x)+Math.abs(e.clientY-start.y)>10)return;
   const p=point(e);
-  /* Koordinat tap pada skrin mesti dipulangkan ke world-space selepas pan/zoom. */
+  /* Koordinat dipetakan dari permukaan canvas sebenar ke world-space selepas pan/zoom. */
   const wx=(p.x-camera.x)/camera.scale;
   const wy=(p.y-camera.y)/camera.scale;
   const lot=findMapLotAtPoint(wx,wy);
