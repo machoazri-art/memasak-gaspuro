@@ -473,7 +473,11 @@ function bootPhaserMapBridge(){
  if(!mount||!canvas)return false;
  try{
   class GaspuroMapBridgeScene extends Phaser.Scene{
-   constructor(){super({key:'GaspuroMapBridgeScene'})}
+   constructor(){super({key:'GaspuroMapBridgeScene'});this.drawTrafficFrame=null}
+   update(time,delta){
+    // Phaser memanggil update() setiap frame aktif; animasi tidak bergantung pada input peta.
+    if(this.drawTrafficFrame)this.drawTrafficFrame();
+   }
    create(){
     try{
      const texture=this.textures.addCanvas('gaspuroLiveMap',canvas);
@@ -919,8 +923,9 @@ function bootPhaserMapBridge(){
         if(i%13===0){q=xy(-7,-2+bob);g.fillStyle(0xf0c45e,1);g.fillCircle(q.x,q.y,2.8)}
        }
       };
-      // Lukis trafik dan pejalan kaki pada setiap frame scene Phaser, tanpa bergantung pada gesture peta.
-      this.events.on('update',drawTrafficAndPeople);
+      // Simpan renderer pada scene; method update() di atas melukis semula setiap frame.
+      this.drawTrafficFrame=drawTrafficAndPeople;
+      drawTrafficAndPeople();
             const landProjectLayer=this.add.graphics(),landProjectTextLayer=this.add.container(0,0);
       const drawLandProjects=()=>{
        landProjectLayer.clear();landProjectTextLayer.removeAll(true);
