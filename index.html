@@ -1147,7 +1147,12 @@ canvas.addEventListener('pointerup',e=>{if(!drag)return;if(!drag.moved){const p=
   const r=surface.getBoundingClientRect();
   const sx=Math.max(0,Math.min(1,(e.clientX-r.left)/Math.max(1,r.width)));
   const sy=Math.max(0,Math.min(1,(e.clientY-r.top)/Math.max(1,r.height)));
-  return{x:sx*canvas.width,y:sy*canvas.height};
+  /* Lot Graphics berada dalam koordinat dunia Phaser (1200x1000),
+     bukan koordinat backing-store canvas HTML yang tersembunyi. */
+  const game=phaserMapBridge;
+  const sceneWidth=game&&game.scale?game.scale.width:1200;
+  const sceneHeight=game&&game.scale?game.scale.height:1000;
+  return{x:sx*sceneWidth,y:sy*sceneHeight};
  };
  document.addEventListener('pointerdown',e=>{
   if(!mapBox.contains(e.target)||e.target.closest('.zoom,.maphead'))return;
