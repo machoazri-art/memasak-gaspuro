@@ -299,7 +299,25 @@ function buyWorker(){let cost=100+s.workers*85;if(s.money<cost)return toast('Dui
 function assignedStaff(){return Object.values(s.staff).reduce((a,b)=>a+(Number(b)||0),0)}
 function assignStaff(role){if(!s.staff||!(role in s.staff))return;const used=assignedStaff();if(used>=s.workers)return toast('Ambil pekerja dahulu sebelum tetapkan tugas.');s.staff[role]++;const names={kitchen:'Dapur',cashier:'Cashier',service:'Servis pelanggan'};toast('Pekerja ditugaskan ke '+names[role]+'!');log('👥 Seorang pekerja kini bertugas: '+names[role]);refreshCustomerFlow();renderInteriorStaff();save()}
 function unassignStaff(role){if(!s.staff[role])return;s.staff[role]--;refreshCustomerFlow();renderInteriorStaff();save();toast('Pekerja dikembalikan ke senarai belum ditugaskan.')}
-function upgrade(k){let names={marketing:'Promosi media sosial',quality:'Resipi premium',traffic:'Tarikan pelawat'},cost=150+(s.upgrades[k]||0)*125;if(s.money<cost)return toast('Duit tak cukup!');s.money-=cost;s.upgrades[k]++;toast(names[k]+' dinaik taraf!');save()}
+function upgrade(k){
+ const names={marketing:'Marketing',quality:'Resipi premium',traffic:'Tarikan pelawat'};
+ if(!Object.prototype.hasOwnProperty.call(names,k))return;
+ const current=Math.max(0,Math.floor(Number(s.upgrades[k])||0));
+ const raw=prompt('Naik taraf '+names[k]+'\\nTahap semasa: '+current+'\\nMasukkan tahap sasaran (contoh: '+(current+5)+'):');
+ if(raw===null)return;
+ const target=Number(raw.trim());
+ if(!Number.isSafeInteger(target)||target<=current||target>1000)return toast('Masukkan tahap sasaran nombor bulat antara '+(current+1)+' hingga 1000.');
+ const levels=target-current;
+ const cost=levels*150+125*levels*(2*current+levels-1)/2;
+ if(!Number.isSafeInteger(cost)||cost<0)return toast('Jumlah kos tidak sah.');
+ if(s.money<cost)return toast('Duit tak cukup! Perlukan '+fmt(cost)+', baki '+fmt(s.money)+'. Tiada upgrade dibuat.');
+ const remaining=s.money-cost;
+ if(!confirm('Sahkan upgrade '+names[k]+'?\\nTahap: '+current+' → '+target+'\\nJumlah tahap: '+levels+'\\nJumlah kos: '+fmt(cost)+'\\nBaki selepas upgrade: '+fmt(remaining)))return;
+ s.money=remaining;s.upgrades[k]=target;
+ log('⬆️ '+names[k]+' dinaik taraf dari tahap '+current+' ke tahap '+target+' dengan kos '+fmt(cost));
+ toast(names[k]+' berjaya dinaik taraf ke tahap '+target+'!');
+ save();
+}
 function levelCheck(){const oldLevel=s.level;while(s.xp>=s.level*100){s.xp-=s.level*100;s.level++;s.money+=1000000;log('🎉 Bandar naik ke level '+s.level+'! Bonus '+fmt(1000000));toast('Level '+s.level+' dibuka! +'+fmt(1000000))}awardMilestones(oldLevel);checkAchievements()}
 
 /* Fasa 4 · Phaser town map — seamless top-down pixel-art neighbourhood. */
@@ -1475,7 +1493,7 @@ function render(){GaspuroStateBridge.publish();refreshPhaserTown();if(window.Gas
  $('businessList').innerHTML='<h3 class="manageGroupTitle">🏪 Perniagaan & restoran</h3>'+(businessCards||'<p class="muted">Belum ada perniagaan dibina.</p>')+'<h3 class="manageGroupTitle">🏙️ Kemudahan bandar</h3>'+(civicCards||'<p class="muted">Belum ada kemudahan bandar dibina.</p>')+'<h3 class="manageGroupTitle">🏠 Bangunan kediaman</h3>'+(homeCards||'<p class="muted">Belum ada bangunan kediaman dibina.</p>');
  $('staffList').innerHTML='<div class="card"><b>👥 Pasukan restoran</b><small>Pekerja boleh diagihkan mengikut tugas. Pekerja belum ditugaskan: '+Math.max(0,s.workers-assignedStaff())+'</small><b>'+s.workers+' orang · '+assignedStaff()+' ditugaskan</b><button class="btn" data-hire>Ambil pekerja · '+fmt(100+s.workers*85)+'</button></div>'+[['kitchen','👨‍🍳 Dapur','Tambah 5 saat masa memasak setiap pekerja (maksimum +15s).'],['cashier','🧑‍💼 Cashier','Mempercepatkan proses bayaran pelanggan.'],['service','🧑‍🍽️ Servis pelanggan','Tambah kesabaran pelanggan dan percepatkan ketibaan pelanggan.']].map(([k,n,d])=>'<div class="card"><b>'+n+'</b><small>'+d+'</small><b>'+s.staff[k]+' pekerja ditugaskan</b><div class="row" style="margin-top:7px;gap:5px"><button class="btn" data-assign="'+k+'" '+(assignedStaff()>=s.workers?'disabled':'')+'>＋ Tugaskan</button><button class="btn soft" data-unassign="'+k+'" '+(!s.staff[k]?'disabled':'')+'>− Keluarkan</button></div></div>').join('');
  const ups=[['marketing','📣 Marketing','Tambah hasil semua kedai 12%',150],['quality','⭐ Resipi premium','Tambah hasil semua kedai 8%',150],['traffic','🚗 Tarikan pelawat','Tambah kadar pelanggan bandar',150]];
- $('upgradeList').innerHTML=ups.map(([k,n,d,c])=>'<div class="card"><b>'+n+'</b><small>'+d+' · Tahap '+s.upgrades[k]+'</small><button class="btn" data-upgrade="'+k+'">Upgrade · '+fmt(c+s.upgrades[k]*125)+'</button></div>').join('');
+ $('upgradeList').innerHTML=ups.map(([k,n,d,c])=>'<div class="card"><b>'+n+'</b><small>'+d+' · Tahap '+s.upgrades[k]+'</small><button class="btn" data-upgrade="'+k+'">⬆️ Pilih tahap upgrade</button></div>').join('');
  $('recordList').innerHTML=[['Pangkat bandar',cityRank()],['Reputasi bandar',Math.round((s.rating||3)*20)+'/100'],['Jumlah perniagaan',s.buildings.length],['Jumlah pelanggan',s.customers],['Kualiti masakan purata',(s.cookingQuality||0).toFixed(0)+'%'],['Stok bahan mentah',Math.floor(s.ingredients||0)+' unit'],['Tahap kemahiran pekerja',s.workerSkill||0],['Tahap pembekal',s.supplierLevel||0],['Daerah dibuka',(s.districts||[]).length],['Francais',s.franchises||0],['Jumlah hasil dikutip',fmt(s.totalIncome)],['Rating restoran',s.rating.toFixed(1)+' / 5'],['Tahap perabot',s.furnitureLevel||0],['Ulasan pelanggan',s.reviews.length],['Pekerja',s.workers],['Level bandar',s.level],['Progress lama diimport',s.legacyImported?'Ya':'Tiada']].map(x=>'<div class="row" style="padding:7px 0;border-bottom:1px solid #e5e8dc"><span>'+x[0]+'</span><b>'+x[1]+'</b></div>').join('');renderProgressSystems();
  document.querySelectorAll('[data-detail]').forEach(b=>b.onclick=()=>openInfoPanel('business',+b.dataset.detail));document.querySelectorAll('[data-asset-detail]').forEach(b=>b.onclick=()=>openInfoPanel('asset',b.dataset.assetDetail));document.querySelectorAll('[data-asset-up]').forEach(b=>b.onclick=()=>upgradeTownAsset(b.dataset.assetUp));$('openCityDashboard').onclick=()=>openInfoPanel('city');document.querySelectorAll('[data-collect]').forEach(b=>b.onclick=()=>collect(+b.dataset.collect));document.querySelectorAll('[data-upbiz]').forEach(b=>b.onclick=()=>upgradeBiz(+b.dataset.upbiz));document.querySelectorAll('[data-hire]').forEach(b=>b.onclick=buyWorker);document.querySelectorAll('[data-assign]').forEach(b=>b.onclick=()=>assignStaff(b.dataset.assign));document.querySelectorAll('[data-unassign]').forEach(b=>b.onclick=()=>unassignStaff(b.dataset.unassign));document.querySelectorAll('[data-upgrade]').forEach(b=>b.onclick=()=>upgrade(b.dataset.upgrade));
 }
