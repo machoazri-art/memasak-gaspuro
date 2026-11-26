@@ -1172,6 +1172,33 @@ canvas.addEventListener('pointerup',e=>{if(!drag)return;if(!drag.moved){const p=
   $('selectionText').textContent='Tap di luar lot. Cuba sentuh bahagian tengah petak.';
  },true);
  document.addEventListener('pointercancel',()=>{touchStart=null},true);
+
+ /* Android fallback: sesetengah browser/WebView menghantar touch events
+    secara berbeza daripada pointer events. Gunakan koordinat dan hit-test
+    yang sama, tetapi elakkan tap berganda apabila pointer events turut aktif. */
+ let lastPointerEventAt=0,touchFallbackStart=null;
+ document.addEventListener('pointerdown',()=>{lastPointerEventAt=Date.now()},true);
+ document.addEventListener('pointerup',()=>{lastPointerEventAt=Date.now()},true);
+ const touchPoint=t=>{
+  const fake={clientX:t.clientX,clientY:t.clientY};
+  return point(fake);
+ };
+ document.addEventListener('touchstart',e=>{
+  if(!mapBox.contains(e.target)||e.target.closest('.zoom,.maphead'))return;
+  if(Date.now()-lastPointerEventAt<900)return;
+  const t=e.changedTouches&&e.changedTouches[0];if(!t)return;
+  touchFallbackStart={x:t.clientX,y:t.clientY};
+ },{capture:true,passive:true});
+ document.addEventListener('touchend',e=>{
+  if(!touchFallbackStart||Date.now()-lastPointerEventAt<900)return;
+  const start=touchFallbackStart;touchFallbackStart=null;
+  const t=e.changedTouches&&e.changedTouches[0];if(!t)return;
+  if(Math.abs(t.clientX-start.x)+Math.abs(t.clientY-start.y)>10)return;
+  const p=touchPoint(t),wx=(p.x-camera.x)/camera.scale,wy=(p.y-camera.y)/camera.scale;
+  const lot=findMapLotAtPoint(wx,wy);
+  if(lot)handleMapLotTap(lot);
+ },{capture:true,passive:true});
+ document.addEventListener('touchcancel',()=>{touchFallbackStart=null},{capture:true,passive:true});
 })();
 // Lot selection is handled by Phaser pointer events using camera-transformed world coordinates.
 
