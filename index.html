@@ -1108,10 +1108,14 @@ function bootPhaserMapBridge(){
     }catch(err){fallbackPhaserMapBridge(err)}
    }
   }
-  // iOS Safari: gunakan Phaser Canvas Renderer untuk mengelakkan WebGL context
-  // gagal/ditolak pada sesetengah peranti; semua Graphics layers masih disokong.
+  // Pilih renderer mengikut platform:
+  // iOS Safari kekal menggunakan Canvas yang telah disahkan stabil.
+  // Android Chrome menggunakan WebGL (AUTO) kerana Canvas renderer pada
+  // sesetengah peranti Android gagal memaparkan Phaser Graphics layers.
+  const isAndroidMap=/Android/i.test(navigator.userAgent||'');
+  const mapRenderer=isAndroidMap?Phaser.AUTO:Phaser.CANVAS;
   phaserMapBridge=new Phaser.Game({
-   type:Phaser.CANVAS,parent:mount,width:900,height:1000,transparent:true,
+   type:mapRenderer,parent:mount,width:900,height:1000,transparent:true,
    render:{antialias:true,roundPixels:false,transparent:true},
    resolution:Math.min(window.devicePixelRatio||1,2),
    scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},
