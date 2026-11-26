@@ -420,7 +420,7 @@ function rounded(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r)
 let mapLastFrame=0;
 function drawMap(now=0){
  // Gerakan kamera diberi kadar lukisan lebih tinggi; ketika pegun kekalkan kadar ringan.
- const frameInterval=drag&&drag.moved?16:33;
+ const frameInterval=drag&&drag.moved?33:(/Android/i.test(navigator.userAgent||'')?100:66);
  if(now-mapLastFrame<frameInterval){requestAnimationFrame(drawMap);return}mapLastFrame=now;
  let w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);ctx.save();ctx.translate(camera.x,camera.y);ctx.scale(camera.scale,camera.scale);
  const viewLeft=Math.max(-1000,(-camera.x)/camera.scale-80),viewTop=Math.max(-1000,(-camera.y)/camera.scale-80),viewRight=Math.min(2000,(w-camera.x)/camera.scale+80),viewBottom=Math.min(3400,(h-camera.y)/camera.scale+80);
@@ -459,7 +459,7 @@ function drawMap(now=0){
  // Kemudahan bandar dinamik kini dipaparkan melalui Phaser Graphics.
  // Trafik kereta dan pejalan kaki kini dipaparkan melalui Phaser Graphics.
  // Festival, orang ramai dan kitaran siang-malam kini dipaparkan melalui Phaser Graphics.
-  ctx.restore();tick++;if(window.GaspuroMapBridge)window.GaspuroMapBridge.refresh();requestAnimationFrame(drawMap)
+  ctx.restore();tick++;if(phaserMapTexture)phaserMapTexture.refresh();requestAnimationFrame(drawMap)
 }
 /* Phaser WebGL map bridge: Canvas lama kekal sebagai sumber data dan input
    sehingga semua objek bandar dipindahkan ke Game Objects secara berperingkat. */
@@ -882,7 +882,7 @@ function bootPhaserMapBridge(){
        const skins=[0xe9b991,0xc98f69,0xf0c9a4,0xa96f50,0xd9a17d],hairs=[0x3d3029,0x272b2d,0x594332,0x332c28,0x78563b];
        const routeLengths=routes.map(pts=>pts.reduce((sum,p,k)=>sum+Math.hypot(pts[(k+1)%pts.length][0]-p[0],pts[(k+1)%pts.length][1]-p[1]),0));
        // Agihan rawak tetapi seimbang: setiap lot mendapat sekurang-kurangnya 3 orang.
-       const pedestrianCount=280,routeCounts=routes.map(()=>3);
+       const pedestrianCount=/Android/i.test(navigator.userAgent||'')?72:180,routeCounts=routes.map(()=>3);
        let remainingPeople=pedestrianCount-routeCounts.reduce((a,b)=>a+b,0);
        let seed=20261122;
        const random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
@@ -927,8 +927,9 @@ function bootPhaserMapBridge(){
       // refresh tekstur peta atau kitaran update Phaser.
       const animateTraffic=(now)=>{
        if(!this.sys.isActive())return;
-       if(now-lastTrafficFrame>=33){
-        const elapsed=lastTrafficFrame?Math.min(66,now-lastTrafficFrame):33;
+       const trafficFrameInterval=/Android/i.test(navigator.userAgent||'')?66:33;
+       if(now-lastTrafficFrame>=trafficFrameInterval){
+        const elapsed=lastTrafficFrame?Math.min(trafficFrameInterval*2,now-lastTrafficFrame):trafficFrameInterval;
         trafficTick+=elapsed/16.667;
         lastTrafficFrame=now;
         drawTrafficAndPeople();
@@ -1116,8 +1117,8 @@ function bootPhaserMapBridge(){
   const mapRenderer=Phaser.CANVAS;
   phaserMapBridge=new Phaser.Game({
    type:mapRenderer,parent:mount,width:900,height:1000,transparent:true,
-   render:{antialias:true,roundPixels:false,transparent:true,failIfMajorPerformanceCaveat:false},
-   resolution:Math.min(window.devicePixelRatio||1,2),
+   render:{antialias:!/Android/i.test(navigator.userAgent||''),roundPixels:true,transparent:true,failIfMajorPerformanceCaveat:false},
+   resolution:/Android/i.test(navigator.userAgent||'')?1:Math.min(window.devicePixelRatio||1,2),
    scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},
    scene:[GaspuroMapBridgeScene],banner:false
   });
@@ -1426,7 +1427,7 @@ function openInfoPanel(mode,id){
  }
  modal.classList.add('show');
 }
-function render(){GaspuroStateBridge.publish();refreshPhaserTown();renderCityPhase1(); $('landCount').textContent=(s.buildings.length+(s.landProjects||[]).length)+'/'+unlockedLots()+' lot';$('cash').textContent=fmt(s.money);$('level').textContent=s.level;$('customers').textContent=s.customers;$('businesses').textContent=s.buildings.length;$('income').textContent=fmt(s.totalIncome);$('rate').textContent=fmt(s.buildings.reduce((a,b)=>a+incomeRate(b),0));$('workers').textContent=s.workers;$('rating').textContent='⭐ '+s.rating.toFixed(1);$('levelBar').style.width=(s.xp/(s.level*100)*100)+'%';$('xpText').textContent=s.xp+' / '+(s.level*100)+' XP ke level seterusnya';
+function render(){GaspuroStateBridge.publish();refreshPhaserTown();if(window.GaspuroMapBridge)window.GaspuroMapBridge.refresh();renderCityPhase1(); $('landCount').textContent=(s.buildings.length+(s.landProjects||[]).length)+'/'+unlockedLots()+' lot';$('cash').textContent=fmt(s.money);$('level').textContent=s.level;$('customers').textContent=s.customers;$('businesses').textContent=s.buildings.length;$('income').textContent=fmt(s.totalIncome);$('rate').textContent=fmt(s.buildings.reduce((a,b)=>a+incomeRate(b),0));$('workers').textContent=s.workers;$('rating').textContent='⭐ '+s.rating.toFixed(1);$('levelBar').style.width=(s.xp/(s.level*100)*100)+'%';$('xpText').textContent=s.xp+' / '+(s.level*100)+' XP ke level seterusnya';
  $('businessList').innerHTML=s.buildings.map(b=>'<div class="card"><b>'+bizType(b).emoji+' '+bizType(b).name+'</b><small>Lot '+(b.lot+1)+' · Tahap '+b.level+' · '+fmt(incomeRate(b)*.6)+'/min</small><small>Dalam tabung: '+fmt(b.bank)+'</small><button class="btn soft" data-detail="'+b.id+'">📊 Lihat prestasi kedai</button><button class="btn gold" data-collect="'+b.id+'">💰 Kutip '+fmt(b.bank)+'</button><button class="btn" style="margin-top:5px" data-upbiz="'+b.id+'">⬆️ Upgrade · '+fmt(90*b.level)+'</button></div>').join('');
  $('staffList').innerHTML='<div class="card"><b>👥 Pasukan restoran</b><small>Pekerja boleh diagihkan mengikut tugas. Pekerja belum ditugaskan: '+Math.max(0,s.workers-assignedStaff())+'</small><b>'+s.workers+' orang · '+assignedStaff()+' ditugaskan</b><button class="btn" data-hire>Ambil pekerja · '+fmt(100+s.workers*85)+'</button></div>'+[['kitchen','👨‍🍳 Dapur','Tambah 5 saat masa memasak setiap pekerja (maksimum +15s).'],['cashier','🧑‍💼 Cashier','Mempercepatkan proses bayaran pelanggan.'],['service','🧑‍🍽️ Servis pelanggan','Tambah kesabaran pelanggan dan percepatkan ketibaan pelanggan.']].map(([k,n,d])=>'<div class="card"><b>'+n+'</b><small>'+d+'</small><b>'+s.staff[k]+' pekerja ditugaskan</b><div class="row" style="margin-top:7px;gap:5px"><button class="btn" data-assign="'+k+'" '+(assignedStaff()>=s.workers?'disabled':'')+'>＋ Tugaskan</button><button class="btn soft" data-unassign="'+k+'" '+(!s.staff[k]?'disabled':'')+'>− Keluarkan</button></div></div>').join('');
  const ups=[['marketing','📣 Marketing','Tambah hasil semua kedai 12%',150],['quality','⭐ Resipi premium','Tambah hasil semua kedai 8%',150],['traffic','🚗 Tarikan pelawat','Tambah kadar pelanggan bandar',150]];
