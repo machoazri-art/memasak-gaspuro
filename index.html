@@ -1109,12 +1109,11 @@ function bootPhaserMapBridge(){
     }catch(err){fallbackPhaserMapBridge(err)}
    }
   }
-  // Pilih renderer mengikut platform:
-  // iOS kekal menggunakan Canvas yang telah disahkan stabil.
-  // Android dipaksa menggunakan WebGL (bukan AUTO) supaya Phaser tidak
-  // senyap memilih Canvas fallback yang pada peranti ini gagal melukis layers.
-  const isAndroidMap=/Android/i.test(navigator.userAgent||'');
-  const mapRenderer=isAndroidMap?Phaser.WEBGL:Phaser.CANVAS;
+  // Gunakan Phaser Canvas renderer pada semua telefon.
+  // Android WebGL gagal memulakan scene bridge pada sesetengah GPU/driver,
+  // lalu fallback legacy hanya memaparkan rumput. Canvas renderer sama
+  // seperti laluan iPhone yang telah disahkan dan masih melukis semua layers.
+  const mapRenderer=Phaser.CANVAS;
   phaserMapBridge=new Phaser.Game({
    type:mapRenderer,parent:mount,width:900,height:1000,transparent:true,
    render:{antialias:true,roundPixels:false,transparent:true,failIfMajorPerformanceCaveat:false},
