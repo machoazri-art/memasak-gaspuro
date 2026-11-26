@@ -1505,32 +1505,61 @@ function bootPhaserRestaurant(){
     }
     createCustomerActor(id,face,bubble,x,y,onTap){
       if(!this.customerActors)this.customerActors=new Map();
-      const shadow=this.add.ellipse(x,y+20,34,11,0x493923,.22).setDepth(10);
-      const avatar=this.add.text(x,y,face,{fontFamily:'system-ui',fontSize:'34px',color:'#ffffff',stroke:'#684b36',strokeThickness:2,backgroundColor:'#fff2d9',padding:{x:7,y:5}}).setOrigin(.5).setDepth(11);
-      const tag=this.add.text(x,y-38,bubble,{fontFamily:'system-ui',fontSize:'13px',fontStyle:'bold',color:'#49351f',backgroundColor:'#fff7df',padding:{x:7,y:5},align:'center'}).setOrigin(.5).setDepth(12);
-      avatar.setInteractive({useHandCursor:true});avatar.on('pointerdown',onTap);
-      this.physics.add.existing(avatar);
-      avatar.body.setSize(25,34).setAllowGravity(false).setCollideWorldBounds(true).setImmovable(true);
-      const actor={avatar,tag,shadow};this.customerActors.set(id,actor);
-      this.tweens.add({targets:avatar,y:y-3,duration:650,yoyo:true,repeat:-1,ease:'Sine.easeInOut'});
+      const palette=[0x477fa8,0xd46c55,0x5d966c,0xd3a94e,0x8b6ca6,0x438b88];
+      const skin=[0xf0c9a4,0xc98f69,0xa96f50,0xe4b18c,0x8b5e43][id%5];
+      const shirt=palette[id%palette.length],walk=this.add.container(x,y).setDepth(12);
+      const shadow=this.add.ellipse(x,y+22,36,10,0x493923,.24).setDepth(10);
+      const legs=[];
+      [-8,8].forEach((dx,i)=>{
+        const leg=this.add.rectangle(dx,15,7,19,0x344b43).setOrigin(.5,0);
+        walk.add(leg);legs.push(leg);
+        const shoe=this.add.ellipse(dx+(i?2:-2),33,11,5,0x4a392f);walk.add(shoe);
+      });
+      const arms=[];
+      [-17,17].forEach((dx,i)=>{
+        const arm=this.add.rectangle(dx,1,7,23,skin).setOrigin(.5,0);
+        arm.rotation=i?-.16:.16;walk.add(arm);arms.push(arm);
+      });
+      const torso=this.add.rectangle(0,3,27,30,shirt).setStrokeStyle(2,0xffffff,.8);
+      walk.add(torso);
+      const neck=this.add.rectangle(0,-15,8,7,skin);walk.add(neck);
+      const head=this.add.circle(0,-26,13,skin).setStrokeStyle(1.5,0x684b36,.8);walk.add(head);
+      const hair=this.add.arc(0,-29,13,185,355,false,0x49372d).setOrigin(.5);hair.setStrokeStyle(5,0x49372d);walk.add(hair);
+      const eyeL=this.add.circle(-4,-26,1.4,0x302820),eyeR=this.add.circle(4,-26,1.4,0x302820);
+      walk.add([eyeL,eyeR]);
+      const tag=this.add.text(x,y-58,bubble,{fontFamily:'system-ui',fontSize:'12px',fontStyle:'bold',color:'#49351f',backgroundColor:'#fff7df',padding:{x:7,y:5},align:'center'}).setOrigin(.5).setDepth(14);
+      walk.setSize(48,66);walk.setInteractive(new Phaser.Geom.Rectangle(-24,-38,48,76),Phaser.Geom.Rectangle.Contains);walk.on('pointerdown',onTap);
+      const actor={avatar:walk,tag,shadow,legs,arms,baseY:y};
+      this.customerActors.set(id,actor);
+      this.tweens.add({targets:walk,y:y-2,duration:850,yoyo:true,repeat:-1,ease:'Sine.easeInOut'});
+      legs.forEach((leg,i)=>this.tweens.add({targets:leg,angle:i?12:-12,duration:260,yoyo:true,repeat:-1,delay:i*130,ease:'Sine.easeInOut'}));
+      arms.forEach((arm,i)=>this.tweens.add({targets:arm,angle:i?9:-9,duration:300,yoyo:true,repeat:-1,delay:i*150,ease:'Sine.easeInOut'}));
       return actor;
     }
     moveCustomerActor(id,x,y,bubble){
       const actor=this.customerActors&&this.customerActors.get(id);if(!actor)return;
       const tx=x*9,ty=y*7.6;
-      this.tweens.add({targets:actor.avatar,x:tx,y:ty,duration:850,ease:'Sine.easeInOut'});
-      this.tweens.add({targets:actor.tag,x:tx,y:ty-38,duration:850,ease:'Sine.easeInOut'});
-      this.tweens.add({targets:actor.shadow,x:tx,y:ty+20,duration:850,ease:'Sine.easeInOut'});
+      this.tweens.killTweensOf(actor.avatar);this.tweens.killTweensOf(actor.tag);this.tweens.killTweensOf(actor.shadow);
+      actor.avatar.setScale(1,1);
+      this.tweens.add({targets:actor.avatar,x:tx,y:ty-2,duration:1150,ease:'Sine.easeInOut',onComplete:()=>{
+        if(actor.avatar&&actor.avatar.active)this.tweens.add({targets:actor.avatar,y:ty-4,duration:700,yoyo:true,repeat:-1,ease:'Sine.easeInOut'});
+      }});
+      this.tweens.add({targets:actor.tag,x:tx,y:ty-60,duration:1150,ease:'Sine.easeInOut'});
+      this.tweens.add({targets:actor.shadow,x:tx,y:ty+22,duration:1150,ease:'Sine.easeInOut'});
       if(bubble)actor.tag.setText(bubble);
     }
     updateCustomerActor(id,face,bubble){
       const actor=this.customerActors&&this.customerActors.get(id);if(!actor)return;
-      if(face)actor.avatar.setText(face);if(bubble)actor.tag.setText(bubble);
+      if(face==='😟'){actor.avatar.setAlpha(.78)}
+      if(face==='😋'){actor.avatar.setScale(1.06)}
+      if(bubble)actor.tag.setText(bubble);
     }
     removeCustomerActor(id,duration=500){
       const actor=this.customerActors&&this.customerActors.get(id);if(!actor)return;
       this.customerActors.delete(id);
-      this.tweens.add({targets:[actor.avatar,actor.tag,actor.shadow],alpha:0,scale:.5,duration,onComplete:()=>{actor.avatar.destroy();actor.tag.destroy();actor.shadow.destroy()}});
+      this.tweens.add({targets:[actor.avatar,actor.tag,actor.shadow],alpha:0,scale:.5,duration,onComplete:()=>{
+        actor.avatar.destroy();actor.tag.destroy();actor.shadow.destroy();
+      }});
     }
     renderStaffActors(staff){
       if(this.staffActors)this.staffActors.forEach(a=>[a.avatar,a.tag].forEach(o=>o.destroy()));
@@ -1565,10 +1594,15 @@ function bootPhaserRestaurant(){
 }
 
 function phaserScene(){return phaserRestaurantGame&&phaserRestaurantGame.scene.getScene('GaspuroRestaurantScene')}
-function phaserCreateCustomer(){}
-function phaserMoveCustomer(){}
-function phaserUpdateCustomer(){}
-function phaserRemoveCustomer(){}
+function phaserCreateCustomer(customer,x,y,targetX,targetY,bubble){
+ const scene=phaserScene();if(!scene||!scene.createCustomerActor)return;
+ const tap=()=>{if(customer&&customer.node&&customer.node.isConnected)customer.node.click()};
+ scene.createCustomerActor(customer.id,customer.face,bubble,x*9,y*7.6,tap);
+ if(targetX!==x||targetY!==y)scene.moveCustomerActor(customer.id,targetX,targetY,bubble);
+}
+function phaserMoveCustomer(customer,x,y,bubble){const scene=phaserScene();if(scene&&scene.moveCustomerActor)scene.moveCustomerActor(customer.id,x,y,bubble)}
+function phaserUpdateCustomer(customer,face,bubble){const scene=phaserScene();if(scene&&scene.updateCustomerActor)scene.updateCustomerActor(customer.id,face,bubble)}
+function phaserRemoveCustomer(customer,duration=500){const scene=phaserScene();if(scene&&scene.removeCustomerActor)scene.removeCustomerActor(customer.id,duration)}
 function phaserRenderStaff(){}
 function menuPrice(b){return Math.max(1,Number(s.menuPrices[b.id])||bizType(b).base)}
 function orderEarning(b){const base=bizType(b).base,price=menuPrice(b),festivalBonus=festivalNow()?1.15:1,vipBonus=activeOrder&&activeOrder.isVip?1.5:1,regularBonus=activeOrder&&activeOrder.isRegular?1.12:1,skillBonus=1+(s.workerSkill||0)*.05,stockPenalty=(s.ingredients||0)<=0?.7:1;return Math.max(1,Math.round(base*(1+b.level*.15)*(price/base)*festivalBonus*vipBonus*regularBonus*skillBonus*stockPenalty))}
