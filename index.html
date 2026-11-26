@@ -1025,8 +1025,9 @@ function bootPhaserMapBridge(){
      const zoneColors={komersial:0xe4b84f,perumahan:0x6da7d5,pelancongan:0x52b9a2,industri:0x99958e,rekreasi:0x78b85e};
      for(let n=0;n<88;n++){
       const zoneLabel=this.add.text(0,0,'',{fontFamily:'system-ui',fontSize:'8px',fontStyle:'bold',color:'#26372c'}).setOrigin(0,0);
+      const idLabel=this.add.text(0,0,'',{fontFamily:'system-ui',fontSize:'7px',fontStyle:'bold',color:'#26372c'}).setOrigin(1,0);
       const emptyLabel=this.add.text(0,0,'',{fontFamily:'system-ui',fontSize:'bold 19px',color:'#f8f3d9',align:'center'}).setOrigin(.5,.5);
-      lotZoneLabels.push(zoneLabel);lotEmptyLabels.push(emptyLabel);lotTextLayer.add([zoneLabel,emptyLabel]);
+      lotZoneLabels.push(zoneLabel);lotIdLabels.push(idLabel);lotEmptyLabels.push(emptyLabel);lotTextLayer.add([zoneLabel,idLabel,emptyLabel]);
      }
      const drawLots=()=>{
       lotLayer.clear();
