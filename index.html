@@ -419,9 +419,12 @@ function lotSlotPos(lot){
 function rounded(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=3;ctx.stroke()}}
 let mapLastFrame=0;
 function drawMap(now=0){
- // Gerakan kamera diberi kadar lukisan lebih tinggi; ketika pegun kekalkan kadar ringan.
- const frameInterval=drag&&drag.moved?33:(/Android/i.test(navigator.userAgent||'')?100:66);
- if(now-mapLastFrame<frameInterval){requestAnimationFrame(drawMap);return}mapLastFrame=now;
+ // Android: lukis hanya apabila ada perubahan (kamera, binaan atau keadaan bandar).
+ // Ini mengelakkan Canvas sumber dan tekstur Phaser disalin semula tanpa henti.
+ const isAndroid=/Android/i.test(navigator.userAgent||'');
+ const frameInterval=drag&&drag.moved?33:(isAndroid?100:66);
+ if(now>0&&now-mapLastFrame<frameInterval){requestAnimationFrame(drawMap);return}
+ mapLastFrame=now>0?now:0;
  let w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);ctx.save();ctx.translate(camera.x,camera.y);ctx.scale(camera.scale,camera.scale);
  const viewLeft=Math.max(-1000,(-camera.x)/camera.scale-80),viewTop=Math.max(-1000,(-camera.y)/camera.scale-80),viewRight=Math.min(2000,(w-camera.x)/camera.scale+80),viewBottom=Math.min(3400,(h-camera.y)/camera.scale+80);
  ctx.fillStyle='#b7d99d';ctx.fillRect(-1000,-1000,3000,3000);
@@ -459,7 +462,8 @@ function drawMap(now=0){
  // Kemudahan bandar dinamik kini dipaparkan melalui Phaser Graphics.
  // Trafik kereta dan pejalan kaki kini dipaparkan melalui Phaser Graphics.
  // Festival, orang ramai dan kitaran siang-malam kini dipaparkan melalui Phaser Graphics.
-  ctx.restore();tick++;if(phaserMapTexture)phaserMapTexture.refresh();requestAnimationFrame(drawMap)
+  ctx.restore();tick++;if(phaserMapTexture)phaserMapTexture.refresh();
+ if(!isAndroid)requestAnimationFrame(drawMap);
 }
 /* Phaser WebGL map bridge: Canvas lama kekal sebagai sumber data dan input
    sehingga semua objek bandar dipindahkan ke Game Objects secara berperingkat. */
@@ -882,7 +886,7 @@ function bootPhaserMapBridge(){
        const skins=[0xe9b991,0xc98f69,0xf0c9a4,0xa96f50,0xd9a17d],hairs=[0x3d3029,0x272b2d,0x594332,0x332c28,0x78563b];
        const routeLengths=routes.map(pts=>pts.reduce((sum,p,k)=>sum+Math.hypot(pts[(k+1)%pts.length][0]-p[0],pts[(k+1)%pts.length][1]-p[1]),0));
        // Agihan rawak tetapi seimbang: setiap lot mendapat sekurang-kurangnya 3 orang.
-       const pedestrianCount=/Android/i.test(navigator.userAgent||'')?72:180,routeCounts=routes.map(()=>3);
+       const pedestrianCount=/Android/i.test(navigator.userAgent||'')?24:180,routeCounts=routes.map(()=>3);
        let remainingPeople=pedestrianCount-routeCounts.reduce((a,b)=>a+b,0);
        let seed=20261122;
        const random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
@@ -927,7 +931,7 @@ function bootPhaserMapBridge(){
       // refresh tekstur peta atau kitaran update Phaser.
       const animateTraffic=(now)=>{
        if(!this.sys.isActive())return;
-       const trafficFrameInterval=/Android/i.test(navigator.userAgent||'')?66:33;
+       const trafficFrameInterval=/Android/i.test(navigator.userAgent||'')?100:33;
        if(now-lastTrafficFrame>=trafficFrameInterval){
         const elapsed=lastTrafficFrame?Math.min(trafficFrameInterval*2,now-lastTrafficFrame):trafficFrameInterval;
         trafficTick+=elapsed/16.667;
@@ -1118,6 +1122,7 @@ function bootPhaserMapBridge(){
   phaserMapBridge=new Phaser.Game({
    type:mapRenderer,parent:mount,width:900,height:1000,transparent:true,
    render:{antialias:!/Android/i.test(navigator.userAgent||''),roundPixels:true,transparent:true,failIfMajorPerformanceCaveat:false},
+   fps:/Android/i.test(navigator.userAgent||'')?{target:30,forceSetTimeOut:true}:{target:60},
    resolution:/Android/i.test(navigator.userAgent||'')?1:Math.min(window.devicePixelRatio||1,2),
    scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},
    scene:[GaspuroMapBridgeScene],banner:false
