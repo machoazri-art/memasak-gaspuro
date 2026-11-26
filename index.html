@@ -238,7 +238,7 @@
 /* Customer presentation: character only, no emoji or floating text. */
 .customerNpc{width:1px!important;height:1px!important;min-width:0!important;min-height:0!important;padding:0!important;margin:0!important;background:transparent!important;border:0!important;box-shadow:none!important;filter:none!important;pointer-events:none!important;overflow:visible!important}
 .customerNpc .avatar,.customerNpc .orderBubble{display:none!important}
-</style></head><body><div class="app">
+\n/* Customer visual cleanup: hide all food/payment indicators on customer sprites and DOM fallbacks. */\n.customerNpc .orderBubble,.customerNpc .avatar{display:none!important;visibility:hidden!important;opacity:0!important}\n.customerNpc .orderBubble:before,.customerNpc .orderBubble:after{content:none!important;display:none!important}\n.customerNpc.waiting .orderBubble,.customerNpc.eating .orderBubble,.customerNpc.paying .orderBubble{display:none!important;background:transparent!important;animation:none!important}\n</style></head><body><div class="app">
 <header class="top"><div class="logo">🍳</div><div class="brand"><b>Memasak Gaspuro</b><small>Food Tycoon · Bandar Makanan Malaysia 🇲🇾</small></div><div class="cash" id="cash">RM80</div></header>
 <div class="stats"><div class="stat"><small>⭐ LEVEL</small><b id="level">1</b></div><div class="stat"><small>👥 PELANGGAN</small><b id="customers">0</b></div><div class="stat"><small>🏪 PERNIAGAAN</small><b id="businesses">1</b></div></div>
 <div class="layout"><main>
@@ -1546,7 +1546,7 @@ function bootPhaserRestaurant(){
       this.tweens.add({targets:actor.avatar,x:tx,y:ty-2,duration:1150,ease:'Sine.easeInOut',onComplete:()=>{
         if(actor.avatar&&actor.avatar.active)this.tweens.add({targets:actor.avatar,y:ty-4,duration:700,yoyo:true,repeat:-1,ease:'Sine.easeInOut'});
       }});
-      this.tweens.add({targets:actor.tag,x:tx,y:ty-60,duration:1150,ease:'Sine.easeInOut'});
+      // Customer labels are intentionally disabled.
       this.tweens.add({targets:actor.shadow,x:tx,y:ty+22,duration:1150,ease:'Sine.easeInOut'});
       // No emoji or text labels above customers.
     }
@@ -1554,7 +1554,7 @@ function bootPhaserRestaurant(){
       const actor=this.customerActors&&this.customerActors.get(id);if(!actor)return;
       if(face==='😟'){actor.avatar.setAlpha(.78)}
       if(face==='😋'){actor.avatar.setScale(1.06)}
-      if(bubble)actor.tag.setText(bubble);
+      // Customer labels and emoji bubbles are intentionally disabled.
     }
     removeCustomerActor(id,duration=500){
       const actor=this.customerActors&&this.customerActors.get(id);if(!actor)return;
