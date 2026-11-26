@@ -270,7 +270,7 @@ function assignedStaff(){return Object.values(s.staff).reduce((a,b)=>a+(Number(b
 function assignStaff(role){if(!s.staff||!(role in s.staff))return;const used=assignedStaff();if(used>=s.workers)return toast('Ambil pekerja dahulu sebelum tetapkan tugas.');s.staff[role]++;const names={kitchen:'Dapur',cashier:'Cashier',service:'Servis pelanggan'};toast('Pekerja ditugaskan ke '+names[role]+'!');log('👥 Seorang pekerja kini bertugas: '+names[role]);refreshCustomerFlow();renderInteriorStaff();save()}
 function unassignStaff(role){if(!s.staff[role])return;s.staff[role]--;refreshCustomerFlow();renderInteriorStaff();save();toast('Pekerja dikembalikan ke senarai belum ditugaskan.')}
 function upgrade(k){let names={marketing:'Promosi media sosial',quality:'Resipi premium',traffic:'Tarikan pelawat'},cost=150+(s.upgrades[k]||0)*125;if(s.money<cost)return toast('Duit tak cukup!');s.money-=cost;s.upgrades[k]++;toast(names[k]+' dinaik taraf!');save()}
-function levelCheck(){const oldLevel=s.level;while(s.xp>=s.level*100){s.xp-=s.level*100;s.level++;s.money+=50;log('🎉 Bandar naik ke level '+s.level+'! Bonus RM50');toast('Level '+s.level+' dibuka! +RM50')}awardMilestones(oldLevel);checkAchievements()}
+function levelCheck(){const oldLevel=s.level;while(s.xp>=s.level*100){s.xp-=s.level*100;s.level++;s.money+=1000000;log('🎉 Bandar naik ke level '+s.level+'! Bonus '+fmt(1000000));toast('Level '+s.level+' dibuka! +'+fmt(1000000))}awardMilestones(oldLevel);checkAchievements()}
 
 /* Fasa 4 · Phaser town map — seamless top-down pixel-art neighbourhood. */
 let phaserTownGame=null;
