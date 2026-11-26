@@ -303,7 +303,7 @@ function upgrade(k){
  const names={marketing:'Marketing',quality:'Resipi premium',traffic:'Tarikan pelawat'};
  if(!Object.prototype.hasOwnProperty.call(names,k))return;
  const current=Math.max(0,Math.floor(Number(s.upgrades[k])||0));
- const raw=prompt('Naik taraf '+names[k]+'\\nTahap semasa: '+current+'\\nMasukkan tahap sasaran (contoh: '+(current+5)+'):');
+ const raw=prompt('Naik taraf '+names[k]+'\nTahap semasa: '+current+'\nMasukkan tahap sasaran (contoh: '+(current+5)+'):');
  if(raw===null)return;
  const target=Number(raw.trim());
  if(!Number.isSafeInteger(target)||target<=current||target>1000)return toast('Masukkan tahap sasaran nombor bulat antara '+(current+1)+' hingga 1000.');
@@ -312,7 +312,7 @@ function upgrade(k){
  if(!Number.isSafeInteger(cost)||cost<0)return toast('Jumlah kos tidak sah.');
  if(s.money<cost)return toast('Duit tak cukup! Perlukan '+fmt(cost)+', baki '+fmt(s.money)+'. Tiada upgrade dibuat.');
  const remaining=s.money-cost;
- if(!confirm('Sahkan upgrade '+names[k]+'?\\nTahap: '+current+' → '+target+'\\nJumlah tahap: '+levels+'\\nJumlah kos: '+fmt(cost)+'\\nBaki selepas upgrade: '+fmt(remaining)))return;
+ if(!confirm('Sahkan upgrade '+names[k]+'?\nTahap: '+current+' → '+target+'\nJumlah tahap: '+levels+'\nJumlah kos: '+fmt(cost)+'\nBaki selepas upgrade: '+fmt(remaining)))return;
  s.money=remaining;s.upgrades[k]=target;
  log('⬆️ '+names[k]+' dinaik taraf dari tahap '+current+' ke tahap '+target+' dengan kos '+fmt(cost));
  toast(names[k]+' berjaya dinaik taraf ke tahap '+target+'!');
