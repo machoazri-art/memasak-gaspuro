@@ -187,6 +187,16 @@
  #inside .room.topRoom{max-height:48svh!important;min-height:260px!important}
  #inside .insideActions button{min-height:70px!important}
 }
+
+/* Hard fix: keep restaurant close control outside the overlapping site header */
+#inside.show{padding-top:env(safe-area-inset-top)!important}
+#inside .insideTop{position:relative!important;top:auto!important;margin:46px auto 10px!important;padding-top:8px!important;padding-right:58px!important;z-index:30!important}
+#inside .closeInside{position:fixed!important;top:calc(env(safe-area-inset-top) + 48px)!important;right:16px!important;z-index:99999!important;width:46px!important;height:46px!important;min-width:46px!important;flex:0 0 46px!important;display:grid!important;place-items:center!important;border:2px solid #f8e8c5!important;border-radius:50%!important;background:#fff5dc!important;color:#294632!important;font-size:29px!important;font-weight:900!important;line-height:1!important;box-shadow:0 4px 18px #071b1470!important;pointer-events:auto!important;touch-action:manipulation!important}
+#inside .closeInside:active{transform:scale(.92)!important;background:#f5d98f!important}
+@media(max-width:600px){
+ #inside .insideTop{margin-top:46px!important;padding-right:54px!important}
+ #inside .closeInside{top:calc(env(safe-area-inset-top) + 48px)!important;right:14px!important}
+}
 </style></head><body><div class="app">
 <header class="top"><div class="logo">🍳</div><div class="brand"><b>Memasak Gaspuro</b><small>Food Tycoon · Bandar Makanan Malaysia 🇲🇾</small></div><div class="cash" id="cash">RM80</div></header>
 <div class="stats"><div class="stat"><small>⭐ LEVEL</small><b id="level">1</b></div><div class="stat"><small>👥 PELANGGAN</small><b id="customers">0</b></div><div class="stat"><small>🏪 PERNIAGAAN</small><b id="businesses">1</b></div></div>
