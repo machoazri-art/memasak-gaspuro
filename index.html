@@ -727,20 +727,27 @@ function bootPhaserMapBridge(){
      const drawStreetLamps=()=>{
       lampLayer.clear();
       const phase=townClock(),night=Math.max(0,Math.min(1,(Math.cos((phase-.5)*Math.PI*2)+.08)/1.08));
-      const lamp=(x,y)=>{
-       if(night>0.01){lampLayer.fillStyle(0xffe799,night*.34);lampLayer.fillCircle(x,y,34)}
+      const lamp=(x,y,index=0)=>{
+       const warm=0xffd982,pulse=.88+Math.sin(trafficTick*.055+index*1.7)*.12;
+       if(night>0.015){
+        const glow=night*pulse;
+        lampLayer.fillStyle(warm,glow*.055);lampLayer.fillCircle(x+11,y-29,58);
+        lampLayer.fillStyle(warm,glow*.10);lampLayer.fillCircle(x+11,y-29,37);
+        lampLayer.fillStyle(0xffefb8,glow*.20);lampLayer.fillCircle(x+11,y-29,19);
+        lampLayer.fillStyle(0xffe8a6,glow*.055);lampLayer.fillTriangle(x-5,y-25,x+27,y-25,x+48,y+54);
+       }
        lampLayer.fillStyle(0x2a352b,.22);lampLayer.fillEllipse(x+2,y+5,16,8);
        lampLayer.fillStyle(0x4b5550,1);lampLayer.fillRoundedRect(x-2,y-2,4,11,2);
        lampLayer.lineStyle(3,0x46514c,1);lampLayer.beginPath();lampLayer.moveTo(x,y);lampLayer.lineTo(x,y-24);lampLayer.lineTo(x+9,y-29);lampLayer.strokePath();
        lampLayer.fillStyle(0x303b38,1);lampLayer.fillRoundedRect(x+5,y-33,12,7,3);
-       lampLayer.fillStyle(0xffe9a6,1);lampLayer.fillRoundedRect(x+8,y-32,7,4,2);
-       lampLayer.fillStyle(0xffefb8,.75);lampLayer.fillCircle(x+11,y-29,3+Math.sin(tick*.06)*.35);
+       lampLayer.fillStyle(0xffe9a6,night>.04?Math.min(1,.45+night*.55):.22);lampLayer.fillRoundedRect(x+8,y-32,7,4,2);
+       lampLayer.fillStyle(0xffefb8,.45+night*.45);lampLayer.fillCircle(x+11,y-29,3+Math.sin(trafficTick*.09+index)*.45);
       };
-      for(let x=-570;x<1550;x+=190){lamp(x,5);lamp(x,89);lamp(x,3195);lamp(x,3285)}
-      for(let y=-600;y<2200;y+=190){lamp(-3,y);lamp(93,y);lamp(863,y);lamp(957,y)}
+      let lampIndex=0;for(let x=-570;x<1550;x+=190){lamp(x,5,lampIndex++);lamp(x,89,lampIndex++);lamp(x,3195,lampIndex++);lamp(x,3285,lampIndex++)}
+      for(let y=-600;y<2200;y+=190){lamp(-3,y,lampIndex++);lamp(93,y,lampIndex++);lamp(863,y,lampIndex++);lamp(957,y,lampIndex++)}
       // Lampu dalaman diletakkan di bahu jalan, bukan di tengah lot.
-      for(let y=390;y<2600;y+=340){lamp(112,y);lamp(470,y);lamp(565,y);lamp(880,y);lamp(975,y)}
-      for(let y=120;y<2900;y+=190){lamp(470,y);lamp(565,y);lamp(880,y);lamp(975,y)}
+      for(let y=390;y<2600;y+=340){lamp(112,y,lampIndex++);lamp(470,y,lampIndex++);lamp(565,y,lampIndex++);lamp(880,y,lampIndex++);lamp(975,y,lampIndex++)}
+      for(let y=120;y<2900;y+=190){lamp(470,y,lampIndex++);lamp(565,y,lampIndex++);lamp(880,y,lampIndex++);lamp(975,y,lampIndex++)}
      };
      drawStreetLamps();
      // Kemudahan bandar yang dibina pemain dipaparkan berdasarkan data simpanan semasa.
@@ -1064,6 +1071,9 @@ function bootPhaserMapBridge(){
         trafficTick+=elapsed/16.667;
         lastTrafficFrame=now;
         drawTrafficAndPeople();
+        // Kesan atmosfera dan lampu dikemas kini pada kadar rendah yang sesuai untuk telefon.
+        drawStreetLamps();
+        drawTownAtmosphere();
        }
        this.trafficAnimationRaf=window.requestAnimationFrame(animateTraffic);
       };
@@ -1188,38 +1198,49 @@ function bootPhaserMapBridge(){
      const crowdLayer=this.add.graphics();
      const festivalLayer=this.add.graphics();
      const festivalTextLayer=this.add.container(0,0);
+     let festivalBanner=null;
      const drawTownAtmosphere=()=>{
-      nightLayer.clear();crowdLayer.clear();festivalLayer.clear();festivalTextLayer.removeAll(true);
+      nightLayer.clear();crowdLayer.clear();festivalLayer.clear();
       const phase=townClock(),night=Math.max(0,Math.min(1,(Math.cos((phase-.5)*Math.PI*2)+.08)/1.08));
-      if(night>.015){
-       nightLayer.fillStyle(0x16233e,night*.50);nightLayer.fillRect(-1000,-1000,3000,3000);
-       for(let i=0;i<14;i++){
-        const p=lotPos(i);
-        if(s.buildings.some(b=>b.lot===i)){
-         nightLayer.fillStyle(0xffe6a0,night*.95);nightLayer.fillRect(p.x+34,p.y+63,12,12);nightLayer.fillRect(p.x+96,p.y+63,12,12);
-        }
-       }
+      // Transisi senja/subuh berlapis, bukan pertukaran warna mengejut.
+      const dusk=Math.max(0,1-Math.abs(phase-.72)/.12),dawn=Math.max(0,1-Math.abs(phase-.02)/.10);
+      if(night>.01){
+       nightLayer.fillStyle(0x101c38,night*.53);nightLayer.fillRect(-1000,-1000,3000,4000);
+       // Bintang kecil berkelip pada waktu malam.
+       for(let i=0;i<42;i++){const x=(i*173+37)%1500-40,y=(i*239+91)%3300-80,a=night*(.28+.42*Math.abs(Math.sin(trafficTick*.025+i*2.1)));nightLayer.fillStyle(0xe8f1ff,a);nightLayer.fillCircle(x,y,1+(i%3)*.35)}
+       // Bulan dengan halo lembut.
+       nightLayer.fillStyle(0xc7d9ef,night*.07);nightLayer.fillCircle(1280,185,54);
+       nightLayer.fillStyle(0xfff1c6,night*.92);nightLayer.fillCircle(1280,185,17);
+       nightLayer.fillStyle(0x101c38,night*.8);nightLayer.fillCircle(1287,179,15);
+       for(let i=0;i<14;i++){const p=lotPos(i);if(s.buildings.some(b=>b.lot===i)){nightLayer.fillStyle(0xffe6a0,night*.88);nightLayer.fillRect(p.x+34,p.y+63,12,12);nightLayer.fillRect(p.x+96,p.y+63,12,12)}}
       }
+      if(dusk>.01){nightLayer.fillStyle(0xf29b65,dusk*.09);nightLayer.fillRect(-1000,-1000,3000,4000)}
+      if(dawn>.01){nightLayer.fillStyle(0xffd58b,dawn*.10);nightLayer.fillRect(-1000,-1000,3000,4000)}
       const crowdCount=Math.min(38,12+Math.floor(Math.log10((s.customers||0)+1)*5)+(s.landProjects||[]).length*2+(festivalNow()?12:0));
       const clothes=[0x477fa8,0xd46c55,0x5d966c,0xd3a94e,0x8b6ca6],skin=[0xe9b991,0xc98f69,0xf0c9a4,0xa96f50];
-      for(let n=0;n<crowdCount-12;n++){
-       const x=112+(n*97)%1260,y=[395,490,735,830,1075,1170,1415,1510][n%8];
-       crowdLayer.fillStyle(0x2d3e2a,.25);crowdLayer.fillEllipse(x,y+5,10,5);
-       crowdLayer.fillStyle(clothes[n%clothes.length],1);crowdLayer.fillCircle(x,y,4.5);
-       crowdLayer.fillStyle(skin[n%skin.length],1);crowdLayer.fillCircle(x,y-5,3);
+      for(let n=0;n<crowdCount-12;n++){const x=112+(n*97)%1260,y=[395,490,735,830,1075,1170,1415,1510][n%8];crowdLayer.fillStyle(0x2d3e2a,.25);crowdLayer.fillEllipse(x,y+5,10,5);crowdLayer.fillStyle(clothes[n%clothes.length],1);crowdLayer.fillCircle(x,y,4.5+Math.sin(trafficTick*.08+n)*.5);crowdLayer.fillStyle(skin[n%skin.length],1);crowdLayer.fillCircle(x,y-5,3)}
+      const event=cityEventNow();
+      if(event&&event.id==='rainstorm'){
+       for(let n=0;n<95;n++){const x=(n*137+trafficTick*3.2)%1600-50,y=(n*211+trafficTick*8.5)%3400-80;festivalLayer.lineStyle(1.4,0x9dc9e8,.28);festivalLayer.lineBetween(x,y,x-7,y+18)}
+       festivalLayer.fillStyle(0x243b55,.12);festivalLayer.fillRect(-1000,-1000,3000,4000);
+      }else if(event&&event.id==='power'){
+       const flicker=Math.max(0,Math.sin(trafficTick*.19)*Math.sin(trafficTick*.037));
+       if(flicker>.82){festivalLayer.fillStyle(0x101522,.18);festivalLayer.fillRect(-1000,-1000,3000,4000)}
       }
       if(festivalNow()){
        const colors=[0xd94f48,0xf3d36c,0x3f936d];
-       for(const p of plots){
-        if(!s.buildings.some(b=>b.lot===p.i)&&!landProjectAt(p.i))continue;
-        for(let n=0;n<3;n++)festivalLayer.fillStyle(colors[n],1),festivalLayer.fillRect(p.x+8+n*29,p.y+7,29,7);
-        festivalLayer.lineStyle(2,0xfff0b0,1);festivalLayer.lineBetween(p.x+8,p.y+4,p.x+95,p.y+4);
-        for(let n=0;n<5;n++){festivalLayer.fillStyle(colors[n%3],1);festivalLayer.fillCircle(p.x+14+n*18,p.y+3,3)}
+       for(const p of plots){if(!s.buildings.some(b=>b.lot===p.i)&&!landProjectAt(p.i))continue;
+        for(let n=0;n<3;n++)festivalLayer.fillStyle(colors[n],.72+.25*Math.sin(trafficTick*.12+n),),festivalLayer.fillRect(p.x+8+n*29,p.y+7,29,7);
+        festivalLayer.lineStyle(2,0xfff0b0,.75+.25*Math.sin(trafficTick*.1));festivalLayer.lineBetween(p.x+8,p.y+4,p.x+95,p.y+4);
+        for(let n=0;n<5;n++){const blink=.55+.45*Math.sin(trafficTick*.16+n*1.7);festivalLayer.fillStyle(colors[n%3],blink);festivalLayer.fillCircle(p.x+14+n*18,p.y+3,3+blink)}
        }
+       // Percikan bunga api ringkas, dikitar semula secara matematik tanpa sprite tambahan.
+       for(let burst=0;burst<3;burst++){const age=(trafficTick*.7+burst*19)%42, bx=260+burst*470,by=250+(burst%2)*720;for(let k=0;k<10;k++){const a=k*Math.PI/5,r=age*1.35;festivalLayer.fillStyle(colors[(k+burst)%3],Math.max(0,1-age/42));festivalLayer.fillCircle(bx+Math.cos(a)*r,by+Math.sin(a)*r,2.4)}}
        const eventIndex=Math.floor(tick/72000)%festivalNames.length;
        festivalLayer.fillStyle(0x423023,.88);festivalLayer.fillRoundedRect(300,637,280,34,12);
-       festivalTextLayer.add(this.add.text(440,644,'🎉 '+festivalNames[eventIndex],{fontFamily:'system-ui',fontSize:'15px',fontStyle:'bold',color:'#ffe7a3'}).setOrigin(.5,0));
-      }
+       if(!festivalBanner){festivalBanner=this.add.text(440,644,'',{fontFamily:'system-ui',fontSize:'15px',fontStyle:'bold',color:'#ffe7a3'}).setOrigin(.5,0);festivalTextLayer.add(festivalBanner)}
+       festivalBanner.setText('🎉 '+festivalNames[eventIndex]+' ✨').setAlpha(.78+.22*Math.sin(trafficTick*.12));
+      }else if(festivalBanner){festivalBanner.setVisible(false)}
      };
      drawTownAtmosphere();
      const syncRoadCamera=()=>{roadLayer.setPosition(camera.x,camera.y);roadLayer.setScale(camera.scale);roadLayer.setVisible(true);natureLayer.setPosition(camera.x,camera.y);natureLayer.setScale(camera.scale);lampLayer.setPosition(camera.x,camera.y);lampLayer.setScale(camera.scale);civicLayer.setPosition(camera.x,camera.y);civicLayer.setScale(camera.scale);residentialLayer.setPosition(camera.x,camera.y);residentialLayer.setScale(camera.scale);commercialLayer.setPosition(camera.x,camera.y);commercialLayer.setScale(camera.scale);cityStructureLayer.setPosition(camera.x,camera.y);cityStructureLayer.setScale(camera.scale);landProjectLayer.setPosition(camera.x,camera.y);landProjectLayer.setScale(camera.scale);streetFurnitureLayer.setPosition(camera.x,camera.y);streetFurnitureLayer.setScale(camera.scale);lotLayer.setPosition(camera.x,camera.y);lotLayer.setScale(camera.scale);streetTextLayer.setPosition(camera.x,camera.y);streetTextLayer.setScale(camera.scale);civicTextLayer.setPosition(camera.x,camera.y);civicTextLayer.setScale(camera.scale);residentialTextLayer.setPosition(camera.x,camera.y);residentialTextLayer.setScale(camera.scale);commercialTextLayer.setPosition(camera.x,camera.y);commercialTextLayer.setScale(camera.scale);trafficLayer.setPosition(camera.x,camera.y);trafficLayer.setScale(camera.scale);cityStructureTextLayer.setPosition(camera.x,camera.y);cityStructureTextLayer.setScale(camera.scale);landProjectTextLayer.setPosition(camera.x,camera.y);landProjectTextLayer.setScale(camera.scale);lotTextLayer.setPosition(camera.x,camera.y);lotTextLayer.setScale(camera.scale);nightLayer.setPosition(camera.x,camera.y);nightLayer.setScale(camera.scale);crowdLayer.setPosition(camera.x,camera.y);crowdLayer.setScale(camera.scale);festivalLayer.setPosition(camera.x,camera.y);festivalLayer.setScale(camera.scale);festivalTextLayer.setPosition(camera.x,camera.y);festivalTextLayer.setScale(camera.scale)};
@@ -1231,7 +1252,7 @@ function bootPhaserMapBridge(){
      commercialLayer.setDepth(22);commercialTextLayer.setDepth(23);
      cityStructureLayer.setDepth(24);cityStructureTextLayer.setDepth(25);
      landProjectLayer.setDepth(26);landProjectTextLayer.setDepth(27);
-     trafficLayer.setDepth(30);nightLayer.setDepth(31);crowdLayer.setDepth(32);festivalLayer.setDepth(33);festivalTextLayer.setDepth(34);
+     trafficLayer.setDepth(30);nightLayer.setDepth(31);lampLayer.setDepth(32);crowdLayer.setDepth(33);festivalLayer.setDepth(34);festivalTextLayer.setDepth(35);
      syncRoadCamera();
      this.scale.on('resize',(size)=>{if(phaserMapImage)phaserMapImage.setDisplaySize(size.width,size.height);syncRoadCamera()});
      window.GaspuroMapBridge={refresh:()=>{if(phaserMapTexture)phaserMapTexture.refresh();syncRoadCamera();drawStreetLamps();drawStreetFurniture();drawCivicFacilities();drawResidentialBuildings();drawCommercialBuildings();drawCityStructures();drawLandProjects();drawLots();drawTownAtmosphere()}};
