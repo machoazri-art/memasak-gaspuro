@@ -728,7 +728,7 @@ function bootPhaserMapBridge(){
       lampLayer.clear();
       const phase=townClock(),night=Math.max(0,Math.min(1,(Math.cos((phase-.5)*Math.PI*2)+.08)/1.08));
       const lamp=(x,y,index=0)=>{
-       const warm=0xffd982,pulse=.88+Math.sin(trafficTick*.055+index*1.7)*.12;
+       const warm=0xffd982,pulse=.88+Math.sin(tick*.055+index*1.7)*.12;
        if(night>0.015){
         const glow=night*pulse;
         lampLayer.fillStyle(warm,glow*.055);lampLayer.fillCircle(x+11,y-29,58);
@@ -741,7 +741,7 @@ function bootPhaserMapBridge(){
        lampLayer.lineStyle(3,0x46514c,1);lampLayer.beginPath();lampLayer.moveTo(x,y);lampLayer.lineTo(x,y-24);lampLayer.lineTo(x+9,y-29);lampLayer.strokePath();
        lampLayer.fillStyle(0x303b38,1);lampLayer.fillRoundedRect(x+5,y-33,12,7,3);
        lampLayer.fillStyle(0xffe9a6,night>.04?Math.min(1,.45+night*.55):.22);lampLayer.fillRoundedRect(x+8,y-32,7,4,2);
-       lampLayer.fillStyle(0xffefb8,.45+night*.45);lampLayer.fillCircle(x+11,y-29,3+Math.sin(trafficTick*.09+index)*.45);
+       lampLayer.fillStyle(0xffefb8,.45+night*.45);lampLayer.fillCircle(x+11,y-29,3+Math.sin(tick*.09+index)*.45);
       };
       let lampIndex=0;for(let x=-570;x<1550;x+=190){lamp(x,5,lampIndex++);lamp(x,89,lampIndex++);lamp(x,3195,lampIndex++);lamp(x,3285,lampIndex++)}
       for(let y=-600;y<2200;y+=190){lamp(-3,y,lampIndex++);lamp(93,y,lampIndex++);lamp(863,y,lampIndex++);lamp(957,y,lampIndex++)}
