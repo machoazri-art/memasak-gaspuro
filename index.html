@@ -1065,6 +1065,8 @@ function bootPhaserMapBridge(){
        // Destinasi NPC diambil daripada bangunan sebenar yang sudah dibina.
        // Setiap lot dipadankan dengan kaki lima paling hampir supaya NPC tidak memotong lot lain.
        const laneXs=[88,544,954,1456];
+       // Sokong rekod lama yang menyimpan nombor lot sebagai teks.
+       // Rekod tanpa lot yang boleh dipastikan sengaja tidak dipadankan secara rawak.
        const destinationCandidates=[
         ...(s.buildings||[]).map(b=>({lot:Number(b.lot),kind:'business'})),
         ...(s.residentialBuildings||[]).map(b=>({lot:Number(b.lot),kind:'home'})),
