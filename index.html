@@ -1089,7 +1089,7 @@ function bootPhaserMapBridge(){
         const route=routes.findIndex((_,r)=>routeSeen[r]<routeCounts[r]);
         const index=routeSeen[route]++,dir=((i%2===0)?1:-1)*routine.direction,speed=routeSpeeds[i%routeSpeeds.length]*routine.speed,sample=pointAt(route,0);
         // Setiap pejalan kaki kekal pada gelung laluan tertutup; fasa bergerak berterusan tanpa spawn/despawn.
-        let pos,angle;
+        let pos,angle,visiting=false,inside=false;
         const laneDestinations=route<4?destinationsByLane[route]:[];
         if(laneDestinations.length){
          const destination=laneDestinations[(index+i*3)%laneDestinations.length];
@@ -1097,10 +1097,20 @@ function bootPhaserMapBridge(){
          const start=[destination.laneX,startY],junction=[destination.laneX,destination.targetY],front=[destination.approachX,destination.targetY];
          const path=[start,junction,front,junction,start];
          const outbound=Math.hypot(junction[0]-start[0],junction[1]-start[1])+Math.hypot(front[0]-junction[0],front[1]-junction[1]);
-         const pause=speed*24,cycle=outbound*2+pause,raw=((trafficTick*speed+index*cycle/Math.max(1,routeCounts[route]))%cycle+cycle)%cycle;
-         if(raw>outbound&&raw<outbound+pause){pos={x:front[0],y:front[1],angle:Math.atan2(front[1]-junction[1],front[0]-junction[0])};}
-         else{const distance=raw>=outbound+pause?raw-pause:raw;pos=pointOnPedestrianPath(path,distance);}
+         const pause=speed*96,cycle=outbound*2+pause,raw=((trafficTick*speed+index*cycle/Math.max(1,routeCounts[route]))%cycle+cycle)%cycle;
+         let activityIcon='🍽️',activityLabel='Makan';
+         if(destination.kind==='home'){activityIcon='🏠';activityLabel='Berehat'}
+         else if(destination.kind==='civic'){
+          const activityMap={hospital:['🏥','Rawatan'],school:['📚','Belajar'],fire:['🚒','Bertugas'],market:['🛍️','Membeli-belah'],petrol:['⛽','Mengisi minyak'],library:['📖','Membaca'],stadium:['⚽','Bersukan'],recycle:['♻️','Kitar semula'],park:['🌳','Bersantai'],busstop:['🚌','Menunggu bas'],parkinglot:['🚗','Mengambil kenderaan']};
+          const activity=activityMap[destination.id]||['🏙️','Aktiviti bandar'];activityIcon=activity[0];activityLabel=activity[1];
+         }
+         if(raw>outbound&&raw<outbound+pause){
+          const stay=raw-outbound,entry=speed*10,exit=speed*82;
+          visiting=true;inside=stay>entry&&stay<exit;
+          pos={x:front[0],y:front[1],angle:Math.atan2(front[1]-junction[1],front[0]-junction[0])};
+         }else{const distance=raw>=outbound+pause?raw-pause:raw;pos=pointOnPedestrianPath(path,distance);}
          angle=pos.angle+Math.PI/2;
+         if(inside)continue;
         }else{
          const phase=index*(sample.total/routeCounts[route])+i*11;
          const distance=((phase+trafficTick*speed*dir)%sample.total+sample.total)%sample.total;
@@ -1125,6 +1135,13 @@ function bootPhaserMapBridge(){
         if(i%9===3||i%9===6){q=xy(0,-12+bob);g.fillStyle(i%2?0x9b5d8b:0x385b78,1);g.fillEllipse(q.x,q.y,9,4.5)}
         if(i%7===0){q=xy(7,1+bob);g.fillStyle(0x8b6848,1);g.fillRoundedRect(q.x-2.2,q.y-2.5,4.4,7,1)}
         if(i%13===0){q=xy(-7,-2+bob);g.fillStyle(0xf0c45e,1);g.fillCircle(q.x,q.y,2.8)}
+        if(typeof visiting!=='undefined'&&visiting){
+         q=xy(0,-23+bob);g.fillStyle(0xffffff,.96);g.fillRoundedRect(q.x-11,q.y-8,22,15,5);
+         g.lineStyle(1,0x7b8b83,1);g.strokeRoundedRect(q.x-11,q.y-8,22,15,5);
+         g.fillStyle(0x263d35,1);g.fillCircle(q.x,q.y,1.2);
+         g.fillStyle(0x263d35,1);g.fillCircle(q.x-4,q.y,1.2);g.fillCircle(q.x+4,q.y,1.2);
+         if(!inside){g.fillStyle(0xffffff,1);g.fillRoundedRect(q.x+10,q.y-13,18,15,4);g.fillStyle(0x243b31,1);g.fillCircle(q.x+19,q.y-5,1);g.fillStyle(0x243b31,1);g.fillCircle(q.x+15,q.y-5,1);g.fillCircle(q.x+23,q.y-5,1);g.fillStyle(0x243b31,1);g.fillCircle(q.x+19,q.y-9,1)}
+        }
        }
       };
       // Animasi trafik menggunakan RAF sendiri, tidak bergantung pada gesture,
