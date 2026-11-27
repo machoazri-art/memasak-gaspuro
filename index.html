@@ -1062,13 +1062,51 @@ function bootPhaserMapBridge(){
         return{x:pts[0][0],y:pts[0][1],angle:0,total};
        };
        const local=(x,y,angle,lx,ly)=>({x:x+lx*Math.cos(angle)-ly*Math.sin(angle),y:y+lx*Math.sin(angle)+ly*Math.cos(angle)});
+       // Destinasi NPC diambil daripada bangunan sebenar yang sudah dibina.
+       // Setiap lot dipadankan dengan kaki lima paling hampir supaya NPC tidak memotong lot lain.
+       const laneXs=[88,544,954,1456];
+       const destinationCandidates=[
+        ...(s.buildings||[]).map(b=>({lot:Number(b.lot),kind:'business'})),
+        ...(s.residentialBuildings||[]).map(b=>({lot:Number(b.lot),kind:'home'})),
+        ...(s.cityStructures||[]).map(b=>({lot:Number(b.lot),kind:'civic'}))
+       ].filter(d=>Number.isInteger(d.lot)&&d.lot>=0&&d.lot<88).map(d=>{
+        const block=Math.floor(d.lot/4),slot=d.lot%4,col=block%3,side=slot%2,plot=lotSlotPos(d.lot);
+        const lane=side===0?col:col+1;
+        return{...d,lane,laneX:laneXs[lane],targetY:plot.y+plot.h/2,approachX:side===0?plot.x-18:plot.x+plot.w+18};
+       });
+       const destinationsByLane=laneXs.map((_,lane)=>destinationCandidates.filter(d=>d.lane===lane));
+       const pointOnPedestrianPath=(path,distance)=>{
+        let d=Math.max(0,distance);
+        for(let k=0;k<path.length-1;k++){
+         const a=path[k],b=path[k+1],length=Math.hypot(b[0]-a[0],b[1]-a[1]);
+         if(d<=length){const t=length?d/length:0;return{x:a[0]+(b[0]-a[0])*t,y:a[1]+(b[1]-a[1])*t,angle:Math.atan2(b[1]-a[1],b[0]-a[0])}}
+         d-=length;
+        }
+        const a=path[path.length-2],b=path[path.length-1];
+        return{x:b[0],y:b[1],angle:Math.atan2(b[1]-a[1],b[0]-a[0])};
+       };
        for(let i=0;i<pedestrianCount;i++){
         const route=routes.findIndex((_,r)=>routeSeen[r]<routeCounts[r]);
         const index=routeSeen[route]++,dir=((i%2===0)?1:-1)*routine.direction,speed=routeSpeeds[i%routeSpeeds.length]*routine.speed,sample=pointAt(route,0);
         // Setiap pejalan kaki kekal pada gelung laluan tertutup; fasa bergerak berterusan tanpa spawn/despawn.
-        const phase=index*(sample.total/routeCounts[route])+i*11;
-        const distance=((phase+trafficTick*speed*dir)%sample.total+sample.total)%sample.total;
-        const pos=pointAt(route,distance),bob=Math.abs(Math.sin(trafficTick*.12+i*1.71))*1.1,angle=pos.angle+Math.PI/2+(dir<0?Math.PI:0);
+        let pos,angle;
+        const laneDestinations=route<4?destinationsByLane[route]:[];
+        if(laneDestinations.length){
+         const destination=laneDestinations[(index+i*3)%laneDestinations.length];
+         const startY=130+(index+.5)*(2650/Math.max(1,routeCounts[route]));
+         const start=[destination.laneX,startY],junction=[destination.laneX,destination.targetY],front=[destination.approachX,destination.targetY];
+         const path=[start,junction,front,junction,start];
+         const outbound=Math.hypot(junction[0]-start[0],junction[1]-start[1])+Math.hypot(front[0]-junction[0],front[1]-junction[1]);
+         const pause=speed*24,cycle=outbound*2+pause,raw=((trafficTick*speed+index*cycle/Math.max(1,routeCounts[route]))%cycle+cycle)%cycle;
+         if(raw>outbound&&raw<outbound+pause){pos={x:front[0],y:front[1],angle:Math.atan2(front[1]-junction[1],front[0]-junction[0])};}
+         else{const distance=raw>=outbound+pause?raw-pause:raw;pos=pointOnPedestrianPath(path,distance);}
+         angle=pos.angle+Math.PI/2;
+        }else{
+         const phase=index*(sample.total/routeCounts[route])+i*11;
+         const distance=((phase+trafficTick*speed*dir)%sample.total+sample.total)%sample.total;
+         pos=pointAt(route,distance);angle=pos.angle+Math.PI/2+(dir<0?Math.PI:0);
+        }
+        const bob=Math.abs(Math.sin(trafficTick*.12+i*1.71))*1.1;
         const xy=(lx,ly)=>local(pos.x,pos.y,angle,lx,ly);
         const shirt=shirts[i%shirts.length],skin=skins[i%skins.length],hair=hairs[i%hairs.length];
         g.fillStyle(0x2d3e2a,.25);g.fillEllipse(pos.x,pos.y+10,19,8);
