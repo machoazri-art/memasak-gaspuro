@@ -1032,13 +1032,23 @@ function bootPhaserMapBridge(){
          drawCar(pos.x,pos.y,length,width,pos.angle,carColors[i%carColors.length],i%10);
         }
        }
-       // Penduduk berjalan di kaki lima khusus di tepi bandar, bukan di atas lot.
-       // Laluan ini sepadan dengan koridor pejalan kaki yang dilukis dalam street furniture.
+       // Rangkaian kaki lima dalaman: laluan diletakkan di jalur rumput antara lot dan jalan.
+       // Setiap koridor ialah gelung nipis supaya NPC tidak memotong lot atau berjalan di tengah jalan.
        const routes=[
-        [[112,520],[112,2680],[118,2680],[118,520]],
-        [[1360,520],[1360,2680],[1366,2680],[1366,520]],
-        [[112,520],[1360,520],[1360,526],[112,526]],
-        [[112,2680],[1360,2680],[1360,2686],[112,2686]]
+        // Koridor menegak di sisi jalan kiri, dua jalan dalaman dan jalan kanan.
+        [[84,90],[92,90],[92,2920],[84,2920]],
+        [[540,90],[548,90],[548,2920],[540,2920]],
+        [[950,90],[958,90],[958,2920],[950,2920]],
+        [[1452,90],[1460,90],[1460,2920],[1452,2920]],
+        // Koridor melintang di ruang hijau selepas setiap jalan.
+        [[92,70],[1452,70],[1452,78],[92,78]],
+        [[92,468],[1452,468],[1452,476],[92,476]],
+        [[92,808],[1452,808],[1452,816],[92,816]],
+        [[92,1148],[1452,1148],[1452,1156],[92,1156]],
+        [[92,1488],[1452,1488],[1452,1496],[92,1496]],
+        [[92,1828],[1452,1828],[1452,1836],[92,1836]],
+        [[92,2168],[1452,2168],[1452,2176],[92,2176]],
+        [[92,2508],[1452,2508],[1452,2516],[92,2516]]
        ];
        const routine=townRoutineInfo(),pedestrianBase=isAndroidDevice?24:64,pedestrianCount=Math.max(isAndroidDevice?4:8,Math.round(pedestrianBase*routine.density)),routeCounts=routes.map((_,i)=>Math.floor(pedestrianCount/routes.length)+(i<pedestrianCount%routes.length?1:0));
        const shirts=[0x477fa8,0xd46c55,0x5d966c,0xd3a94e,0x8b6ca6,0xe7e0ce,0x2f7774,0xc45c83,0x9a7048,0x477b9e];
