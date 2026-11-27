@@ -981,7 +981,8 @@ function bootPhaserMapBridge(){
         const k=Math.min(lo,route.lengths.length-1),t=(d-route.cumulative[k])/Math.max(.001,route.lengths[k]),a=route.points[k],b=route.points[(k+1)%route.points.length];
         return{x:a[0]+(b[0]-a[0])*t,y:a[1]+(b[1]-a[1])*t,angle:Math.atan2(b[1]-a[1],b[0]-a[0])};
        };
-       const carCount=182,vehiclesPerRoute=roadLoops.map(()=>14);
+       const isAndroidDevice=/Android/i.test(navigator.userAgent||'');
+       const carCount=isAndroidDevice?52:91,vehiclesPerRoute=roadLoops.map(()=>isAndroidDevice?4:7);
        const drawCar=(cx,cy,length,width,angle,color,kind)=>{
         const co=Math.cos(angle),si=Math.sin(angle),tr=(x,y)=>({x:cx+x*co-y*si,y:cy+x*si+y*co});
         const poly=(pts,fill)=>{g.fillStyle(fill,1);g.fillPoints(pts.map(([x,y])=>tr(x,y)),true)};
@@ -1006,25 +1007,18 @@ function bootPhaserMapBridge(){
          drawCar(pos.x,pos.y,length,width,pos.angle,carColors[i%carColors.length],i%10);
         }
        }
-       // 280 pejalan kaki: 100 tambahan. Setiap satu daripada 88 lot menerima 3-4 pejalan kaki.
-       // Laluan kecil mengelilingi setiap lot; tiada walker diletakkan statik atau spawn/despawn.
-       const pedestrianSlots=[[8,8],[164,8],[8,128],[164,128]];
-       const routes=[];
-       for(let lot=0;lot<88;lot++){
-        const block=Math.floor(lot/4),slot=pedestrianSlots[lot%4],col=block%3,row=Math.floor(block/3);
-        const x=150+col*410+slot[0],y=150+row*340+slot[1];
-        routes.push([[x-5,y-5],[x+155,y-5],[x+155,y+117],[x-5,y+117]]);
-       }
+       // Penduduk berjalan di kaki lima khusus di tepi bandar, bukan di atas lot.
+       // Laluan ini sepadan dengan koridor pejalan kaki yang dilukis dalam street furniture.
+       const routes=[
+        [[112,520],[112,2680],[118,2680],[118,520]],
+        [[1360,520],[1360,2680],[1366,2680],[1366,520]],
+        [[112,520],[1360,520],[1360,526],[112,526]],
+        [[112,2680],[1360,2680],[1360,2686],[112,2686]]
+       ];
+       const pedestrianCount=isAndroidDevice?24:64,routeCounts=routes.map((_,i)=>Math.floor(pedestrianCount/routes.length)+(i<pedestrianCount%routes.length?1:0));
        const shirts=[0x477fa8,0xd46c55,0x5d966c,0xd3a94e,0x8b6ca6,0xe7e0ce,0x2f7774,0xc45c83,0x9a7048,0x477b9e];
        const skins=[0xe9b991,0xc98f69,0xf0c9a4,0xa96f50,0xd9a17d],hairs=[0x3d3029,0x272b2d,0x594332,0x332c28,0x78563b];
-       const routeLengths=routes.map(pts=>pts.reduce((sum,p,k)=>sum+Math.hypot(pts[(k+1)%pts.length][0]-p[0],pts[(k+1)%pts.length][1]-p[1]),0));
-       // Agihan rawak tetapi seimbang: setiap lot mendapat sekurang-kurangnya 3 orang.
-       const pedestrianCount=/Android/i.test(navigator.userAgent||'')?24:180,routeCounts=routes.map(()=>3);
-       let remainingPeople=pedestrianCount-routeCounts.reduce((a,b)=>a+b,0);
-       let seed=20261122;
-       const random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
-       const shuffledRoutes=routes.map((_,i)=>i).sort(()=>random()-.5);
-       for(let n=0;n<remainingPeople;n++)routeCounts[shuffledRoutes[n%shuffledRoutes.length]]++;
+       // Agihan pejalan kaki seimbang pada empat koridor kaki lima bandar.
        const routeSeen=routes.map(()=>0),routeSpeeds=[.22,.27,.19,.31,.24,.29,.17,.26];
        const pointAt=(route,distance)=>{
         const pts=routes[route],lengths=pts.map((p,k)=>Math.hypot(pts[(k+1)%pts.length][0]-p[0],pts[(k+1)%pts.length][1]-p[1]));
